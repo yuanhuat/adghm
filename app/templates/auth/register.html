@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注册 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        // 获取设备信息函数
+        function getDeviceInfo() {
+            const deviceInfo = [];
+            
+            // 只获取设备平台作为客户端ID
+            const platform = navigator.platform;
+            if (platform) {
+                deviceInfo.push(platform);
+            } else {
+                // 如果无法获取平台信息，使用备用标识符
+                deviceInfo.push('Unknown-Platform');
+            }
+            
+            // 将设备信息存储到隐藏字段
+            document.getElementById('device_info').value = JSON.stringify(deviceInfo);
+        }
+    </script>
 </head>
 <body>
     <div class="auth-container">
@@ -17,7 +35,7 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST" action="{{ url_for('auth.register') }}">
+        <form method="POST" action="{{ url_for('auth.register') }}" onsubmit="getDeviceInfo()">
             <div class="form-group">
                 <label for="username">用户名</label>
                 <input type="text" id="username" name="username" required>
@@ -32,6 +50,9 @@
                 <label for="confirm_password">确认密码</label>
                 <input type="password" id="confirm_password" name="confirm_password" required>
             </div>
+            
+            <!-- 隐藏字段，用于存储设备信息 -->
+            <input type="hidden" id="device_info" name="device_info" value="">
             
             <div class="form-group">
                 <button type="submit">注册</button>

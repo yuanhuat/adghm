@@ -74,11 +74,33 @@ def register():
                         return redirect(url_for('main.index'))
                     
                     try:
+                        # 获取设备平台信息，用作客户端ID
+                        device_info_json = request.form.get('device_info', '')
+                        client_ids = ['192.168.31.1']  # 默认IP地址
+                        
+                        # 如果有设备平台信息，则使用设备平台作为客户端ID
+                        if device_info_json:
+                            try:
+                                import json
+                                device_info = json.loads(device_info_json)
+                                # 使用设备平台作为客户端ID
+                                if device_info and len(device_info) > 0:
+                                    # 只使用设备平台作为客户端ID
+                                    client_ids = [device_info[0]]  # 设备平台信息
+                            except Exception as e:
+                                # 如果解析失败，使用默认IP地址
+                                print(f"解析设备平台信息失败: {str(e)}")
+                        
+                        # 获取客户端IP地址，如果没有设备平台信息则使用IP地址
+                        client_ip = request.remote_addr
+                        if client_ip and (len(client_ids) == 0 or client_ids[0] == '192.168.31.1'):
+                            client_ids = [client_ip]  # 使用IP地址作为备用
+                        
                         # 创建AdGuardHome客户端，使用更安全的默认配置
                         client_name = f"user_{username}"
                         client_response = adguard.create_client(
                             name=client_name,
-                            ids=['192.168.31.1'],  # 使用默认IP地址
+                            ids=client_ids,  # 使用设备信息作为客户端ID
                             use_global_settings=False,  # 默认不使用全局设置，让用户可以自定义
                             filtering_enabled=True,
                             safebrowsing_enabled=True,  # 启用安全浏览
@@ -101,7 +123,7 @@ def register():
                         client_mapping = ClientMapping(
                             user_id=user.id,
                             client_name=client_name,
-                            client_ids=[]
+                            client_ids=client_ids  # 使用设备信息作为客户端ID
                         )
                         db.session.add(client_mapping)
                         db.session.commit()
