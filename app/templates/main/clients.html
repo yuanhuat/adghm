@@ -75,8 +75,11 @@
             <form id="domainForm">
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label for="subDomain">子域名：</label>
-                    <input type="text" id="subDomain" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
-                    <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">输入您想要的子域名前缀</p>
+                    <div style="padding: 8px; margin-top: 5px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;">
+                        <span id="subDomainDisplay"></span>
+                    </div>
+                    <input type="hidden" id="subDomain">
+                    <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">子域名自动使用客户端ID作为前缀</p>
                 </div>
                 
                 <div id="existingDomainInfo" style="display: none; margin-top: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
@@ -263,24 +266,42 @@
                 return;
             }
             
-            // 填充表单
-            if (data.domain_mapping) {
-                document.getElementById('subDomain').value = data.domain_mapping.subdomain;
-                document.getElementById('currentDomain').textContent = data.domain_mapping.full_domain;
-                document.getElementById('currentIp').textContent = data.domain_mapping.ip_address;
-                document.getElementById('domainCreatedAt').textContent = data.domain_mapping.created_at;
-                document.getElementById('existingDomainInfo').style.display = 'block';
-                document.getElementById('refreshDomainBtn').style.display = 'inline-block';
-                document.getElementById('deleteDomainBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('subDomain').value = '';
-                document.getElementById('existingDomainInfo').style.display = 'none';
-                document.getElementById('refreshDomainBtn').style.display = 'none';
-                document.getElementById('deleteDomainBtn').style.display = 'none';
-            }
-            
-            // 显示模态框
-            document.getElementById('domainModal').style.display = 'block';
+            // 获取客户端ID作为子域名
+            fetch(`/clients/${mappingId}`, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(clientData => {
+                if (clientData.error) {
+                    alert(clientData.error);
+                    return;
+                }
+                
+                // 使用客户端ID作为子域名
+                const clientId = clientData.client_ids[0];
+                document.getElementById('subDomain').value = clientId;
+                document.getElementById('subDomainDisplay').textContent = clientId;
+                
+                // 填充表单
+                if (data.domain_mapping) {
+                    document.getElementById('currentDomain').textContent = data.domain_mapping.full_domain;
+                    document.getElementById('currentIp').textContent = data.domain_mapping.ip_address;
+                    document.getElementById('domainCreatedAt').textContent = data.domain_mapping.created_at;
+                    document.getElementById('existingDomainInfo').style.display = 'block';
+                    document.getElementById('refreshDomainBtn').style.display = 'inline-block';
+                    document.getElementById('deleteDomainBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('existingDomainInfo').style.display = 'none';
+                    document.getElementById('refreshDomainBtn').style.display = 'none';
+                    document.getElementById('deleteDomainBtn').style.display = 'none';
+                }
+                
+                // 显示模态框
+                document.getElementById('domainModal').style.display = 'block';
+            })
+            .catch(error => {
+                alert('获取客户端信息失败：' + error);
+            });
         })
         .catch(error => {
             alert('获取域名配置失败：' + error);

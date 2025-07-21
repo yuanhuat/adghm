@@ -92,27 +92,36 @@ def register():
                             try:
                                 import json
                                 device_info = json.loads(device_info_json)
-                                # 使用设备平台和用户名组合作为客户端ID
+                                # 只使用用户名作为客户端ID
                                 if device_info and len(device_info) > 0:
-                                    # 使用设备平台和用户名组合，确保唯一性
-                                    platform = device_info[0].lower()  # 转为小写以避免大小写问题
+                                    # 只使用用户名，确保唯一性
                                     # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
-                                    client_ids = [f"{platform}-{username}"]  # 设备平台信息-用户名
-                                    print(f"使用组合客户端ID: {client_ids[0]}")
+                                    client_ids = [f"{username}"]  # 只使用用户名
+                                    print(f"使用用户名作为客户端ID: {client_ids[0]}")
                             except Exception as e:
                                 # 如果解析失败，使用默认IP地址
                                 print(f"解析设备平台信息失败: {str(e)}")
                         
-                        # 获取客户端IP地址，如果没有设备平台信息则使用IP地址和用户名组合
-                        client_ip = request.remote_addr
-                        if client_ip and (len(client_ids) == 0 or client_ids[0] == '192.168.31.1'):
-                            # 使用IP地址和用户名组合作为客户端ID，确保唯一性
+                        # 如果没有设备平台信息，则只使用用户名作为客户端ID
+                        if len(client_ids) == 0 or client_ids[0] == '192.168.31.1':
+                            # 只使用用户名作为客户端ID，确保唯一性
                             # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
-                            client_ids = [f"{client_ip}-{username}"]  # IP地址-用户名
-                            print(f"使用IP地址组合客户端ID: {client_ids[0]}")
+                            client_ids = [f"{username}"]  # 只使用用户名
+                            print(f"使用用户名作为客户端ID: {client_ids[0]}")
                         
                         # 创建AdGuardHome客户端，使用更安全的默认配置
-                        client_name = f"user_{username}"
+                        # 获取设备型号并添加到客户端名称中
+                        device_platform = "unknown"
+                        if device_info_json:
+                            try:
+                                import json
+                                device_info = json.loads(device_info_json)
+                                if device_info and len(device_info) > 0:
+                                    device_platform = device_info[0]
+                            except Exception as e:
+                                print(f"解析设备平台信息失败: {str(e)}")
+                        
+                        client_name = f"user_{username}-{device_platform}"
                         client_response = adguard.create_client(
                             name=client_name,
                             ids=client_ids,  # 使用设备信息作为客户端ID
@@ -155,8 +164,8 @@ def register():
                                 # 获取IP地址
                                 ip_address = domain_service.get_ip_address()
                                 if ip_address:
-                                    # 使用用户名作为子域名前缀
-                                    subdomain = username
+                                    # 使用客户端ID作为子域名前缀
+                                    subdomain = client_ids[0]
                                     
                                     # 创建或更新域名解析记录
                                     success, record_id, full_domain = domain_service.create_or_update_subdomain(
@@ -176,12 +185,11 @@ def register():
                                         db.session.add(domain_mapping)
                                         
                                         # 记录操作日志
-                                        domain_service.log_domain_operation(
+                                        domain_service.log_operation(
                                             user_id=user.id,
                                             operation_type='create',
-                                            subdomain=subdomain,
-                                            ip_address=ip_address,
-                                            record_id=record_id
+                                            target_id=record_id,
+                                            details=f'创建子域名: {subdomain}, IP: {ip_address}'
                                         )
                                         
                                         # 提交所有更改

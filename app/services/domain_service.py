@@ -54,8 +54,6 @@ class DomainService:
         # 定义多个可用的IP获取API，按可靠性排序
         ip_apis = [
             # 国内可靠的API
-            {'url': 'https://pv.sohu.com/cityjson', 'type': 'text', 'parser': lambda r: r.text.split('"')[1] if 'var returnCitySN = ' in r.text else None},
-            {'url': 'https://www.cip.cc', 'type': 'text', 'parser': lambda r: r.text.split('\n')[0].split(':')[1].strip() if 'IP' in r.text else None},
             {'url': 'https://myip.ipip.net', 'type': 'text', 'parser': lambda r: r.text.split('：')[1].split(' ')[0] if '：' in r.text else None},
             
             # 国际通用API

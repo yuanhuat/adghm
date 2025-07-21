@@ -35,6 +35,9 @@ def domain_info():
                 'success': False,
                 'error': '客户端不存在或无权访问'
             })
+            
+        # 使用客户端ID作为子域名前缀
+        subdomain = client_mapping.client_ids[0]
         
         # 获取与客户端关联的域名映射
         domain_mapping = DomainMapping.query.filter_by(client_mapping_id=client_id).first()
@@ -65,9 +68,8 @@ def manage_domain_mapping():
     if request.method == 'POST':
         data = request.get_json()
         client_id = data.get('client_id')
-        subdomain = data.get('subdomain')
         
-        if not client_id or not subdomain:
+        if not client_id:
             return jsonify({
                 'success': False,
                 'error': '缺少必要参数'
