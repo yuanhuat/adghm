@@ -78,8 +78,8 @@ def register():
                         client_name = f"user_{username}"
                         client_response = adguard.create_client(
                             name=client_name,
-                            ids=[],  # 初始时不设置任何ID
-                            use_global_settings=True,
+                            ids=['192.168.31.1'],  # 使用默认IP地址
+                            use_global_settings=False,  # 默认不使用全局设置，让用户可以自定义
                             filtering_enabled=True,
                             safebrowsing_enabled=True,  # 启用安全浏览
                             parental_enabled=False,
@@ -92,7 +92,7 @@ def register():
                                 "yandex": True,
                                 "youtube": True
                             },
-                            use_global_blocked_services=True,
+                            use_global_blocked_services=False,  # 默认不使用全局屏蔽服务设置
                             ignore_querylog=False,
                             ignore_statistics=False
                         )

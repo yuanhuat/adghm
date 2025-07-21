@@ -53,7 +53,7 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                <button onclick="editClientIds({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-primary">编辑ID</button>
+                                <button onclick="editClient({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-primary">编辑设置</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -66,20 +66,117 @@
         </main>
     </div>
     
+    <!-- 客户端编辑模态框 -->
+    <div id="clientModal" class="modal" style="display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+        <div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px;">
+            <span class="close" onclick="closeModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h2 id="modalTitle">编辑客户端设置</h2>
+            <form id="clientForm">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="clientIds">客户端ID列表（多个ID用逗号分隔）：</label>
+                    <input type="text" id="clientIds" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>
+                        <input type="checkbox" id="useGlobalSettings"> 使用全局设置
+                    </label>
+                    <p class="help-text" style="font-size: 0.9em; color: #666;">启用后，将使用AdGuardHome的全局设置，以下选项将被忽略</p>
+                </div>
+                <div id="customSettings" style="margin-top: 15px;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="filteringEnabled"> 启用过滤
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="safebrowsingEnabled"> 启用安全浏览
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="parentalEnabled"> 启用家长控制
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button type="button" onclick="saveClientSettings()" class="btn btn-primary" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">保存</button>
+                    <button type="button" onclick="closeModal()" class="btn" style="padding: 8px 16px; margin-left: 10px; background-color: #f1f1f1; border: none; cursor: pointer;">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-    function editClientIds(mappingId, clientName) {
-        const currentIds = prompt(`请输入${clientName}的新客户端ID列表（多个ID用逗号分隔）：`);
-        if (currentIds === null) return;
+    let currentMappingId = null;
+
+    function editClient(mappingId, clientName) {
+        currentMappingId = mappingId;
+        document.getElementById('modalTitle').textContent = `编辑客户端：${clientName}`;
         
-        const clientIds = currentIds.split(',').map(id => id.trim()).filter(id => id);
+        // 获取当前客户端设置
+        fetch(`/clients/${mappingId}`, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            // 填充表单
+            document.getElementById('clientIds').value = data.client_ids.join(', ');
+            document.getElementById('useGlobalSettings').checked = data.use_global_settings;
+            document.getElementById('filteringEnabled').checked = data.filtering_enabled;
+            document.getElementById('safebrowsingEnabled').checked = data.safebrowsing_enabled;
+            document.getElementById('parentalEnabled').checked = data.parental_enabled;
+            
+            // 根据是否使用全局设置显示/隐藏自定义设置
+            toggleCustomSettings();
+            
+            // 显示模态框
+            document.getElementById('clientModal').style.display = 'block';
+        })
+        .catch(error => {
+            alert('获取客户端设置失败：' + error);
+        });
+    }
+    
+    function closeModal() {
+        document.getElementById('clientModal').style.display = 'none';
+    }
+    
+    function toggleCustomSettings() {
+        const useGlobal = document.getElementById('useGlobalSettings').checked;
+        document.getElementById('customSettings').style.display = useGlobal ? 'none' : 'block';
+    }
+    
+    // 添加全局设置切换事件
+    document.getElementById('useGlobalSettings').addEventListener('change', toggleCustomSettings);
+    
+    function saveClientSettings() {
+        if (!currentMappingId) return;
         
-        fetch(`/main/clients/${mappingId}`, {
+        const clientIds = document.getElementById('clientIds').value
+            .split(',').map(id => id.trim()).filter(id => id);
+        
+        const useGlobalSettings = document.getElementById('useGlobalSettings').checked;
+        const filteringEnabled = document.getElementById('filteringEnabled').checked;
+        const safebrowsingEnabled = document.getElementById('safebrowsingEnabled').checked;
+        const parentalEnabled = document.getElementById('parentalEnabled').checked;
+        
+        fetch(`/clients/${currentMappingId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                client_ids: clientIds
+                client_ids: clientIds,
+                use_global_settings: useGlobalSettings,
+                filtering_enabled: filteringEnabled,
+                safebrowsing_enabled: safebrowsingEnabled,
+                parental_enabled: parentalEnabled
             })
         })
         .then(response => response.json())

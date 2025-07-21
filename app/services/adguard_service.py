@@ -114,6 +114,8 @@ class AdGuardService:
                     return data
                 return {}
             except ValueError:
+                if 200 <= response.status_code < 300:
+                    return {}
                 raise Exception("无法解析服务器响应：响应不是有效的JSON格式")
             
         except requests.exceptions.ConnectionError as e:
@@ -217,7 +219,7 @@ class AdGuardService:
         Returns:
             更新后的客户端信息
         """
-        data = {
+        client_data = {
             "name": name,
             "ids": ids,
             "use_global_settings": use_global_settings,
@@ -225,7 +227,13 @@ class AdGuardService:
             "safebrowsing_enabled": safebrowsing_enabled,
             "parental_enabled": parental_enabled
         }
-        return self._make_request('POST', '/control/clients/update', json=data)
+        
+        request_body = {
+            "name": name,
+            "data": client_data
+        }
+        
+        return self._make_request('POST', '/control/clients/update', json=request_body)
     
     def delete_client(self, name: str) -> Dict:
         """删除AdGuardHome客户端
@@ -257,6 +265,29 @@ class AdGuardService:
             
         data = {"criteria": search_criteria}
         return self._make_request('POST', '/control/clients/find', json=data)
+        
+    def find_client(self, name: str) -> Optional[Dict]:
+        """根据名称查找AdGuardHome客户端
+        
+        Args:
+            name: 客户端名称
+            
+        Returns:
+            Optional[Dict]: 客户端信息，如果未找到则返回None
+        """
+        try:
+            # 获取所有客户端列表
+            response_data = self._make_request('GET', '/control/clients')
+            clients = response_data.get('clients', [])
+            
+            # 查找匹配名称的客户端
+            for client in clients:
+                if client.get('name') == name:
+                    return client
+                    
+            return None
+        except Exception:
+            return None
     
     def get_status(self) -> Optional[Dict]:
         """获取AdGuardHome服务器状态和版本信息
@@ -270,7 +301,7 @@ class AdGuardService:
             return None
         
     def check_connection(self) -> bool:
-        """检查与AdGuardHome服务器的连接
+        """检查与AdGuardHome服务器的连接和认证状态
 
         Returns:
             bool: 连接和认证是否成功
@@ -286,18 +317,6 @@ class AdGuardService:
             return status is not None
         except Exception:
             return False
-        
-    def check_connection(self) -> bool:
-        """检查与AdGuardHome的连接和认证状态
-        
-        Returns:
-            bool: 连接和认证是否成功
-        """
-        try:
-            # 首先验证配置
-            is_valid, error_msg = self.config.validate()
-            if not is_valid:
-                raise Exception(error_msg)
                 
             # 尝试获取状态信息来验证连接和认证
             self.get_status()
