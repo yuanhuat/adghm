@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户端管理 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <header class="main-header">
+            <h1>客户端管理</h1>
+            <nav class="main-nav">
+                <a href="{{ url_for('main.index') }}">返回主页</a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}">退出登录</a>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="client-list">
+                <h2>我的客户端列表</h2>
+                {% if current_user.client_mappings %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>客户端名称</th>
+                            <th>客户端ID</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mapping in current_user.client_mappings %}
+                        <tr>
+                            <td>{{ mapping.client_name }}</td>
+                            <td>
+                                <ul class="client-ids">
+                                    {% for client_id in mapping.client_ids %}
+                                    <li>{{ client_id }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <button onclick="editClientIds({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-primary">编辑ID</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-data">您还没有客户端。</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+    
+    <script>
+    function editClientIds(mappingId, clientName) {
+        const currentIds = prompt(`请输入${clientName}的新客户端ID列表（多个ID用逗号分隔）：`);
+        if (currentIds === null) return;
+        
+        const clientIds = currentIds.split(',').map(id => id.trim()).filter(id => id);
+        
+        fetch(`/main/clients/${mappingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_ids: clientIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert(data.message);
+                location.reload();
+            }
+        })
+        .catch(error => {
+            alert('更新客户端失败：' + error);
+        });
+    }
+    </script>
+</body>
+</html>

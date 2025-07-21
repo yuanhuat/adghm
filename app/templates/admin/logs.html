@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">操作日志</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>操作用户</th>
+                            <th>操作类型</th>
+                            <th>目标类型</th>
+                            <th>目标ID</th>
+                            <th>详细信息</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                        <tr>
+                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ log.user.username }}</td>
+                            <td>{{ log.operation_type }}</td>
+                            <td>{{ log.target_type }}</td>
+                            <td>{{ log.target_id }}</td>
+                            <td>{{ log.details }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if logs.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not logs.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.operation_logs', page=logs.prev_num) if logs.has_prev else '#' }}">
+                            &laquo; 上一页
+                        </a>
+                    </li>
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">第 {{ logs.page }} 页，共 {{ logs.pages }} 页</span>
+                    </li>
+                    
+                    <li class="page-item {% if not logs.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.operation_logs', page=logs.next_num) if logs.has_next else '#' }}">
+                            下一页 &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

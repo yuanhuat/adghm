@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h2 class="card-title">欢迎回来，{{ current_user.username }}</h2>
+                    <p class="card-text">请从上方导航栏选择要管理的内容。</p>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">用户管理</h5>
+                                    <p class="card-text">管理系统用户和客户端</p>
+                                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">进入</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">AdGuardHome配置</h5>
+                                    <p class="card-text">设置AdGuardHome连接信息</p>
+                                    <a href="{{ url_for('admin.adguard_config') }}" class="btn btn-primary">进入</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">操作日志</h5>
+                                    <p class="card-text">查看系统操作记录</p>
+                                    <a href="{{ url_for('admin.operation_logs') }}" class="btn btn-primary">进入</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

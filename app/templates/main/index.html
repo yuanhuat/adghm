@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <header class="main-header">
+            <h1>欢迎，{{ current_user.username }}</h1>
+            <nav class="main-nav">
+                <a href="{{ url_for('main.clients') }}">客户端管理</a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}">退出登录</a>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="dashboard">
+                <div class="dashboard-card">
+                    <h2>我的客户端</h2>
+                    <p class="dashboard-stat">{{ current_user.client_mappings|length }}</p>
+                    <a href="{{ url_for('main.clients') }}" class="btn btn-primary">管理客户端</a>
+                </div>
+                
+                <div class="dashboard-card">
+                    <h2>账号信息</h2>
+                    <div class="info-list">
+                        <p><strong>用户名：</strong>{{ current_user.username }}</p>
+                        <p><strong>注册时间：</strong>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p><strong>账号类型：</strong>{% if current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

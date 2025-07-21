@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>AdGuardHome 配置</h2>
+    <div class="alert alert-info" id="versionInfo" style="display: none;">
+        <strong>AdGuardHome 版本：</strong><span id="versionText"></span>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <form id="configForm">
+                <div class="mb-3">
+                    <label for="api_base_url" class="form-label">API 地址</label>
+                    <input type="text" class="form-control" id="api_base_url" name="api_base_url" value="{{ config.api_base_url }}" required>
+                    <div class="form-text">例如：http://localhost:3000</div>
+                </div>
+                <div class="mb-3">
+                    <label for="auth_username" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="auth_username" name="auth_username" value="{{ config.auth_username }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="auth_password" class="form-label">密码</label>
+                    <input type="password" class="form-control" id="auth_password" name="auth_password" value="{{ config.auth_password }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">保存配置</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 获取AdGuardHome状态信息
+async function getAdGuardStatus() {
+    try {
+        const response = await fetch('/admin/adguard-status');
+        const data = await response.json();
+        
+        if (response.ok && data.version) {
+            document.getElementById('versionInfo').style.display = 'block';
+            document.getElementById('versionText').textContent = data.version;
+        }
+    } catch (error) {
+        console.error('获取状态失败：', error);
+    }
+}
+
+// 页面加载时获取状态信息
+document.addEventListener('DOMContentLoaded', getAdGuardStatus);
+
+document.getElementById('configForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        api_base_url: document.getElementById('api_base_url').value,
+        auth_username: document.getElementById('auth_username').value,
+        auth_password: document.getElementById('auth_password').value
+    };
+    
+    try {
+        const response = await fetch('/admin/adguard-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('配置更新成功');
+            if (data.version) {
+                document.getElementById('versionInfo').style.display = 'block';
+                document.getElementById('versionText').textContent = data.version;
+            }
+        } else {
+            alert(data.error || '配置更新失败');
+        }
+    } catch (error) {
+        alert('配置更新失败：' + error.message);
+    }
+});
+</script>
+{% endblock %}

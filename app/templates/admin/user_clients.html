@@ -1,0 +1,99 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>用户客户端管理</h2>
+        </div>
+        <div class="col text-end">
+            <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">返回用户列表</a>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">用户信息</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>用户名：</strong>{{ user.username }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>注册时间：</strong>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">客户端列表</h5>
+            {% if user.client_mappings %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>客户端名称</th>
+                            <th>客户端ID</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mapping in user.client_mappings %}
+                        <tr>
+                            <td>{{ mapping.client_name }}</td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    {% for client_id in mapping.client_ids %}
+                                    <li><code>{{ client_id }}</code></li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <button onclick="editClientIds({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-sm btn-primary">编辑ID</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">该用户暂无客户端。</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function editClientIds(mappingId, clientName) {
+    const currentIds = prompt(`请输入${clientName}的新客户端ID列表（多个ID用逗号分隔）：`);
+    if (currentIds === null) return;
+    
+    const clientIds = currentIds.split(',').map(id => id.trim()).filter(id => id);
+    
+    fetch(`/admin/users/{{ user.id }}/clients/${mappingId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            client_ids: clientIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert(data.message);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('更新客户端失败：' + error);
+    });
+}
+</script>
+{% endblock %}
