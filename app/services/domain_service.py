@@ -44,39 +44,71 @@ class DomainService:
     
     def get_local_ip(self) -> str:
         """
-        获取本地IP地址
+        获取本地公网IP地址
         
-        使用百度API获取当前IP地址
+        使用多个公共API获取当前公网IP地址，按优先级尝试不同的API
         
         Returns:
             str: IP地址，如果获取失败则返回默认IP
         """
-        try:
-            # 使用百度API获取IP地址
-            response = requests.get('https://qifu-api.baidubce.com/ip/local/geo/v1/district', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data and 'data' in data and len(data['data']) > 0:
-                    # 提取IP地址
-                    ip = data['data'][0]['origip']
-                    print(f"获取到IP地址: {ip}")
-                    return ip
+        # 定义多个可用的IP获取API，按可靠性排序
+        ip_apis = [
+            # 国内可靠的API
+            {'url': 'https://pv.sohu.com/cityjson', 'type': 'text', 'parser': lambda r: r.text.split('"')[1] if 'var returnCitySN = ' in r.text else None},
+            {'url': 'https://www.cip.cc', 'type': 'text', 'parser': lambda r: r.text.split('\n')[0].split(':')[1].strip() if 'IP' in r.text else None},
+            {'url': 'https://myip.ipip.net', 'type': 'text', 'parser': lambda r: r.text.split('：')[1].split(' ')[0] if '：' in r.text else None},
             
-            # 如果百度API失败，尝试使用备用API
-            response = requests.get('https://api.ipify.org?format=json', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data and 'ip' in data:
-                    ip = data['ip']
-                    print(f"通过备用API获取到IP地址: {ip}")
-                    return ip
+            # 国际通用API
+            {'url': 'https://api.ipify.org', 'type': 'text', 'parser': lambda r: r.text},
+            {'url': 'https://ifconfig.me/ip', 'type': 'text', 'parser': lambda r: r.text},
+            {'url': 'https://icanhazip.com', 'type': 'text', 'parser': lambda r: r.text.strip()},
             
-            # 如果所有API都失败，返回本地IP地址
-            print("所有API获取IP地址失败，使用默认本地IP地址")
-            return "127.0.0.1"
-        except Exception as e:
-            print(f"获取IP地址失败: {str(e)}，使用默认本地IP地址")
-            return "127.0.0.1"
+            # JSON格式API
+            {'url': 'https://api.ipify.org?format=json', 'type': 'json', 'parser': lambda r: r.json().get('ip')},
+            {'url': 'https://httpbin.org/ip', 'type': 'json', 'parser': lambda r: r.json().get('origin')}
+        ]
+        
+        # 尝试所有API
+        success_count = 0
+        for api in ip_apis:
+            try:
+                response = requests.get(api['url'], timeout=3)
+                if response.status_code == 200:
+                    if api['type'] == 'json':
+                        ip = api['parser'](response)
+                    else:
+                        ip = api['parser'](response)
+                    
+                    # 验证IP地址格式
+                    if ip and self._is_valid_ip(ip):
+                        print(f"通过API {api['url']} 获取到IP地址: {ip}")
+                        return ip
+                    else:
+                        print(f"API {api['url']} 返回的IP格式无效: {ip}")
+                else:
+                    print(f"API {api['url']} 请求失败，状态码: {response.status_code}")
+            except Exception as e:
+                print(f"API {api['url']} 请求异常: {str(e)}")
+                success_count += 1
+        
+        # 如果所有API都失败，返回本地IP地址
+        print(f"获取IP地址失败: {success_count}，使用默认本地IP地址")
+        return "127.0.0.1"
+    
+    def _is_valid_ip(self, ip: str) -> bool:
+        """
+        验证IP地址格式是否有效
+        
+        Args:
+            ip: 要验证的IP地址
+            
+        Returns:
+            bool: 是否是有效的IP地址
+        """
+        import re
+        # 简单的IPv4地址格式验证
+        pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        return bool(re.match(pattern, ip.strip()))
             
     def get_ip_address(self) -> str:
         """

@@ -254,7 +254,8 @@ def refresh_domain():
         domain_mapping = DomainMapping.query.filter_by(client_mapping_id=client_id).first()
     else:
         # 获取用户的任意域名映射（用于主页刷新）
-        domain_mapping = DomainMapping.query.join(ClientMapping).filter(ClientMapping.user_id==current_user.id).first()
+        # 直接查询用户的域名映射，不需要join操作
+        domain_mapping = DomainMapping.query.filter_by(user_id=current_user.id).first()
     
     if not domain_mapping:
         return jsonify({
