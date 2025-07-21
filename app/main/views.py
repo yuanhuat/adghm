@@ -67,11 +67,17 @@ def client_details(mapping_id):
             
     elif request.method == 'PUT':
         data = request.get_json()
-        client_ids = data.get('client_ids', [])
         use_global_settings = data.get('use_global_settings', True)
         filtering_enabled = data.get('filtering_enabled', True)
         safebrowsing_enabled = data.get('safebrowsing_enabled', False)
         parental_enabled = data.get('parental_enabled', False)
+        
+        # 只有管理员可以修改设备标识
+        if current_user.is_admin:
+            client_ids = data.get('client_ids', [])
+        else:
+            # 普通用户保持原有设备标识不变
+            client_ids = mapping.client_ids
         
         try:
             # 更新AdGuardHome客户端

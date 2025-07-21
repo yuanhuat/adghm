@@ -73,8 +73,16 @@
             <h2 id="modalTitle">编辑客户端设置</h2>
             <form id="clientForm">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="clientIds">客户端ID列表（多个ID用逗号分隔）：</label>
+                    <label for="clientIds">设备标识（多个标识用逗号分隔）：</label>
+                    {% if current_user.is_admin %}
                     <input type="text" id="clientIds" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
+                    {% else %}
+                    <div style="padding: 8px; margin-top: 5px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;">
+                        <span id="clientIdsDisplay"></span>
+                    </div>
+                    <input type="hidden" id="clientIds">
+                    <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">普通用户不可编辑设备标识，如需修改请联系管理员</p>
+                    {% endif %}
                 </div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label>
@@ -126,7 +134,15 @@
             }
             
             // 填充表单
-            document.getElementById('clientIds').value = data.client_ids.join(', ');
+            const clientIdsStr = data.client_ids.join(', ');
+            document.getElementById('clientIds').value = clientIdsStr;
+            
+            // 如果是普通用户，在显示区域显示设备标识
+            const clientIdsDisplay = document.getElementById('clientIdsDisplay');
+            if (clientIdsDisplay) {
+                clientIdsDisplay.textContent = clientIdsStr;
+            }
+            
             document.getElementById('useGlobalSettings').checked = data.use_global_settings;
             document.getElementById('filteringEnabled').checked = data.filtering_enabled;
             document.getElementById('safebrowsingEnabled').checked = data.safebrowsing_enabled;
@@ -158,6 +174,7 @@
     function saveClientSettings() {
         if (!currentMappingId) return;
         
+        // 获取表单数据
         const clientIds = document.getElementById('clientIds').value
             .split(',').map(id => id.trim()).filter(id => id);
         
@@ -166,18 +183,26 @@
         const safebrowsingEnabled = document.getElementById('safebrowsingEnabled').checked;
         const parentalEnabled = document.getElementById('parentalEnabled').checked;
         
+        // 准备请求数据
+        const requestData = {
+            use_global_settings: useGlobalSettings,
+            filtering_enabled: filteringEnabled,
+            safebrowsing_enabled: safebrowsingEnabled,
+            parental_enabled: parentalEnabled
+        };
+        
+        // 只有管理员才能修改设备标识
+        const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+        if (isAdmin) {
+            requestData.client_ids = clientIds;
+        }
+        
         fetch(`/clients/${currentMappingId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                client_ids: clientIds,
-                use_global_settings: useGlobalSettings,
-                filtering_enabled: filteringEnabled,
-                safebrowsing_enabled: safebrowsingEnabled,
-                parental_enabled: parentalEnabled
-            })
+            body: JSON.stringify(requestData)
         })
         .then(response => response.json())
         .then(data => {
