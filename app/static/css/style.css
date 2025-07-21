@@ -33,6 +33,13 @@ body {
     margin-bottom: 20px;
 }
 
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
 .form-group label {
     display: block;
     margin-bottom: 5px;
@@ -40,12 +47,24 @@ body {
 }
 
 .form-group input[type="text"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="number"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+}
+
+/* 移除number类型输入框的上下箭头 */
+.form-group input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.form-group input[type="number"]::-webkit-outer-spin-button,
+.form-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .form-group input[type="checkbox"] {
@@ -296,4 +315,36 @@ tr:hover {
     color: #666;
     margin: 50px 0;
     font-style: italic;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .auth-container {
+        max-width: 90%;
+        margin: 30px auto;
+        padding: 15px;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="password"],
+    .form-group input[type="number"] {
+        font-size: 14px;
+    }
+    
+    .form-group button {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        max-width: 95%;
+        margin: 20px auto;
+        padding: 10px;
+    }
+    
+    .auth-container h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
 }

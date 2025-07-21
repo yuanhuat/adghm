@@ -33,8 +33,8 @@ class AdGuardService:
         
         # 设置Basic认证头部
         import base64
-        # 临时使用硬编码的认证信息
-        auth_str = "yuanhu:yuanhu66"
+        # 使用配置中的认证信息
+        auth_str = f"{self.config.auth_username}:{self.config.auth_password}"
         auth_bytes = auth_str.encode('utf-8')
         auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
         self.headers = {
@@ -85,6 +85,14 @@ class AdGuardService:
             endpoint = '/control' + endpoint
             
         url = f"{self.base_url}{endpoint}"
+        
+        # 记录请求信息（不包含敏感信息）
+        print(f"发送请求到AdGuardHome API: 方法={method}, URL={url}")
+        if json is not None:
+            print(f"请求体数据: {json}")
+        if params is not None:
+            print(f"URL参数: {params}")
+        
         try:
             response = self.session.request(
                 method=method,
@@ -114,9 +122,14 @@ class AdGuardService:
                     return data
                 return {}
             except ValueError:
+                # 对于成功的响应，即使不是JSON格式也返回空字典
                 if 200 <= response.status_code < 300:
+                    # 记录警告但不抛出异常
+                    print(f"警告：成功的响应不是JSON格式，状态码：{response.status_code}，内容：{response.content[:100]}...")
                     return {}
-                raise Exception("无法解析服务器响应：响应不是有效的JSON格式")
+                # 对于错误响应，提供更详细的错误信息
+                error_content = response.content.decode('utf-8', errors='replace')[:200]
+                raise Exception(f"无法解析服务器响应：响应不是有效的JSON格式。状态码：{response.status_code}，内容：{error_content}...")
             
         except requests.exceptions.ConnectionError as e:
             raise Exception(f"无法连接到AdGuardHome服务器（{self.base_url}）：{str(e)}")
@@ -150,6 +163,8 @@ class AdGuardService:
         ignore_querylog: bool = False,
         ignore_statistics: bool = False
     ) -> Dict:
+        # 记录创建客户端的请求信息
+        print(f"开始创建AdGuardHome客户端：名称={name}, IDs={ids}")
         """创建新的AdGuardHome客户端
         
         Args:
@@ -170,9 +185,12 @@ class AdGuardService:
         Returns:
             创建成功的客户端信息
         """
-        # 如果没有提供ids，使用默认的IP地址
+        # 如果没有提供ids，使用名称作为唯一标识
         if ids is None:
-            ids = ['192.168.31.1']
+            # 使用客户端名称作为ID，确保唯一性
+            # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+            ids = [f"default-{name}"]
+            print(f"未提供客户端ID，使用名称生成唯一ID: {ids}")
             
         data = {
             "name": name,
@@ -194,8 +212,16 @@ class AdGuardService:
             data["upstreams"] = upstreams
         if tags is not None:
             data["tags"] = tags
-            
-        return self._make_request('POST', '/control/clients/add', json=data)
+        
+        print(f"准备创建AdGuardHome客户端，数据: {data}")
+        
+        try:
+            result = self._make_request('POST', '/control/clients/add', json=data)
+            print(f"成功创建AdGuardHome客户端: {result}")
+            return result
+        except Exception as e:
+            print(f"创建AdGuardHome客户端失败: {str(e)}")
+            raise
     
     def update_client(
         self,
@@ -304,8 +330,12 @@ class AdGuardService:
             Optional[Dict]: 包含服务器状态和版本信息的字典，如果请求失败则返回None
         """
         try:
-            return self._make_request('GET', '/status')
-        except Exception:
+            print("尝试获取AdGuardHome服务器状态信息...")
+            status = self._make_request('GET', '/status')
+            print(f"成功获取AdGuardHome服务器状态信息: {status}")
+            return status
+        except Exception as e:
+            print(f"获取AdGuardHome服务器状态信息失败: {str(e)}")
             return None
         
     def check_connection(self) -> bool:
@@ -315,19 +345,22 @@ class AdGuardService:
             bool: 连接和认证是否成功
         """
         try:
+            print("开始检查AdGuardHome连接状态...")
             # 首先验证配置
             is_valid, error_msg = self.config.validate()
             if not is_valid:
+                print(f"AdGuardHome配置验证失败: {error_msg}")
                 return False
                 
             # 尝试获取状态信息来验证连接和认证
+            print(f"尝试连接AdGuardHome服务器: {self.base_url}")
             status = self.get_status()
-            return status is not None
-        except Exception:
-            return False
-                
-            # 尝试获取状态信息来验证连接和认证
-            self.get_status()
-            return True
-        except Exception:
-            return False
+            if status is not None:
+                print(f"成功连接到AdGuardHome服务器，版本: {status.get('version', '未知')}")
+                return True
+            else:
+                print("连接AdGuardHome服务器失败: 获取状态信息返回None")
+                return False
+        except Exception as e:
+             print(f"连接AdGuardHome服务器时发生异常: {str(e)}")
+             return False

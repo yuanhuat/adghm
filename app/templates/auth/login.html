@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登录 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        // 验证用户名是否为6-12位数字
+        function validateUsername() {
+            const username = document.getElementById('username').value;
+            const usernameRegex = /^\d{6,12}$/;
+            
+            if (!usernameRegex.test(username)) {
+                if (username.length < 6) {
+                    alert('用户名不能少于6位数字');
+                } else if (username.length > 12) {
+                    alert('用户名不能超过12位数字');
+                } else {
+                    alert('用户名必须只包含数字');
+                }
+                return false;
+            }
+            return true;
+        }
+    </script>
 </head>
 <body>
     <div class="auth-container">
@@ -17,10 +36,11 @@
             {% endif %}
         {% endwith %}
         
-        <form method="POST" action="{{ url_for('auth.login') }}">
+        <form method="POST" action="{{ url_for('auth.login') }}" onsubmit="return validateUsername();">
             <div class="form-group">
-                <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required>
+                <label for="username">用户名（6-12位数字）</label>
+                <input type="number" id="username" name="username" pattern="\d{6,12}" placeholder="请输入6-12位数字" oninput="if(this.value.length > 12) this.value = this.value.slice(0, 12)" min="100000" max="999999999999" required>
+                <small class="form-text">用户名只能使用6-12位数字</small>
             </div>
             
             <div class="form-group">

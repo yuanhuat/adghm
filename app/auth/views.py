@@ -27,6 +27,12 @@ def register():
             flash('请填写所有必填字段', 'error')
             return render_template('auth/register.html')
             
+        # 验证用户名是否为6-12位数字
+        import re
+        if not re.match(r'^\d{6,12}$', username):
+            flash('用户名必须是6-12位数字', 'error')
+            return render_template('auth/register.html')
+            
         if password != confirm_password:
             flash('两次输入的密码不一致', 'error')
             return render_template('auth/register.html')
@@ -78,23 +84,29 @@ def register():
                         device_info_json = request.form.get('device_info', '')
                         client_ids = ['192.168.31.1']  # 默认IP地址
                         
-                        # 如果有设备平台信息，则使用设备平台作为客户端ID
+                        # 如果有设备平台信息，则使用设备平台和用户名组合作为客户端ID，确保唯一性
                         if device_info_json:
                             try:
                                 import json
                                 device_info = json.loads(device_info_json)
-                                # 使用设备平台作为客户端ID
+                                # 使用设备平台和用户名组合作为客户端ID
                                 if device_info and len(device_info) > 0:
-                                    # 只使用设备平台作为客户端ID
-                                    client_ids = [device_info[0]]  # 设备平台信息
+                                    # 使用设备平台和用户名组合，确保唯一性
+                                    platform = device_info[0].lower()  # 转为小写以避免大小写问题
+                                    # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+                                    client_ids = [f"{platform}-{username}"]  # 设备平台信息-用户名
+                                    print(f"使用组合客户端ID: {client_ids[0]}")
                             except Exception as e:
                                 # 如果解析失败，使用默认IP地址
                                 print(f"解析设备平台信息失败: {str(e)}")
                         
-                        # 获取客户端IP地址，如果没有设备平台信息则使用IP地址
+                        # 获取客户端IP地址，如果没有设备平台信息则使用IP地址和用户名组合
                         client_ip = request.remote_addr
                         if client_ip and (len(client_ids) == 0 or client_ids[0] == '192.168.31.1'):
-                            client_ids = [client_ip]  # 使用IP地址作为备用
+                            # 使用IP地址和用户名组合作为客户端ID，确保唯一性
+                            # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+                            client_ids = [f"{client_ip}-{username}"]  # IP地址-用户名
+                            print(f"使用IP地址组合客户端ID: {client_ids[0]}")
                         
                         # 创建AdGuardHome客户端，使用更安全的默认配置
                         client_name = f"user_{username}"
@@ -134,10 +146,21 @@ def register():
                         return redirect(url_for('main.index'))
                         
                     except Exception as e:
+                        # 不回滚用户创建，只回滚客户端映射（如果有）
                         db.session.rollback()
+                        # 重新提交用户创建，确保用户已创建成功
+                        db.session.add(user)
+                        db.session.commit()
                         # 如果创建客户端失败，提示具体错误
                         login_user(user)
-                        flash(f'注册成功！但创建AdGuardHome客户端失败：{str(e)}', 'warning')
+                        error_msg = str(e)
+                        # 检查是否为JSON格式错误
+                        if "无法解析服务器响应" in error_msg:
+                            flash('注册成功！但创建AdGuardHome客户端失败：AdGuardHome服务器返回了非预期的响应格式。请联系管理员检查AdGuardHome配置。', 'warning')
+                        else:
+                            flash(f'注册成功！但创建AdGuardHome客户端失败：{error_msg}', 'warning')
+                        # 记录详细错误信息到控制台
+                        print(f"创建AdGuardHome客户端失败：{error_msg}")
                         return redirect(url_for('main.index'))
                         
                 except Exception as e:
@@ -171,6 +194,12 @@ def login():
         
         if not username or not password:
             flash('请填写用户名和密码', 'error')
+            return render_template('auth/login.html')
+            
+        # 验证用户名是否为6-12位数字
+        import re
+        if not re.match(r'^\d{6,12}$', username):
+            flash('用户名必须是6-12位数字', 'error')
             return render_template('auth/login.html')
         
         user = User.query.filter_by(username=username).first()
