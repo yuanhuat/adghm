@@ -1,0 +1,134 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>域名映射管理</h2>
+    <div class="alert alert-info">
+        <p>管理用户的域名映射记录，可以刷新IP地址或删除映射。</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>子域名</th>
+                            <th>完整域名</th>
+                            <th>IP地址</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mappingsTable">
+                        {% for mapping in mappings %}
+                        <tr id="mapping-{{ mapping.id }}">
+                            <td>{{ mapping.id }}</td>
+                            <td>{{ mapping.user.username }}</td>
+                            <td>{{ mapping.subdomain }}</td>
+                            <td>{{ mapping.full_domain }}</td>
+                            <td>{{ mapping.ip_address }}</td>
+                            <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary refresh-btn" data-id="{{ mapping.id }}">
+                                    刷新IP
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="{{ mapping.id }}">
+                                    删除
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">暂无域名映射记录</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 刷新IP地址
+async function refreshMapping(mappingId) {
+    try {
+        const response = await fetch(`/admin/domain-mappings/${mappingId}/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('IP地址刷新成功');
+            // 更新表格中的IP地址
+            const row = document.getElementById(`mapping-${mappingId}`);
+            if (row) {
+                const ipCell = row.cells[4];
+                ipCell.textContent = data.ip_address;
+            }
+        } else {
+            alert(data.error || 'IP地址刷新失败');
+        }
+    } catch (error) {
+        alert('操作失败：' + error.message);
+    }
+}
+
+// 删除域名映射
+async function deleteMapping(mappingId) {
+    if (!confirm('确定要删除这个域名映射吗？此操作将同时删除阿里云上的解析记录。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/domain-mappings/${mappingId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('域名映射删除成功');
+            // 从表格中移除该行
+            const row = document.getElementById(`mapping-${mappingId}`);
+            if (row) {
+                row.remove();
+            }
+            
+            // 检查表格是否为空
+            const tbody = document.getElementById('mappingsTable');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无域名映射记录</td></tr>';
+            }
+        } else {
+            alert(data.error || '域名映射删除失败');
+        }
+    } catch (error) {
+        alert('操作失败：' + error.message);
+    }
+}
+
+// 绑定刷新按钮事件
+document.querySelectorAll('.refresh-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const mappingId = this.getAttribute('data-id');
+        refreshMapping(mappingId);
+    });
+});
+
+// 绑定删除按钮事件
+document.querySelectorAll('.delete-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const mappingId = this.getAttribute('data-id');
+        deleteMapping(mappingId);
+    });
+});
+</script>
+{% endblock %}

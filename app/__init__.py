@@ -31,7 +31,7 @@ def create_app():
     app.register_blueprint(main)
 
     # 导入所有模型以确保它们在创建数据库表之前被定义
-    from app.models import User, ClientMapping, OperationLog, AdGuardConfig
+    from app.models import User, ClientMapping, OperationLog, AdGuardConfig, DomainMapping, DomainConfig
 
     # 在应用上下文中创建所有数据库表
     with app.app_context():

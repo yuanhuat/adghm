@@ -4,7 +4,10 @@ from app import db
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
+from app.models.domain_config import DomainConfig
+from app.models.domain_mapping import DomainMapping
 from app.services.adguard_service import AdGuardService
+from app.services.domain_service import DomainService
 from . import admin
 from functools import wraps
 
@@ -240,3 +243,151 @@ def get_adguard_status():
         })
     except Exception as e:
         return jsonify({'error': f'获取状态失败：{str(e)}'}), 500
+
+@admin.route('/domain-config')
+@login_required
+@admin_required
+def domain_config():
+    """阿里云域名解析配置页面"""
+    config = DomainConfig.get_config()
+    return render_template('admin/domain_config.html', config=config)
+
+@admin.route('/domain-config', methods=['POST'])
+@login_required
+@admin_required
+def update_domain_config():
+    """更新阿里云域名解析配置"""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据不能为空'}), 400
+        
+    access_key_id = data.get('access_key_id', '').strip()
+    access_key_secret = data.get('access_key_secret', '').strip()
+    domain_name = data.get('domain_name', '').strip()
+    
+    # 获取并更新配置
+    config = DomainConfig.get_config()
+    config.access_key_id = access_key_id
+    config.access_key_secret = access_key_secret
+    config.domain_name = domain_name
+    
+    # 验证配置
+    is_valid, error_msg = config.validate()
+    if not is_valid:
+        return jsonify({'error': error_msg}), 400
+    
+    try:
+        # 验证阿里云API连接
+        domain_service = DomainService()
+        if not domain_service.check_connection():
+            return jsonify({'error': '无法连接到阿里云API，请检查AccessKey和域名信息是否正确'}), 400
+            
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='update_config',
+            target_type='domain_config',
+            target_id='1',
+            details=f'更新阿里云域名解析配置：{domain_name}'
+        )
+        db.session.add(log)
+        
+        db.session.commit()
+        return jsonify({
+            'message': '配置更新成功',
+            'domain': domain_name
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'更新配置失败：{str(e)}'}), 500
+
+@admin.route('/domain-mappings')
+@login_required
+@admin_required
+def domain_mappings():
+    """域名映射管理页面"""
+    mappings = DomainMapping.query.all()
+    return render_template('admin/domain_mappings.html', mappings=mappings)
+
+@admin.route('/domain-mappings/<int:mapping_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_domain_mapping(mapping_id):
+    """删除域名映射"""
+    mapping = DomainMapping.query.get_or_404(mapping_id)
+    
+    try:
+        # 删除阿里云域名解析记录
+        domain_service = DomainService()
+        success = domain_service.delete_subdomain(mapping.record_id)
+        
+        if success:
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='delete',
+                target_type='domain_mapping',
+                target_id=str(mapping.id),
+                details=f'删除域名映射：{mapping.full_domain}'
+            )
+            db.session.add(log)
+            
+            # 删除映射记录
+            db.session.delete(mapping)
+            db.session.commit()
+            return jsonify({'message': '域名映射删除成功'})
+        else:
+            return jsonify({'error': '删除阿里云域名解析记录失败'}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'删除域名映射失败：{str(e)}'}), 500
+
+@admin.route('/domain-mappings/<int:mapping_id>/refresh', methods=['POST'])
+@login_required
+@admin_required
+def refresh_domain_mapping(mapping_id):
+    """刷新域名映射的IP地址"""
+    mapping = DomainMapping.query.get_or_404(mapping_id)
+    
+    try:
+        # 获取最新IP地址
+        domain_service = DomainService()
+        ip_address = domain_service.get_ip_address()
+        
+        if not ip_address:
+            return jsonify({'error': '无法获取当前IP地址'}), 500
+            
+        # 更新阿里云域名解析记录
+        success, record_id, _ = domain_service.create_or_update_subdomain(
+            subdomain=mapping.subdomain,
+            ip_address=ip_address,
+            record_id=mapping.record_id
+        )
+        
+        if success:
+            # 更新映射记录
+            old_ip = mapping.ip_address
+            mapping.ip_address = ip_address
+            if record_id and record_id != mapping.record_id:
+                mapping.record_id = record_id
+                
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update',
+                target_type='domain_mapping',
+                target_id=str(mapping.id),
+                details=f'刷新域名映射IP地址：{mapping.full_domain}，从 {old_ip} 更新为 {ip_address}'
+            )
+            db.session.add(log)
+            
+            db.session.commit()
+            return jsonify({
+                'message': '域名映射IP地址刷新成功',
+                'ip_address': ip_address
+            })
+        else:
+            return jsonify({'error': '更新阿里云域名解析记录失败'}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'刷新域名映射IP地址失败：{str(e)}'}), 500

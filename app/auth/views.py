@@ -4,7 +4,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
+from app.models.domain_config import DomainConfig
+from app.models.domain_mapping import DomainMapping
 from app.services.adguard_service import AdGuardService
+from app.services.domain_service import DomainService
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -138,9 +141,86 @@ def register():
                             client_ids=client_ids  # 使用设备信息作为客户端ID
                         )
                         db.session.add(client_mapping)
-                        db.session.commit()
                         
-                        # 自动登录
+                        # 尝试创建阿里云域名解析
+                        try:
+                            # 获取域名配置
+                            domain_config = DomainConfig.get_config()
+                            is_valid, error_msg = domain_config.validate()
+                            
+                            if is_valid:
+                                # 创建域名服务实例
+                                domain_service = DomainService()
+                                
+                                # 获取IP地址
+                                ip_address = domain_service.get_ip_address()
+                                if ip_address:
+                                    # 使用用户名作为子域名前缀
+                                    subdomain = username
+                                    
+                                    # 创建或更新域名解析记录
+                                    success, record_id, full_domain = domain_service.create_or_update_subdomain(
+                                        subdomain=subdomain,
+                                        ip_address=ip_address
+                                    )
+                                    
+                                    if success and record_id:
+                                        # 创建域名映射记录
+                                        domain_mapping = DomainMapping(
+                                            user_id=user.id,
+                                            subdomain=subdomain,
+                                            full_domain=full_domain,
+                                            record_id=record_id,
+                                            ip_address=ip_address
+                                        )
+                                        db.session.add(domain_mapping)
+                                        
+                                        # 记录操作日志
+                                        domain_service.log_domain_operation(
+                                            user_id=user.id,
+                                            operation_type='create',
+                                            subdomain=subdomain,
+                                            ip_address=ip_address,
+                                            record_id=record_id
+                                        )
+                                        
+                                        # 提交所有更改
+                                        db.session.commit()
+                                        
+                                        # 自动登录
+                                        login_user(user)
+                                        flash(f'注册成功！已为您创建域名 {full_domain}', 'success')
+                                        return redirect(url_for('main.index'))
+                                    else:
+                                        # 域名解析创建失败，但AdGuardHome客户端创建成功
+                                        db.session.commit()  # 提交AdGuardHome客户端创建
+                                        login_user(user)
+                                        flash('注册成功！但域名解析创建失败，请联系管理员。', 'warning')
+                                        return redirect(url_for('main.index'))
+                                else:
+                                    # 无法获取IP地址
+                                    db.session.commit()  # 提交AdGuardHome客户端创建
+                                    login_user(user)
+                                    flash('注册成功！但无法获取您的IP地址，域名解析创建失败。', 'warning')
+                                    return redirect(url_for('main.index'))
+                            else:
+                                # 域名配置无效
+                                db.session.commit()  # 提交AdGuardHome客户端创建
+                                login_user(user)
+                                flash(f'注册成功！但域名配置无效：{error_msg}，请联系管理员。', 'warning')
+                                return redirect(url_for('main.index'))
+                                
+                        except Exception as e:
+                            # 域名解析创建过程中出错，但AdGuardHome客户端创建成功
+                            db.session.commit()  # 提交AdGuardHome客户端创建
+                            login_user(user)
+                            error_msg = str(e)
+                            flash(f'注册成功！但域名解析创建失败：{error_msg}', 'warning')
+                            print(f"创建域名解析失败：{error_msg}")
+                            return redirect(url_for('main.index'))
+                        
+                        # 如果没有进入任何条件分支，确保提交并登录
+                        db.session.commit()
                         login_user(user)
                         flash('注册成功！', 'success')
                         return redirect(url_for('main.index'))
