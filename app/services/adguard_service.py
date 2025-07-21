@@ -243,7 +243,15 @@ class AdGuardService:
             
         Returns:
             删除操作的响应数据
+            
+        Raises:
+            Exception: 当客户端不存在时抛出异常
         """
+        # 先检查客户端是否存在
+        client = self.find_client(name)
+        if client is None:
+            raise Exception(f"客户端 {name} 不存在，无法删除")
+            
         data = {"name": name}
         return self._make_request('POST', '/control/clients/delete', json=data)
     

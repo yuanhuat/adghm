@@ -49,16 +49,21 @@ function deleteUser(userId) {
     
     fetch(`/admin/users/${userId}`, {
         method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
-        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.error) {
             alert(data.error);
         } else {
+            // 显示成功消息
             alert(data.message);
+            
+            // 如果有客户端删除失败的错误，显示详细信息
+            if (data.errors && data.errors.length > 0) {
+                alert('部分客户端删除失败：\n' + data.errors.join('\n'));
+            }
+            
+            // 刷新页面
             location.reload();
         }
     })

@@ -55,33 +55,30 @@ def delete_user(user_id):
     try:
         # 删除用户的AdGuardHome客户端
         adguard = AdGuardService()
-        for mapping in user.client_mappings:
-            adguard.delete_client(mapping.client_name)
-            
-            # 记录操作日志
-            log = OperationLog(
-                user_id=current_user.id,
-                operation_type='delete_client',
-                target_type='client',
-                target_id=mapping.client_name,
-                details=f'删除用户{user.username}的客户端{mapping.client_name}'
-            )
-            db.session.add(log)
+        client_delete_errors = []
         
+        # 先删除AdGuardHome客户端，记录错误但继续执行
+        for mapping in user.client_mappings:
+            try:
+                adguard.delete_client(mapping.client_name)
+            except Exception as e:
+                client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
+        
+        # 删除所有关联的客户端映射记录
+        for mapping in user.client_mappings:
+            db.session.delete(mapping)
+            
         # 删除用户记录
         db.session.delete(user)
-        
-        # 记录操作日志
-        log = OperationLog(
-            user_id=current_user.id,
-            operation_type='delete_user',
-            target_type='user',
-            target_id=str(user.id),
-            details=f'删除用户{user.username}'
-        )
-        db.session.add(log)
-        
         db.session.commit()
+        
+        # 如果有客户端删除失败，返回警告信息
+        if client_delete_errors:
+            return jsonify({
+                'message': '用户删除成功，但部分客户端删除失败',
+                'errors': client_delete_errors
+            })
+            
         return jsonify({'message': '用户删除成功'})
         
     except Exception as e:
