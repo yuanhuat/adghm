@@ -322,8 +322,17 @@
                 alert(data.error);
             } else {
                 alert(data.message);
-                // 重新获取域名信息以更新显示
-                configureDomain(currentClientId, document.getElementById('domainModalTitle').textContent.replace('为客户端配置域名：', ''));
+                // 直接更新当前显示的域名信息，然后关闭模态框
+                if (data.domain_mapping) {
+                    document.getElementById('currentDomain').textContent = data.domain_mapping.full_domain;
+                    document.getElementById('currentIp').textContent = data.domain_mapping.ip_address;
+                    document.getElementById('domainCreatedAt').textContent = data.domain_mapping.created_at;
+                    document.getElementById('existingDomainInfo').style.display = 'block';
+                    document.getElementById('refreshDomainBtn').style.display = 'inline-block';
+                    document.getElementById('deleteDomainBtn').style.display = 'inline-block';
+                }
+                // 成功后自动关闭模态框
+                closeDomainModal();
             }
         })
         .catch(error => {
@@ -364,7 +373,19 @@
     }
     
     function deleteDomain() {
-        if (!currentClientId || !confirm('确定要删除此域名映射吗？删除后将无法恢复。')) return;
+        if (!currentClientId) {
+            alert('未选择客户端，无法删除域名');
+            return;
+        }
+        
+        if (!confirm('确定要删除此域名映射吗？删除后将无法恢复。')) return;
+        
+        // 禁用删除按钮，防止重复点击
+        const deleteBtn = document.getElementById('deleteDomainBtn');
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = '正在删除...';
+        
+        console.log('正在删除域名映射，客户端ID:', currentClientId);
         
         fetch('/domain-mapping', {
             method: 'DELETE',
@@ -373,18 +394,29 @@
             },
             body: JSON.stringify({ client_id: currentClientId })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('删除请求响应状态:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('删除请求响应数据:', data);
             if (data.success) {
                 alert('域名映射删除成功');
                 closeDomainModal();
                 location.reload();
             } else {
-                alert(data.message || '删除域名映射失败');
+                alert(data.error || data.message || '删除域名映射失败');
+                // 恢复按钮状态
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = '删除域名';
             }
         })
         .catch(error => {
-            alert('操作失败：' + error.message);
+            console.error('删除请求出错:', error);
+            alert('操作失败：' + (error.message || error));
+            // 恢复按钮状态
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = '删除域名';
         });
     }
     </script>

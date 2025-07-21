@@ -173,26 +173,48 @@ class DomainService:
             
             if existing_record:
                 # 如果已存在，则更新解析记录
-                result = self.update_subdomain(subdomain, ip, existing_record['RecordId'])
-                return existing_record['RecordId']
+                try:
+                    result = self.update_subdomain(subdomain, ip, existing_record['RecordId'])
+                    return existing_record['RecordId']
+                except Exception as update_error:
+                    # 如果更新失败，检查是否是DomainRecordDuplicate错误
+                    error_str = str(update_error)
+                    if "DomainRecordDuplicate" in error_str:
+                        logging.warning(f"域名记录已存在，但IP地址相同，无需更新: {subdomain}.{self.domain_name} -> {ip}")
+                        return existing_record['RecordId']
+                    else:
+                        # 其他错误则继续抛出
+                        raise update_error
             else:
                 # 如果不存在，则创建新的解析记录
-                request = AddDomainRecordRequest()
-                request.set_accept_format('json')
-                
-                # 设置域名解析参数
-                request.set_DomainName(self.domain_name)
-                request.set_RR(subdomain)  # 子域名前缀
-                request.set_Type("A")     # A记录，将域名解析到IPv4地址
-                request.set_Value(ip)      # 解析到的IP地址
-                request.set_TTL(600)       # 生存时间，单位秒
-                
-                # 发送请求
-                response = self.client.do_action_with_exception(request)
-                result = json.loads(response.decode('utf-8'))
-                
-                print(f"创建子域名解析成功: {subdomain}.{self.domain_name} -> {ip}")
-                return result.get('RecordId', '')
+                try:
+                    request = AddDomainRecordRequest()
+                    request.set_accept_format('json')
+                    
+                    # 设置域名解析参数
+                    request.set_DomainName(self.domain_name)
+                    request.set_RR(subdomain)  # 子域名前缀
+                    request.set_Type("A")     # A记录，将域名解析到IPv4地址
+                    request.set_Value(ip)      # 解析到的IP地址
+                    request.set_TTL(600)       # 生存时间，单位秒
+                    
+                    # 发送请求
+                    response = self.client.do_action_with_exception(request)
+                    result = json.loads(response.decode('utf-8'))
+                    
+                    print(f"创建子域名解析成功: {subdomain}.{self.domain_name} -> {ip}")
+                    return result.get('RecordId', '')
+                except Exception as add_error:
+                    # 检查是否是DomainRecordDuplicate错误
+                    error_str = str(add_error)
+                    if "DomainRecordDuplicate" in error_str:
+                        # 如果是重复记录错误，尝试再次查找记录并返回
+                        retry_record = self.find_subdomain_record(subdomain)
+                        if retry_record:
+                            logging.warning(f"域名记录已存在，使用现有记录: {subdomain}.{self.domain_name}")
+                            return retry_record['RecordId']
+                    # 其他错误或找不到重复记录，则继续抛出
+                    raise add_error
         except Exception as e:
             logging.error(f"添加域名解析记录失败: {str(e)}")
             raise e
@@ -374,6 +396,12 @@ class DomainService:
             Exception: 当更新域名解析记录失败时抛出异常
         """
         try:
+            # 先检查当前记录的IP是否与要更新的IP相同
+            existing_record = self.find_subdomain_record(subdomain)
+            if existing_record and existing_record.get('Value') == ip:
+                logging.info(f"域名记录IP地址未变化，无需更新: {subdomain}.{self.domain_name} -> {ip}")
+                return {"RecordId": record_id, "Status": "Unchanged"}
+                
             request = UpdateDomainRecordRequest()
             request.set_accept_format('json')
             
@@ -391,5 +419,64 @@ class DomainService:
             print(f"更新域名解析记录成功: {subdomain}.{self.domain_name} -> {ip}")
             return result
         except Exception as e:
-            logging.error(f"更新域名解析记录失败: {str(e)}")
-            raise Exception(f"更新域名解析记录失败: {str(e)}")
+            error_str = str(e)
+            # 检查是否是DomainRecordDuplicate错误
+            if "DomainRecordDuplicate" in error_str:
+                logging.warning(f"域名记录已存在，可能IP地址相同: {subdomain}.{self.domain_name} -> {ip}")
+                # 返回一个成功的结果，但标记为重复
+                return {"RecordId": record_id, "Status": "Duplicate"}
+            else:
+                logging.error(f"更新域名解析记录失败: {str(e)}")
+                raise Exception(f"更新域名解析记录失败: {str(e)}")
+                
+    def create_or_update_subdomain(self, subdomain: str, ip_address: str) -> tuple:
+        """
+        创建或更新子域名解析记录
+        
+        Args:
+            subdomain: 子域名前缀
+            ip_address: IP地址
+            
+        Returns:
+            tuple: (成功标志, 记录ID, 完整域名)
+            
+        Raises:
+            Exception: 当创建或更新子域名解析记录失败时抛出异常
+        """
+        try:
+            # 检查域名解析是否已存在
+            existing_record = self.find_subdomain_record(subdomain)
+            
+            if existing_record:
+                # 如果已存在，则更新解析记录
+                try:
+                    result = self.update_subdomain(subdomain, ip_address, existing_record['RecordId'])
+                    return True, existing_record['RecordId'], f"{subdomain}.{self.domain_name}"
+                except Exception as update_error:
+                    # 如果更新失败，检查是否是DomainRecordDuplicate错误
+                    error_str = str(update_error)
+                    if "DomainRecordDuplicate" in error_str:
+                        logging.warning(f"域名记录已存在，但IP地址相同，无需更新: {subdomain}.{self.domain_name} -> {ip_address}")
+                        return True, existing_record['RecordId'], f"{subdomain}.{self.domain_name}"
+                    else:
+                        # 其他错误则继续抛出
+                        raise update_error
+            else:
+                # 如果不存在，则创建新的解析记录
+                try:
+                    record_id = self.add_domain_record(subdomain, ip_address)
+                    return True, record_id, f"{subdomain}.{self.domain_name}"
+                except Exception as add_error:
+                    # 检查是否是DomainRecordDuplicate错误
+                    error_str = str(add_error)
+                    if "DomainRecordDuplicate" in error_str:
+                        # 如果是重复记录错误，尝试再次查找记录并返回
+                        retry_record = self.find_subdomain_record(subdomain)
+                        if retry_record:
+                            logging.warning(f"域名记录已存在，使用现有记录: {subdomain}.{self.domain_name}")
+                            return True, retry_record['RecordId'], f"{subdomain}.{self.domain_name}"
+                    # 其他错误或找不到重复记录，则继续抛出
+                    raise add_error
+        except Exception as e:
+            logging.error(f"创建或更新子域名解析记录失败: {str(e)}")
+            raise e

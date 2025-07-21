@@ -1,3 +1,4 @@
+import logging
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -67,6 +68,18 @@ def delete_user(user_id):
             except Exception as e:
                 client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
         
+        # 删除所有关联的域名映射记录
+        domain_service = DomainService()
+        domain_mappings = DomainMapping.query.filter_by(user_id=user.id).all()
+        for domain_mapping in domain_mappings:
+            try:
+                # 尝试删除阿里云域名解析记录
+                domain_service.delete_domain_record(domain_mapping.record_id)
+            except Exception as e:
+                logging.error(f"删除域名解析记录失败：{str(e)}")
+            # 删除数据库中的域名映射记录
+            db.session.delete(domain_mapping)
+            
         # 删除所有关联的客户端映射记录
         for mapping in user.client_mappings:
             db.session.delete(mapping)

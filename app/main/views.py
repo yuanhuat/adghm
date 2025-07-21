@@ -126,6 +126,7 @@ def manage_domain_mapping():
                 # 创建新的域名映射
                 record_id = domain_service.add_domain_record(subdomain, ip_address)
                 domain_mapping = DomainMapping(
+                    user_id=current_user.id,
                     client_mapping_id=client_id,
                     subdomain=subdomain,
                     full_domain=f'{subdomain}.{domain_config.domain_name}',
