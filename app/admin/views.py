@@ -73,8 +73,29 @@ def delete_user(user_id):
         domain_mappings = DomainMapping.query.filter_by(user_id=user.id).all()
         for domain_mapping in domain_mappings:
             try:
-                # 尝试删除阿里云域名解析记录
+                # 记录删除的域名信息
+                details = f'删除用户域名映射：{domain_mapping.full_domain}'
+                if domain_mapping.ipv6_record_id:
+                    details += f'（IPv4: {domain_mapping.ip_address}, IPv6: {domain_mapping.ipv6_address}）'
+                else:
+                    details += f'（IPv4: {domain_mapping.ip_address}）'
+                    
+                # 记录操作日志
+                log = OperationLog(
+                    user_id=current_user.id,
+                    operation_type='delete',
+                    target_type='domain_mapping',
+                    target_id=str(domain_mapping.id),
+                    details=details
+                )
+                db.session.add(log)
+                
+                # 尝试删除阿里云IPv4域名解析记录
                 domain_service.delete_domain_record(domain_mapping.record_id)
+                
+                # 尝试删除阿里云IPv6域名解析记录（如果存在）
+                if domain_mapping.ipv6_record_id:
+                    domain_service.delete_domain_record(domain_mapping.ipv6_record_id)
             except Exception as e:
                 logging.error(f"删除域名解析记录失败：{str(e)}")
             # 删除数据库中的域名映射记录
@@ -332,16 +353,27 @@ def delete_domain_mapping(mapping_id):
     try:
         # 删除阿里云域名解析记录
         domain_service = DomainService()
-        success = domain_service.delete_subdomain(mapping.record_id)
+        success = domain_service.delete_domain_record(mapping.record_id)
         
-        if success:
+        # 如果存在IPv6记录，也删除它
+        ipv6_success = True
+        if mapping.ipv6_record_id:
+            ipv6_success = domain_service.delete_domain_record(mapping.ipv6_record_id)
+        
+        if success and ipv6_success:
             # 记录操作日志
+            details = f'删除域名映射：{mapping.full_domain}'
+            if mapping.ipv6_record_id:
+                details += f'（IPv4: {mapping.ip_address}, IPv6: {mapping.ipv6_address}）'
+            else:
+                details += f'（IPv4: {mapping.ip_address}）'
+                
             log = OperationLog(
                 user_id=current_user.id,
                 operation_type='delete',
                 target_type='domain_mapping',
                 target_id=str(mapping.id),
-                details=f'删除域名映射：{mapping.full_domain}'
+                details=details
             )
             db.session.add(log)
             

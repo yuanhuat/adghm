@@ -457,7 +457,7 @@ class DomainService:
             print(f"检查阿里云API连接失败: {str(e)}")
             return False
             
-    def delete_domain_record(self, record_id: str) -> Dict:
+    def delete_domain_record(self, record_id: str) -> bool:
         """
         删除域名解析记录
         
@@ -465,11 +465,12 @@ class DomainService:
             record_id: 解析记录ID
             
         Returns:
-            Dict: 删除结果
-            
-        Raises:
-            Exception: 当删除域名解析记录失败时抛出异常
+            bool: 删除是否成功
         """
+        if not record_id:
+            logging.warning("尝试删除空的记录ID")
+            return False
+            
         try:
             from aliyunsdkalidns.request.v20150109.DeleteDomainRecordRequest import DeleteDomainRecordRequest
             
@@ -483,11 +484,11 @@ class DomainService:
             response = self.client.do_action_with_exception(request)
             result = json.loads(response.decode('utf-8'))
             
-            print(f"删除域名解析记录成功: {record_id}")
-            return result
+            logging.info(f"删除域名解析记录成功: {record_id}")
+            return True
         except Exception as e:
             logging.error(f"删除域名解析记录失败: {str(e)}")
-            raise Exception(f"删除域名解析记录失败: {str(e)}")
+            return False
             
     def update_domain_record(self, record_id: str, subdomain: str, ip: str) -> Dict:
         """
