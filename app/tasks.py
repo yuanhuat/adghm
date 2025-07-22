@@ -77,114 +77,73 @@ def auto_update_ip():
               
             updated_count = 0
             
-            # 处理IPv4地址更新
-            if 'ipv4' in ip_addresses:
-                ipv4_address = ip_addresses['ipv4']
-                for mapping in domain_mappings:
-                    # 检查IP地址是否变化
-                    if mapping.ip_address == ipv4_address:
-                        logging.debug(f'域名映射 {mapping.full_domain} 的IPv4地址未变化，无需更新')
-                        continue
-                          
-                    try:
-                        # 更新阿里云域名解析记录
+            for mapping in domain_mappings:
+                ipv4_address = ip_addresses.get('ipv4')
+                ipv6_address = ip_addresses.get('ipv6')
+
+                # 检查IPv4和IPv6地址是否都未变化
+                ipv4_changed = ipv4_address and mapping.ip_address != ipv4_address
+                ipv6_changed = ipv6_address and mapping.ipv6_address != ipv6_address
+
+                if not ipv4_changed and not ipv6_changed:
+                    logging.debug(f'域名映射 {mapping.full_domain} 的IP地址未变化，无需更新')
+                    continue
+
+                try:
+                    details_parts = []
+                    # 更新IPv4地址
+                    if ipv4_changed:
                         domain_service.update_domain_record(
                             mapping.record_id,
                             mapping.subdomain,
                             ipv4_address
                         )
-                        
-                        # 记录操作日志
-                        log = OperationLog(
-                            user_id=mapping.user_id,
-                            operation_type='auto_update_ip',
-                            target_type='domain_mapping',
-                            target_id=str(mapping.id),
-                            details=f'自动更新域名映射IPv4地址：{mapping.full_domain}，从 {mapping.ip_address} 更新为 {ipv4_address}'
-                        )
-                        db.session.add(log)
-                        
-                        # 更新映射记录
+                        details_parts.append(f'IPv4从 {mapping.ip_address} 更新为 {ipv4_address}')
                         mapping.ip_address = ipv4_address
-                        updated_count += 1
                         logging.info(f'成功更新域名映射 {mapping.full_domain} 的IPv4地址为 {ipv4_address}')
-                          
-                    except Exception as e:
-                        logging.error(f'自动更新域名映射 {mapping.full_domain} 的IPv4地址失败: {str(e)}')
-            
-            # 处理IPv6地址更新
-            if 'ipv6' in ip_addresses:
-                ipv6_address = ip_addresses['ipv6']
-                ipv6_updated_count = 0
-                
-                for mapping in domain_mappings:
-                    # 检查IPv6地址是否变化
-                    if mapping.ipv6_address == ipv6_address:
-                        logging.debug(f'域名映射 {mapping.full_domain} 的IPv6地址未变化，无需更新')
-                        continue
-                    
-                    try:
-                        # 如果已有IPv6记录ID，则更新记录
+
+                    # 更新IPv6地址
+                    if ipv6_changed:
                         if mapping.ipv6_record_id:
                             domain_service.update_domain_record(
                                 mapping.ipv6_record_id,
                                 mapping.subdomain,
                                 ipv6_address
                             )
-                            
-                            # 记录操作日志
-                            log = OperationLog(
-                                user_id=mapping.user_id,
-                                operation_type='auto_update_ip',
-                                target_type='domain_mapping',
-                                target_id=str(mapping.id),
-                                details=f'自动更新域名映射IPv6地址：{mapping.full_domain}，从 {mapping.ipv6_address or "无"} 更新为 {ipv6_address}'
-                            )
-                            db.session.add(log)
-                            
-                            # 更新映射记录
+                            details_parts.append(f'IPv6从 {mapping.ipv6_address or "无"} 更新为 {ipv6_address}')
                             mapping.ipv6_address = ipv6_address
-                            ipv6_updated_count += 1
                             logging.info(f'成功更新域名映射 {mapping.full_domain} 的IPv6地址为 {ipv6_address}')
-                        
-                        # 如果没有IPv6记录ID，则创建新记录
                         else:
-                            # 创建AAAA记录
                             request = AddDomainRecordRequest()
                             request.set_accept_format('json')
                             request.set_DomainName(domain_config.domain_name)
-                            request.set_RR(mapping.subdomain)  # 子域名前缀
-                            request.set_Type("AAAA")  # AAAA记录(IPv6)
-                            request.set_Value(ipv6_address)  # 解析到的IPv6地址
-                            request.set_TTL(600)  # 生存时间，单位秒
+                            request.set_RR(mapping.subdomain)
+                            request.set_Type("AAAA")
+                            request.set_Value(ipv6_address)
+                            request.set_TTL(600)
                             
-                            # 发送请求
                             response = domain_service.client.do_action_with_exception(request)
                             result = json.loads(response.decode('utf-8'))
-                            
-                            # 获取记录ID并保存
                             ipv6_record_id = result.get('RecordId', '')
                             if ipv6_record_id:
-                                # 记录操作日志
-                                log = OperationLog(
-                                    user_id=mapping.user_id,
-                                    operation_type='create_ipv6_record',
-                                    target_type='domain_mapping',
-                                    target_id=str(mapping.id),
-                                    details=f'创建域名映射IPv6记录：{mapping.full_domain} -> {ipv6_address}'
-                                )
-                                db.session.add(log)
-                                
-                                # 更新映射记录
+                                details_parts.append(f'IPv6创建为 {ipv6_address}')
                                 mapping.ipv6_address = ipv6_address
                                 mapping.ipv6_record_id = ipv6_record_id
-                                ipv6_updated_count += 1
                                 logging.info(f'成功创建域名映射 {mapping.full_domain} 的IPv6记录，地址为 {ipv6_address}')
-                    
-                    except Exception as e:
-                        logging.error(f'自动更新域名映射 {mapping.full_domain} 的IPv6地址失败: {str(e)}')
-                
-                updated_count += ipv6_updated_count
+
+                    # 记录统一的操作日志
+                    log = OperationLog(
+                        user_id=mapping.user_id,
+                        operation_type='auto_update_ip',
+                        target_type='domain_mapping',
+                        target_id=str(mapping.id),
+                        details=f'自动更新域名映射IP地址：{mapping.full_domain}，' + '；'.join(details_parts)
+                    )
+                    db.session.add(log)
+                    updated_count += 1
+
+                except Exception as e:
+                    logging.error(f'自动更新域名映射 {mapping.full_domain} 的IP地址失败: {str(e)}')
             
             if updated_count > 0:
                 db.session.commit()

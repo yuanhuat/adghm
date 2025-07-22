@@ -102,6 +102,9 @@ class AdGuardService:
                 params=params,
                 timeout=10  # 设置超时时间
             )
+
+            print(f"收到来自 AdGuardHome API 的响应: 状态码={response.status_code}")
+            print(f"响应内容: {response.content[:500]}") # 打印前500个字符以供调试
             
             # 处理常见的HTTP错误
             if response.status_code == 401:
@@ -146,6 +149,21 @@ class AdGuardService:
                     pass
                 raise Exception(f"请求AdGuardHome API失败：{error_msg}")
             raise Exception(f"请求AdGuardHome API失败：{str(e)}")
+
+    def get_query_log(self, older_than: Optional[str] = None, limit: int = 100) -> Dict:
+        """获取查询日志
+
+        Args:
+            older_than: 用于分页，获取比指定时间更早的日志
+            limit: 返回的日志条目数
+
+        Returns:
+            查询日志数据
+        """
+        params = {'limit': limit}
+        if older_than:
+            params['older_than'] = older_than
+        return self._make_request('GET', '/querylog', params=params)
     
     def create_client(
         self,

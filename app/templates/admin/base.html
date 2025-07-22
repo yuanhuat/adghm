@@ -34,6 +34,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.operation_logs') }}">操作日志</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.query_log') }}">查询日志</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -59,7 +62,7 @@
             {% endif %}
         {% endwith %}
 
-        {% block content %}{% endblock %}
+        {% block page_content %}{% endblock %}
     </div>
 </body>
 </html>

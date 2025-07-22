@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block title %}查询日志{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1 class="mt-4">查询日志</h1>
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>时间</th>
+                <th>客户端</th>
+                <th>请求域名</th>
+                <th>状态</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.time }}</td>
+                <td>{{ log.client }}</td>
+                <td>{{ log.question.name }}</td>
+                <td>{{ log.reason }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">没有日志记录。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if next_older_than %}
+    <div class="text-center">
+        <a href="{{ url_for('admin.query_log', older_than=next_older_than) }}" class="btn btn-primary">加载更早的日志</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

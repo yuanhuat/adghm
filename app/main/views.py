@@ -11,6 +11,8 @@ from app.services.domain_service import DomainService
 from app.admin.views import admin_required
 from . import main
 
+
+
 @main.route('/')
 @login_required
 def index():

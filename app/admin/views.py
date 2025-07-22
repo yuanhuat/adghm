@@ -250,6 +250,25 @@ def update_adguard_config():
         db.session.rollback()
         return jsonify({'error': f'更新配置失败：{str(e)}'}), 500
 
+@admin.route('/query-log')
+@login_required
+@admin_required
+def query_log():
+    """查询 AdGuardHome 的日志"""
+    adguard_service = AdGuardService()
+    older_than = request.args.get('older_than')
+    try:
+        logs_data = adguard_service.get_query_log(older_than=older_than)
+        logs = logs_data.get('data', [])
+        print(f"传递给模板的日志数据: {logs[:5]}") # 打印前5条日志以供调试
+        next_older_than = None
+        if logs:
+            next_older_than = logs[-1].get('time')
+        return render_template('admin/query_log.html', logs=logs, next_older_than=next_older_than)
+    except Exception as e:
+        flash(f'获取查询日志失败: {str(e)}', 'error')
+        return render_template('admin/query_log.html', logs=[], next_older_than=None)
+
 @admin.route('/adguard-status')
 @login_required
 @admin_required
