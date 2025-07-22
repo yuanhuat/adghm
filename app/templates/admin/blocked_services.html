@@ -1,6 +1,35 @@
 {% extends "admin/base.html" %}
 
 {% block content %}
+<style>
+    .service-item {
+        padding: 6px 10px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    
+    .service-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .service-item label {
+        cursor: pointer;
+        margin-bottom: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    
+    .service-checkbox {
+        margin-right: 8px;
+    }
+    
+    #blockedServicesContainer {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 8px;
+    }
+</style>
 <div class="container mt-4">
     <h2>全局阻止服务配置</h2>
     <div class="alert alert-info" id="statusInfo">
@@ -20,10 +49,9 @@
                     <button id="selectSocialBtn" class="btn btn-sm btn-outline-info">选择社交媒体</button>
                     <button id="selectStreamingBtn" class="btn btn-sm btn-outline-info">选择流媒体</button>
                 </div>
-                <select id="blockedServices" class="form-select" multiple size="15" style="height: auto;">
+                <div id="blockedServicesContainer" class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
                     <!-- 服务列表将通过JavaScript动态填充 -->
-                </select>
-                <div class="form-text">按住Ctrl键可以选择多个服务</div>
+                </div>
             </div>
             <button id="saveBtn" class="btn btn-primary">保存设置</button>
         </div>
@@ -84,16 +112,16 @@ async function saveBlockedServices(serviceIds) {
 
 // 辅助函数：根据ID列表选择服务
 function selectServicesByIds(ids) {
-    const selectElement = document.getElementById('blockedServices');
-    Array.from(selectElement.options).forEach(option => {
-        option.selected = ids.includes(option.value);
+    const checkboxes = document.querySelectorAll('.service-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = ids.includes(checkbox.value);
     });
 }
 
 // 辅助函数：获取当前选中的服务ID列表
 function getSelectedServiceIds() {
-    const selectElement = document.getElementById('blockedServices');
-    return Array.from(selectElement.selectedOptions).map(option => option.value);
+    const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+    return Array.from(checkboxes).map(checkbox => checkbox.value);
 }
 
 // 初始化页面
@@ -101,25 +129,45 @@ async function initPage() {
     try {
         // 获取所有可用服务
         const services = await getAvailableServices();
-        const selectElement = document.getElementById('blockedServices');
+        const servicesContainer = document.getElementById('blockedServicesContainer');
         
         // 清空现有选项
-        selectElement.innerHTML = '';
+        servicesContainer.innerHTML = '';
         
         // 添加服务选项
         services.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.id;
-            option.textContent = service.name;
-            // 添加自定义属性用于分类
+            // 创建服务项容器
+            const serviceItem = document.createElement('div');
+            serviceItem.className = 'service-item mb-2';
+            
+            // 确定服务类别
+            let category = '';
             if (service.id.includes('social') || 
                 ['facebook', 'twitter', 'instagram', 'tiktok', 'pinterest', 'linkedin', 'snapchat', 'telegram', 'whatsapp', 'discord', 'reddit', 'wechat', 'qq'].some(s => service.id.includes(s))) {
-                option.dataset.category = 'social';
+                category = 'social';
             } else if (service.id.includes('stream') || 
                       ['youtube', 'netflix', 'hulu', 'spotify', 'pandora', 'twitch', 'vimeo', 'hbo', 'disney', 'amazon', 'apple', 'iqiyi', 'youku', 'bilibili'].some(s => service.id.includes(s))) {
-                option.dataset.category = 'streaming';
+                category = 'streaming';
             }
-            selectElement.appendChild(option);
+            
+            // 创建勾选框和标签
+            const label = document.createElement('label');
+            label.className = 'd-flex align-items-center';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'service-checkbox me-2';
+            checkbox.value = service.id;
+            checkbox.dataset.category = category;
+            
+            const serviceName = document.createElement('span');
+            serviceName.textContent = service.name;
+            
+            // 组装元素
+            label.appendChild(checkbox);
+            label.appendChild(serviceName);
+            serviceItem.appendChild(label);
+            servicesContainer.appendChild(serviceItem);
         });
         
         // 获取当前设置并选中对应服务
@@ -138,52 +186,58 @@ document.addEventListener('DOMContentLoaded', () => {
     // 搜索功能
     document.getElementById('serviceSearch').addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
-        const selectElement = document.getElementById('blockedServices');
+        const serviceItems = document.querySelectorAll('.service-item');
         
-        Array.from(selectElement.options).forEach(option => {
-            const serviceName = option.textContent.toLowerCase();
-            const serviceId = option.value.toLowerCase();
+        serviceItems.forEach(item => {
+            const label = item.querySelector('label');
+            const checkbox = item.querySelector('.service-checkbox');
+            const serviceName = label.textContent.toLowerCase();
+            const serviceId = checkbox.value.toLowerCase();
             const isMatch = serviceName.includes(searchTerm) || serviceId.includes(searchTerm);
-            option.style.display = isMatch ? '' : 'none';
+            item.style.display = isMatch ? '' : 'none';
         });
     });
     
     // 全选按钮
     document.getElementById('selectAllBtn').addEventListener('click', function() {
-        const selectElement = document.getElementById('blockedServices');
-        Array.from(selectElement.options).forEach(option => {
-            if (option.style.display !== 'none') { // 只选择当前可见的选项
-                option.selected = true;
+        const serviceItems = document.querySelectorAll('.service-item');
+        serviceItems.forEach(item => {
+            if (item.style.display !== 'none') { // 只选择当前可见的选项
+                const checkbox = item.querySelector('.service-checkbox');
+                checkbox.checked = true;
             }
         });
     });
     
     // 取消全选按钮
     document.getElementById('deselectAllBtn').addEventListener('click', function() {
-        const selectElement = document.getElementById('blockedServices');
-        Array.from(selectElement.options).forEach(option => {
-            if (option.style.display !== 'none') { // 只取消当前可见的选项
-                option.selected = false;
+        const serviceItems = document.querySelectorAll('.service-item');
+        serviceItems.forEach(item => {
+            if (item.style.display !== 'none') { // 只取消当前可见的选项
+                const checkbox = item.querySelector('.service-checkbox');
+                checkbox.checked = false;
             }
         });
     });
     
     // 选择社交媒体按钮
     document.getElementById('selectSocialBtn').addEventListener('click', function() {
-        const selectElement = document.getElementById('blockedServices');
-        Array.from(selectElement.options).forEach(option => {
-            if (option.style.display !== 'none' && option.dataset.category === 'social') {
-                option.selected = true;
+        const checkboxes = document.querySelectorAll('.service-checkbox');
+        checkboxes.forEach(checkbox => {
+            const item = checkbox.closest('.service-item');
+            if (item.style.display !== 'none' && checkbox.dataset.category === 'social') {
+                checkbox.checked = true;
             }
         });
     });
     
     // 选择流媒体按钮
     document.getElementById('selectStreamingBtn').addEventListener('click', function() {
-        const selectElement = document.getElementById('blockedServices');
-        Array.from(selectElement.options).forEach(option => {
-            if (option.style.display !== 'none' && option.dataset.category === 'streaming') {
-                option.selected = true;
+        const checkboxes = document.querySelectorAll('.service-checkbox');
+        checkboxes.forEach(checkbox => {
+            const item = checkbox.closest('.service-item');
+            if (item.style.display !== 'none' && checkbox.dataset.category === 'streaming') {
+                checkbox.checked = true;
             }
         });
     });
