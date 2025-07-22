@@ -15,22 +15,26 @@ class DomainMapping(db.Model):
     full_domain = db.Column(db.String(255), nullable=False)  # 完整域名
     record_id = db.Column(db.String(50), nullable=False)  # 阿里云解析记录ID
     ip_address = db.Column(db.String(50), nullable=False)  # 解析的IP地址
+    ipv6_address = db.Column(db.String(50), nullable=True)  # IPv6地址
+    ipv6_record_id = db.Column(db.String(50), nullable=True)  # IPv6解析记录ID
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # 关联用户
     user = db.relationship('User', backref='domain_mappings')
     
-    def __init__(self, user_id, subdomain, full_domain, record_id, ip_address, client_mapping_id=None):
+    def __init__(self, user_id, subdomain, full_domain, record_id, ip_address, client_mapping_id=None, ipv6_address=None, ipv6_record_id=None):
         """初始化域名映射对象
         
         Args:
             user_id: 用户ID
             subdomain: 子域名前缀
             full_domain: 完整域名
-            record_id: 阿里云解析记录ID
-            ip_address: 解析的IP地址
+            record_id: 阿里云解析记录ID (IPv4)
+            ip_address: 解析的IP地址 (IPv4)
             client_mapping_id: 客户端映射ID（可选）
+            ipv6_address: IPv6地址（可选）
+            ipv6_record_id: IPv6解析记录ID（可选）
         """
         self.user_id = user_id
         self.subdomain = subdomain
@@ -38,3 +42,5 @@ class DomainMapping(db.Model):
         self.record_id = record_id
         self.ip_address = ip_address
         self.client_mapping_id = client_mapping_id
+        self.ipv6_address = ipv6_address
+        self.ipv6_record_id = ipv6_record_id

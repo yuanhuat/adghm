@@ -42,17 +42,20 @@ class DomainService:
         # 初始化阿里云客户端
         self.client = AcsClient(self.access_key_id, self.access_key_secret, 'cn-hangzhou')
     
-    def get_local_ip(self) -> str:
+    def get_local_ip(self, ip_type: str = 'ipv4') -> str:
         """
         获取本地公网IP地址
         
         使用多个公共API获取当前公网IP地址，按优先级尝试不同的API
         
+        Args:
+            ip_type: 指定获取的IP类型，可选值为'ipv4'、'ipv6'或'both'，默认为'ipv4'
+        
         Returns:
             str: IP地址，如果获取失败则返回默认IP
         """
-        # 定义多个可用的IP获取API，按可靠性排序
-        ip_apis = [
+        # 定义多个可用的IPv4获取API，按可靠性排序
+        ipv4_apis = [
             # 国内可靠的API
             {'url': 'https://myip.ipip.net', 'type': 'text', 'parser': lambda r: r.text.split('：')[1].split(' ')[0] if '：' in r.text else None},
             
@@ -66,11 +69,54 @@ class DomainService:
             {'url': 'https://httpbin.org/ip', 'type': 'json', 'parser': lambda r: r.json().get('origin')}
         ]
         
-        # 尝试所有API
+        # 定义IPv6获取API
+        ipv6_apis = [
+            {'url': 'https://api6.ipify.org', 'type': 'text', 'parser': lambda r: r.text},
+            {'url': 'https://ifconfig.co/ip', 'type': 'text', 'parser': lambda r: r.text.strip()},
+            {'url': 'https://api6.ipify.org?format=json', 'type': 'json', 'parser': lambda r: r.json().get('ip')}
+        ]
+        
+        # 根据请求的IP类型选择API
+        if ip_type.lower() == 'ipv4':
+            ip_apis = ipv4_apis
+        elif ip_type.lower() == 'ipv6':
+            ip_apis = ipv6_apis
+        elif ip_type.lower() == 'both':
+            # 先尝试获取IPv4，如果失败再尝试IPv6
+            ipv4 = self._try_get_ip(ipv4_apis)
+            ipv6 = self._try_get_ip(ipv6_apis)
+            
+            if ipv4 and ipv6:
+                print(f"成功获取到IPv4地址: {ipv4} 和IPv6地址: {ipv6}")
+                return {"ipv4": ipv4, "ipv6": ipv6}
+            elif ipv4:
+                print(f"仅获取到IPv4地址: {ipv4}")
+                return {"ipv4": ipv4}
+            elif ipv6:
+                print(f"仅获取到IPv6地址: {ipv6}")
+                return {"ipv6": ipv6}
+            else:
+                print("IPv4和IPv6地址均获取失败，使用默认本地IP地址")
+                return {"ipv4": "127.0.0.1"}
+        else:
+            # 默认使用IPv4
+            ip_apis = ipv4_apis
+        
+        # 尝试获取单一类型的IP地址
+        ip = self._try_get_ip(ip_apis)
+        if ip:
+            return ip
+        
+        # 如果所有API都失败，返回本地IP地址
+        print(f"获取{ip_type}地址失败，使用默认本地IP地址")
+        return "127.0.0.1"
+    
+    def _try_get_ip(self, ip_apis):
+        """尝试从多个API获取IP地址"""
         success_count = 0
         for api in ip_apis:
             try:
-                response = requests.get(api['url'], timeout=3)
+                response = requests.get(api['url'], timeout=5)
                 if response.status_code == 200:
                     if api['type'] == 'json':
                         ip = api['parser'](response)
@@ -89,13 +135,11 @@ class DomainService:
                 print(f"API {api['url']} 请求异常: {str(e)}")
                 success_count += 1
         
-        # 如果所有API都失败，返回本地IP地址
-        print(f"获取IP地址失败: {success_count}，使用默认本地IP地址")
-        return "127.0.0.1"
+        return None
     
     def _is_valid_ip(self, ip: str) -> bool:
         """
-        验证IP地址格式是否有效
+        验证IP地址格式是否有效，支持IPv4和IPv6
         
         Args:
             ip: 要验证的IP地址
@@ -104,9 +148,36 @@ class DomainService:
             bool: 是否是有效的IP地址
         """
         import re
-        # 简单的IPv4地址格式验证
-        pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
-        return bool(re.match(pattern, ip.strip()))
+        ip = ip.strip()
+        
+        # IPv4地址格式验证
+        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        
+        # IPv6地址格式验证 (简化版)
+        ipv6_pattern = r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$'
+        
+        return bool(re.match(ipv4_pattern, ip)) or bool(re.match(ipv6_pattern, ip))
+        
+    def _get_ip_type(self, ip: str) -> str:
+        """
+        判断IP地址类型
+        
+        Args:
+            ip: IP地址
+            
+        Returns:
+            str: 'A'表示IPv4, 'AAAA'表示IPv6
+        """
+        import re
+        ip = ip.strip()
+        
+        # IPv4地址格式验证
+        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+        
+        if re.match(ipv4_pattern, ip):
+            return "A"
+        else:
+            return "AAAA"
             
     def get_ip_address(self) -> str:
         """
@@ -122,23 +193,25 @@ class DomainService:
         """
         return self.get_local_ip()
         
-    def get_current_ip(self) -> str:
+    def get_current_ip(self, ip_type: str = 'both') -> Union[str, Dict]:
         """
-        获取当前IP地址
+        获取当前IP地址，支持同时获取IPv4和IPv6地址
         
-        此方法是get_local_ip的别名，用于保持代码兼容性
+        Args:
+            ip_type: 指定获取的IP类型，可选值为'ipv4'、'ipv6'或'both'，默认为'both'
         
         Returns:
-            str: IP地址
+            Union[str, Dict]: 如果ip_type为'ipv4'或'ipv6'，返回字符串形式的IP地址；
+                             如果ip_type为'both'，返回包含'ipv4'和'ipv6'键的字典
         
         Raises:
             Exception: 当获取IP地址失败时抛出异常
         """
-        return self.get_local_ip()
+        return self.get_local_ip(ip_type)
     
     def create_subdomain(self, username: str, ip: Optional[str] = None) -> Dict:
         """
-        创建子域名解析
+        创建子域名解析，支持IPv4和IPv6
         
         Args:
             username: 用户名，用于创建子域名
@@ -166,10 +239,13 @@ class DomainService:
                 request = AddDomainRecordRequest()
                 request.set_accept_format('json')
                 
+                # 获取IP类型（IPv4或IPv6）
+                record_type = self._get_ip_type(ip)
+                
                 # 设置域名解析参数
                 request.set_DomainName(self.domain_name)
                 request.set_RR(username)  # 子域名前缀
-                request.set_Type("A")     # A记录，将域名解析到IPv4地址
+                request.set_Type(record_type)  # A记录(IPv4)或AAAA记录(IPv6)
                 request.set_Value(ip)      # 解析到的IP地址
                 request.set_TTL(600)       # 生存时间，单位秒
                 
@@ -177,7 +253,7 @@ class DomainService:
                 response = self.client.do_action_with_exception(request)
                 result = json.loads(response.decode('utf-8'))
                 
-                print(f"创建子域名解析成功: {username}.{self.domain_name} -> {ip}")
+                print(f"创建子域名解析成功: {username}.{self.domain_name} -> {ip} (类型: {record_type})")
                 return result
         except Exception as e:
             print(f"创建子域名解析失败: {str(e)}")
@@ -251,7 +327,7 @@ class DomainService:
     
     def update_subdomain(self, username: str, ip: str, record_id: str) -> Dict:
         """
-        更新子域名解析
+        更新子域名解析，支持IPv4和IPv6
         
         Args:
             username: 用户名，用于标识子域名
@@ -268,10 +344,13 @@ class DomainService:
             request = UpdateDomainRecordRequest()
             request.set_accept_format('json')
             
+            # 获取IP类型（IPv4或IPv6）
+            record_type = self._get_ip_type(ip)
+            
             # 设置域名解析参数
             request.set_RecordId(record_id)
             request.set_RR(username)  # 子域名前缀
-            request.set_Type("A")     # A记录，将域名解析到IPv4地址
+            request.set_Type(record_type)  # A记录(IPv4)或AAAA记录(IPv6)
             request.set_Value(ip)      # 解析到的IP地址
             request.set_TTL(600)       # 生存时间，单位秒
             
@@ -279,7 +358,7 @@ class DomainService:
             response = self.client.do_action_with_exception(request)
             result = json.loads(response.decode('utf-8'))
             
-            print(f"更新子域名解析成功: {username}.{self.domain_name} -> {ip}")
+            print(f"更新子域名解析成功: {username}.{self.domain_name} -> {ip} (类型: {record_type})")
             return result
         except Exception as e:
             print(f"更新子域名解析失败: {str(e)}")
@@ -412,7 +491,7 @@ class DomainService:
             
     def update_domain_record(self, record_id: str, subdomain: str, ip: str) -> Dict:
         """
-        更新域名解析记录
+        更新域名解析记录，支持IPv4和IPv6
         
         Args:
             record_id: 解析记录ID
@@ -431,6 +510,9 @@ class DomainService:
             if existing_record and existing_record.get('Value') == ip:
                 logging.info(f"域名记录IP地址未变化，无需更新: {subdomain}.{self.domain_name} -> {ip}")
                 return {"RecordId": record_id, "Status": "Unchanged"}
+            
+            # 获取IP类型（IPv4或IPv6）
+            record_type = self._get_ip_type(ip)
                 
             request = UpdateDomainRecordRequest()
             request.set_accept_format('json')
@@ -438,7 +520,7 @@ class DomainService:
             # 设置域名解析参数
             request.set_RecordId(record_id)
             request.set_RR(subdomain)  # 子域名前缀
-            request.set_Type("A")     # A记录，将域名解析到IPv4地址
+            request.set_Type(record_type)  # A记录(IPv4)或AAAA记录(IPv6)
             request.set_Value(ip)      # 解析到的IP地址
             request.set_TTL(600)       # 生存时间，单位秒
             
@@ -446,7 +528,7 @@ class DomainService:
             response = self.client.do_action_with_exception(request)
             result = json.loads(response.decode('utf-8'))
             
-            print(f"更新域名解析记录成功: {subdomain}.{self.domain_name} -> {ip}")
+            print(f"更新域名解析记录成功: {subdomain}.{self.domain_name} -> {ip} (类型: {record_type})")
             return result
         except Exception as e:
             error_str = str(e)
