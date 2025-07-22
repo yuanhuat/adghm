@@ -223,6 +223,46 @@ class AdGuardService:
             print(f"创建AdGuardHome客户端失败: {str(e)}")
             raise
     
+    def get_blocked_services_all(self) -> Dict:
+        """获取所有可用的阻止服务列表
+        
+        根据AdGuardHome API文档，使用/control/blocked_services/all接口获取所有可用的阻止服务及其详细信息
+        
+        Returns:
+            包含所有可用阻止服务的信息，包括图标、ID、名称和规则
+        """
+        return self._make_request('GET', '/blocked_services/all')
+    
+    def get_blocked_services(self) -> Dict:
+        """获取当前的阻止服务配置
+        
+        根据AdGuardHome API文档，使用/control/blocked_services/get接口获取当前的阻止服务配置
+        
+        Returns:
+            当前的阻止服务配置，包括计划和服务ID列表
+        """
+        return self._make_request('GET', '/blocked_services/get')
+    
+    def update_blocked_services(self, schedule: Optional[Dict] = None, ids: List[str] = None) -> Dict:
+        """更新阻止服务配置
+        
+        根据AdGuardHome API文档，使用PUT /control/blocked_services/update接口更新阻止服务配置
+        
+        Args:
+            schedule: 阻止服务的计划配置，符合Schedule模式
+            ids: 要阻止的服务ID列表
+            
+        Returns:
+            更新操作的响应数据
+        """
+        data = {}
+        if ids is not None:
+            data['ids'] = ids
+        if schedule is not None:
+            data['schedule'] = schedule
+            
+        return self._make_request('PUT', '/blocked_services/update', json=data)
+    
     def update_client(
         self,
         name: str,
@@ -230,7 +270,14 @@ class AdGuardService:
         use_global_settings: bool = True,
         filtering_enabled: bool = True,
         safebrowsing_enabled: bool = False,
-        parental_enabled: bool = False
+        parental_enabled: bool = False,
+        safe_search: Optional[Dict] = None,
+        use_global_blocked_services: bool = True,
+        blocked_services: Optional[List[str]] = None,
+        upstreams: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        ignore_querylog: bool = False,
+        ignore_statistics: bool = False
     ) -> Dict:
         """更新现有的AdGuardHome客户端
         
@@ -241,6 +288,13 @@ class AdGuardService:
             filtering_enabled: 是否启用过滤
             safebrowsing_enabled: 是否启用安全浏览
             parental_enabled: 是否启用家长控制
+            safe_search: 安全搜索配置，包含各搜索引擎的启用状态
+            use_global_blocked_services: 是否使用全局服务屏蔽设置
+            blocked_services: 要屏蔽的服务列表
+            upstreams: 上游DNS服务器列表
+            tags: 客户端标签列表
+            ignore_querylog: 是否忽略查询日志
+            ignore_statistics: 是否忽略统计信息
             
         Returns:
             更新后的客户端信息
@@ -251,8 +305,21 @@ class AdGuardService:
             "use_global_settings": use_global_settings,
             "filtering_enabled": filtering_enabled,
             "safebrowsing_enabled": safebrowsing_enabled,
-            "parental_enabled": parental_enabled
+            "parental_enabled": parental_enabled,
+            "use_global_blocked_services": use_global_blocked_services,
+            "ignore_querylog": ignore_querylog,
+            "ignore_statistics": ignore_statistics
         }
+        
+        # 添加可选参数
+        if safe_search is not None:
+            client_data["safe_search"] = safe_search
+        if blocked_services is not None:
+            client_data["blocked_services"] = blocked_services
+        if upstreams is not None:
+            client_data["upstreams"] = upstreams
+        if tags is not None:
+            client_data["tags"] = tags
         
         request_body = {
             "name": name,

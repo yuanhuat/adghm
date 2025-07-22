@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客户端管理 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/clients.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="main-container">
@@ -73,9 +75,9 @@
             <h2 id="modalTitle">编辑客户端设置</h2>
             <form id="clientForm">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label for="clientIds">设备标识（多个标识用逗号分隔）：</label>
+                    <label for="clientIds">设备标识（IP、MAC、CIDR）：</label>
                     {% if current_user.is_admin %}
-                    <input type="text" id="clientIds" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
+                    <input type="text" id="clientIds" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="多个标识用逗号分隔">
                     {% else %}
                     <div style="padding: 8px; margin-top: 5px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;">
                         <span id="clientIdsDisplay"></span>
@@ -84,32 +86,126 @@
                     <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">普通用户不可编辑设备标识，如需修改请联系管理员</p>
                     {% endif %}
                 </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>
-                        <input type="checkbox" id="useGlobalSettings"> 使用全局设置
+                <div class="form-group global-settings-container" style="margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; padding: 15px; background-color: #f0f8ff;">
+                    <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">全局设置选项</h4>
+                    <label style="font-weight: bold;">
+                        <input type="checkbox" id="useGlobalSettings" style="margin-right: 8px;"> 使用全局设置
                     </label>
-                    <p class="help-text" style="font-size: 0.9em; color: #666;">启用后，将使用AdGuardHome的全局设置，以下选项将被忽略</p>
+                    <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 8px;">启用后，将使用AdGuardHome的全局设置，以下所有自定义选项将被忽略</p>
                 </div>
                 <div id="customSettings" style="margin-top: 15px;">
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>
-                            <input type="checkbox" id="filteringEnabled"> 启用过滤
-                        </label>
+                    <!-- 基本设置 -->
+                    <div class="form-group basic-settings-container" style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; padding: 15px; background-color: #f9f9f9;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">基本过滤设置</h4>
+                        <div style="padding-left: 10px; border-left: 2px solid #ddd;">
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-weight: bold;">
+                                    <input type="checkbox" id="filteringEnabled" style="margin-right: 5px;"> 启用过滤
+                                </label>
+                                <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">启用DNS过滤功能，阻止广告和跟踪器</p>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-weight: bold;">
+                                    <input type="checkbox" id="safebrowsingEnabled" style="margin-right: 5px;"> 启用安全浏览
+                                </label>
+                                <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">阻止已知的恶意和钓鱼网站</p>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-weight: bold;">
+                                    <input type="checkbox" id="parentalEnabled" style="margin-right: 5px;"> 启用家长控制
+                                </label>
+                                <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">阻止成人内容网站</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label>
-                            <input type="checkbox" id="safebrowsingEnabled"> 启用安全浏览
+                    <!-- 安全搜索设置 -->
+                    <div class="form-group safe-search-container" style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; padding: 15px; background-color: #f9f9f9;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">安全搜索设置</h4>
+                        <label style="font-weight: bold;">
+                            <input type="checkbox" id="safeSearchEnabled" style="margin-right: 5px;"> 启用安全搜索
                         </label>
+                        <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">强制搜索引擎使用安全搜索模式，过滤不适合儿童的内容</p>
+                        <div id="safeSearchOptions" style="margin-left: 20px; margin-top: 10px; display: none; border-left: 2px solid #ddd; padding-left: 15px;">
+                            <h5 style="margin-top: 0; margin-bottom: 10px; color: #2c3e50;">选择需要启用安全搜索的搜索引擎：</h5>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchGoogle" style="margin-right: 5px;"> Google</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchBing" style="margin-right: 5px;"> Bing</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchYandex" style="margin-right: 5px;"> Yandex</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchDuckDuckGo" style="margin-right: 5px;"> DuckDuckGo</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchYoutube" style="margin-right: 5px;"> YouTube</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchPixabay" style="margin-right: 5px;"> Pixabay</label>
+                            </div>
+                            <div class="safe-search-option" style="margin-bottom: 8px;">
+                                <label><input type="checkbox" id="safeSearchEcosia" style="margin-right: 5px;"> Ecosia</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-bottom: 15px;">
+                    <!-- 阻止服务设置 -->
+                    <div class="form-group blocked-services-container" style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; padding: 15px; background-color: #f9f9f9;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">阻止服务设置</h4>
                         <label>
-                            <input type="checkbox" id="parentalEnabled"> 启用家长控制
+                            <input type="checkbox" id="useGlobalBlockedServices"> 使用全局已阻止服务
                         </label>
+                        <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">使用全局配置的阻止服务列表</p>
+                        <div id="blockedServicesOptions" style="margin-left: 20px; margin-top: 10px; display: none; border-left: 2px solid #ddd; padding-left: 15px;">
+                            <label>已阻止的服务：</label>
+                            <div style="margin-top: 8px; margin-bottom: 8px;">
+                                <input type="text" id="serviceSearch" placeholder="搜索服务..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div class="blocked-services-select">
+                                <select id="blockedServices" multiple style="width: 100%; height: 200px; border: 1px solid #ddd; border-radius: 4px; padding: 5px; margin-top: 8px;">
+                                    <!-- 这里将通过JavaScript动态填充可用的服务 -->
+                                </select>
+                                <div style="margin-top: 8px; display: flex; justify-content: space-between;">
+                                    <button type="button" id="selectAllServices" class="btn" style="padding: 5px 10px; font-size: 12px; background-color: #f1f1f1; border: none; cursor: pointer;">全选</button>
+                                    <button type="button" id="deselectAllServices" class="btn" style="padding: 5px 10px; font-size: 12px; background-color: #f1f1f1; border: none; cursor: pointer;">取消全选</button>
+                                    <button type="button" id="selectSocialMedia" class="btn" style="padding: 5px 10px; font-size: 12px; background-color: #f1f1f1; border: none; cursor: pointer;">社交媒体</button>
+                                    <button type="button" id="selectStreaming" class="btn" style="padding: 5px 10px; font-size: 12px; background-color: #f1f1f1; border: none; cursor: pointer;">流媒体</button>
+                                </div>
+                                <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">按住Ctrl键可选择多个服务，或使用上方按钮快速选择</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 上游DNS设置 -->
+                    <div class="form-group upstream-dns-container" style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; padding: 15px; background-color: #f9f9f9;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">上游DNS服务器设置</h4>
+                        <label for="customUpstreams">自定义上游DNS服务器：</label>
+                        <div class="upstream-dns-input">
+                            <textarea id="customUpstreams" style="width: 100%; height: 80px; margin-top: 8px; border: 1px solid #ddd; border-radius: 4px; padding: 8px; font-family: monospace;" placeholder="每行一个上游DNS服务器，例如：8.8.8.8"></textarea>
+                            <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">留空则使用全局DNS设置</p>
+                        </div>
+                    </div>
+                    <!-- 日志和统计设置 -->
+                    <div class="form-group logs-stats-container" style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 4px; padding: 15px; background-color: #f9f9f9;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #2c3e50;">日志和统计设置</h4>
+                        <div class="log-option" style="padding: 8px; border-left: 2px solid #ddd; margin-bottom: 12px;">
+                            <label style="font-weight: bold;">
+                                <input type="checkbox" id="ignoreQuerylog" style="margin-right: 5px;"> 忽略查询日志
+                            </label>
+                            <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">启用后，此客户端的DNS查询将不会记录在查询日志中</p>
+                        </div>
+                        <div class="stats-option" style="padding: 8px; border-left: 2px solid #ddd;">
+                            <label style="font-weight: bold;">
+                                <input type="checkbox" id="ignoreStatistics" style="margin-right: 5px;"> 忽略统计信息
+                            </label>
+                            <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 5px;">启用后，此客户端的DNS查询将不会计入统计信息</p>
+                        </div>
                     </div>
                 </div>
-                <div class="form-actions" style="margin-top: 20px;">
-                    <button type="button" onclick="saveClientSettings()" class="btn btn-primary" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">保存</button>
+                <div class="form-actions" style="margin-top: 30px; text-align: center;">
+                    <button type="button" onclick="saveClientSettings()" class="btn btn-primary" style="padding: 10px 30px; font-size: 16px; font-weight: bold; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease; background-color: #4CAF50; color: white; border: none; cursor: pointer;"><i class="fas fa-save" style="margin-right: 8px;"></i>保存客户端设置</button>
                     <button type="button" onclick="closeModal()" class="btn" style="padding: 8px 16px; margin-left: 10px; background-color: #f1f1f1; border: none; cursor: pointer;">取消</button>
+                    <p class="help-text" style="font-size: 0.9em; color: #666; margin-top: 10px;">点击保存按钮将更新客户端的所有设置</p>
                 </div>
             </form>
         </div>
@@ -117,6 +213,124 @@
 
     <script>
     let currentMappingId = null;
+    let availableBlockedServices = [];
+    
+    // 辅助函数：根据服务ID列表选择服务
+    function selectServicesByIds(serviceIds) {
+        const selectElement = document.getElementById('blockedServices');
+        Array.from(selectElement.options).forEach(option => {
+            if (serviceIds.includes(option.value) && option.style.display !== 'none') {
+                option.selected = true;
+            }
+        });
+    }
+
+    // 页面加载时获取可用的阻止服务列表
+    document.addEventListener('DOMContentLoaded', function() {
+        // 添加安全搜索切换事件
+        document.getElementById('safeSearchEnabled').addEventListener('change', function() {
+            document.getElementById('safeSearchOptions').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // 添加阻止服务切换事件
+        document.getElementById('useGlobalBlockedServices').addEventListener('change', function() {
+            document.getElementById('blockedServicesOptions').style.display = this.checked ? 'none' : 'block';
+        });
+        
+        // 添加服务搜索功能
+        document.getElementById('serviceSearch').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const selectElement = document.getElementById('blockedServices');
+            
+            Array.from(selectElement.options).forEach(option => {
+                const serviceName = option.textContent.toLowerCase();
+                const serviceId = option.value.toLowerCase();
+                const match = serviceName.includes(searchTerm) || serviceId.includes(searchTerm);
+                option.style.display = match ? '' : 'none';
+            });
+        });
+        
+        // 添加全选按钮事件
+        document.getElementById('selectAllServices').addEventListener('click', function() {
+            const selectElement = document.getElementById('blockedServices');
+            Array.from(selectElement.options).forEach(option => {
+                if (option.style.display !== 'none') { // 只选择当前可见的选项
+                    option.selected = true;
+                }
+            });
+        });
+        
+        // 添加取消全选按钮事件
+        document.getElementById('deselectAllServices').addEventListener('click', function() {
+            const selectElement = document.getElementById('blockedServices');
+            Array.from(selectElement.options).forEach(option => {
+                if (option.style.display !== 'none') { // 只取消当前可见的选项
+                    option.selected = false;
+                }
+            });
+        });
+        
+        // 添加选择社交媒体按钮事件
+        document.getElementById('selectSocialMedia').addEventListener('click', function() {
+            const socialMediaServices = ['facebook', 'twitter', 'instagram', 'snapchat', 'tiktok', 'pinterest', 'reddit', 'discord', 'whatsapp', 'wechat', 'qq', 'vk'];
+            selectServicesByIds(socialMediaServices);
+        });
+        
+        // 添加选择流媒体按钮事件
+        document.getElementById('selectStreaming').addEventListener('click', function() {
+            const streamingServices = ['youtube', 'netflix', 'twitch', 'hulu', 'disney', 'amazon', 'spotify', 'pandora', 'deezer', 'tidal'];
+            selectServicesByIds(streamingServices);
+        });
+        
+        // 获取可用的阻止服务列表
+        fetch('/api/blocked_services', {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('获取阻止服务列表失败：', data.error);
+                return;
+            }
+            
+            availableBlockedServices = data.services || [];
+            const selectElement = document.getElementById('blockedServices');
+            
+            // 清空现有选项
+            selectElement.innerHTML = '';
+            
+            // 添加服务选项
+            availableBlockedServices.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = service.name;
+                selectElement.appendChild(option);
+            });
+            
+            // 如果当前正在编辑客户端，重新设置已选择的服务
+            if (currentMappingId) {
+                fetch(`/clients/${currentMappingId}`, {
+                    method: 'GET'
+                })
+                .then(response => response.json())
+                .then(clientData => {
+                    if (!clientData.error && clientData.blocked_services) {
+                        // 设置已阻止的服务
+                        const blockedServices = clientData.blocked_services || [];
+                        Array.from(selectElement.options).forEach(option => {
+                            option.selected = blockedServices.includes(option.value);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('获取客户端阻止服务设置失败：', error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('获取阻止服务列表失败：', error);
+        });
+    });
 
     function editClient(mappingId, clientName) {
         currentMappingId = mappingId;
@@ -143,10 +357,45 @@
                 clientIdsDisplay.textContent = clientIdsStr;
             }
             
+            // 基本设置
             document.getElementById('useGlobalSettings').checked = data.use_global_settings;
             document.getElementById('filteringEnabled').checked = data.filtering_enabled;
             document.getElementById('safebrowsingEnabled').checked = data.safebrowsing_enabled;
             document.getElementById('parentalEnabled').checked = data.parental_enabled;
+            
+            // 安全搜索设置
+            const safeSearch = data.safe_search || {};
+            const safeSearchEnabled = safeSearch.enabled || false;
+            document.getElementById('safeSearchEnabled').checked = safeSearchEnabled;
+            document.getElementById('safeSearchOptions').style.display = safeSearchEnabled ? 'block' : 'none';
+            
+            document.getElementById('safeSearchGoogle').checked = safeSearch.google || false;
+            document.getElementById('safeSearchBing').checked = safeSearch.bing || false;
+            document.getElementById('safeSearchYandex').checked = safeSearch.yandex || false;
+            document.getElementById('safeSearchDuckDuckGo').checked = safeSearch.duckduckgo || false;
+            document.getElementById('safeSearchYoutube').checked = safeSearch.youtube || false;
+            document.getElementById('safeSearchPixabay').checked = safeSearch.pixabay || false;
+            document.getElementById('safeSearchEcosia').checked = safeSearch.ecosia || false;
+            
+            // 阻止服务设置
+            document.getElementById('useGlobalBlockedServices').checked = data.use_global_blocked_services || true;
+            document.getElementById('blockedServicesOptions').style.display = data.use_global_blocked_services ? 'none' : 'block';
+            
+            // 设置已阻止的服务
+            const blockedServices = data.blocked_services || [];
+            const selectElement = document.getElementById('blockedServices');
+            
+            // 清除所有选中状态
+            Array.from(selectElement.options).forEach(option => {
+                option.selected = blockedServices.includes(option.value);
+            });
+            
+            // 上游DNS设置
+            document.getElementById('customUpstreams').value = (data.upstreams || []).join('\n');
+            
+            // 日志和统计设置
+            document.getElementById('ignoreQuerylog').checked = data.ignore_querylog || false;
+            document.getElementById('ignoreStatistics').checked = data.ignore_statistics || false;
             
             // 根据是否使用全局设置显示/隐藏自定义设置
             toggleCustomSettings();
@@ -183,12 +432,44 @@
         const safebrowsingEnabled = document.getElementById('safebrowsingEnabled').checked;
         const parentalEnabled = document.getElementById('parentalEnabled').checked;
         
+        // 安全搜索设置
+        const safeSearchEnabled = document.getElementById('safeSearchEnabled').checked;
+        const safeSearch = {
+            enabled: safeSearchEnabled,
+            google: document.getElementById('safeSearchGoogle').checked,
+            bing: document.getElementById('safeSearchBing').checked,
+            yandex: document.getElementById('safeSearchYandex').checked,
+            duckduckgo: document.getElementById('safeSearchDuckDuckGo').checked,
+            youtube: document.getElementById('safeSearchYoutube').checked,
+            pixabay: document.getElementById('safeSearchPixabay').checked,
+            ecosia: document.getElementById('safeSearchEcosia').checked
+        };
+        
+        // 阻止服务设置
+        const useGlobalBlockedServices = document.getElementById('useGlobalBlockedServices').checked;
+        const blockedServicesSelect = document.getElementById('blockedServices');
+        const blockedServices = Array.from(blockedServicesSelect.selectedOptions).map(option => option.value);
+        
+        // 上游DNS设置
+        const customUpstreams = document.getElementById('customUpstreams').value
+            .split('\n').map(line => line.trim()).filter(line => line);
+        
+        // 日志和统计设置
+        const ignoreQuerylog = document.getElementById('ignoreQuerylog').checked;
+        const ignoreStatistics = document.getElementById('ignoreStatistics').checked;
+        
         // 准备请求数据
         const requestData = {
             use_global_settings: useGlobalSettings,
             filtering_enabled: filteringEnabled,
             safebrowsing_enabled: safebrowsingEnabled,
-            parental_enabled: parentalEnabled
+            parental_enabled: parentalEnabled,
+            safe_search: safeSearch,
+            use_global_blocked_services: useGlobalBlockedServices,
+            blocked_services: blockedServices,
+            upstreams: customUpstreams,
+            ignore_querylog: ignoreQuerylog,
+            ignore_statistics: ignoreStatistics
         };
         
         // 只有管理员才能修改设备标识

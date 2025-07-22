@@ -1,0 +1,203 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>全局阻止服务配置</h2>
+    <div class="alert alert-info" id="statusInfo">
+        <p>在此页面配置全局阻止服务列表，所有使用全局设置的客户端都将应用这些规则。</p>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">阻止服务列表</label>
+                <div class="mb-2">
+                    <input type="text" id="serviceSearch" class="form-control" placeholder="搜索服务...">
+                </div>
+                <div class="mb-2 d-flex flex-wrap gap-2">
+                    <button id="selectAllBtn" class="btn btn-sm btn-outline-primary">全选</button>
+                    <button id="deselectAllBtn" class="btn btn-sm btn-outline-secondary">取消全选</button>
+                    <button id="selectSocialBtn" class="btn btn-sm btn-outline-info">选择社交媒体</button>
+                    <button id="selectStreamingBtn" class="btn btn-sm btn-outline-info">选择流媒体</button>
+                </div>
+                <select id="blockedServices" class="form-select" multiple size="15" style="height: auto;">
+                    <!-- 服务列表将通过JavaScript动态填充 -->
+                </select>
+                <div class="form-text">按住Ctrl键可以选择多个服务</div>
+            </div>
+            <button id="saveBtn" class="btn btn-primary">保存设置</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 获取所有可用的阻止服务
+async function getAvailableServices() {
+    try {
+        const response = await fetch('/api/blocked_services');
+        if (!response.ok) {
+            throw new Error('获取服务列表失败');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('获取服务列表错误:', error);
+        return [];
+    }
+}
+
+// 获取当前全局阻止服务设置
+async function getCurrentBlockedServices() {
+    try {
+        const response = await fetch('/api/global_blocked_services');
+        if (!response.ok) {
+            throw new Error('获取当前设置失败');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('获取当前设置错误:', error);
+        return { ids: [] };
+    }
+}
+
+// 保存全局阻止服务设置
+async function saveBlockedServices(serviceIds) {
+    try {
+        const response = await fetch('/api/global_blocked_services', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: serviceIds })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '保存设置失败');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('保存设置错误:', error);
+        throw error;
+    }
+}
+
+// 辅助函数：根据ID列表选择服务
+function selectServicesByIds(ids) {
+    const selectElement = document.getElementById('blockedServices');
+    Array.from(selectElement.options).forEach(option => {
+        option.selected = ids.includes(option.value);
+    });
+}
+
+// 辅助函数：获取当前选中的服务ID列表
+function getSelectedServiceIds() {
+    const selectElement = document.getElementById('blockedServices');
+    return Array.from(selectElement.selectedOptions).map(option => option.value);
+}
+
+// 初始化页面
+async function initPage() {
+    try {
+        // 获取所有可用服务
+        const services = await getAvailableServices();
+        const selectElement = document.getElementById('blockedServices');
+        
+        // 清空现有选项
+        selectElement.innerHTML = '';
+        
+        // 添加服务选项
+        services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.id;
+            option.textContent = service.name;
+            // 添加自定义属性用于分类
+            if (service.id.includes('social') || 
+                ['facebook', 'twitter', 'instagram', 'tiktok', 'pinterest', 'linkedin', 'snapchat', 'telegram', 'whatsapp', 'discord', 'reddit', 'wechat', 'qq'].some(s => service.id.includes(s))) {
+                option.dataset.category = 'social';
+            } else if (service.id.includes('stream') || 
+                      ['youtube', 'netflix', 'hulu', 'spotify', 'pandora', 'twitch', 'vimeo', 'hbo', 'disney', 'amazon', 'apple', 'iqiyi', 'youku', 'bilibili'].some(s => service.id.includes(s))) {
+                option.dataset.category = 'streaming';
+            }
+            selectElement.appendChild(option);
+        });
+        
+        // 获取当前设置并选中对应服务
+        const currentSettings = await getCurrentBlockedServices();
+        selectServicesByIds(currentSettings.ids || []);
+        
+    } catch (error) {
+        alert('初始化页面失败: ' + error.message);
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initPage();
+    
+    // 搜索功能
+    document.getElementById('serviceSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const selectElement = document.getElementById('blockedServices');
+        
+        Array.from(selectElement.options).forEach(option => {
+            const serviceName = option.textContent.toLowerCase();
+            const serviceId = option.value.toLowerCase();
+            const isMatch = serviceName.includes(searchTerm) || serviceId.includes(searchTerm);
+            option.style.display = isMatch ? '' : 'none';
+        });
+    });
+    
+    // 全选按钮
+    document.getElementById('selectAllBtn').addEventListener('click', function() {
+        const selectElement = document.getElementById('blockedServices');
+        Array.from(selectElement.options).forEach(option => {
+            if (option.style.display !== 'none') { // 只选择当前可见的选项
+                option.selected = true;
+            }
+        });
+    });
+    
+    // 取消全选按钮
+    document.getElementById('deselectAllBtn').addEventListener('click', function() {
+        const selectElement = document.getElementById('blockedServices');
+        Array.from(selectElement.options).forEach(option => {
+            if (option.style.display !== 'none') { // 只取消当前可见的选项
+                option.selected = false;
+            }
+        });
+    });
+    
+    // 选择社交媒体按钮
+    document.getElementById('selectSocialBtn').addEventListener('click', function() {
+        const selectElement = document.getElementById('blockedServices');
+        Array.from(selectElement.options).forEach(option => {
+            if (option.style.display !== 'none' && option.dataset.category === 'social') {
+                option.selected = true;
+            }
+        });
+    });
+    
+    // 选择流媒体按钮
+    document.getElementById('selectStreamingBtn').addEventListener('click', function() {
+        const selectElement = document.getElementById('blockedServices');
+        Array.from(selectElement.options).forEach(option => {
+            if (option.style.display !== 'none' && option.dataset.category === 'streaming') {
+                option.selected = true;
+            }
+        });
+    });
+    
+    // 保存按钮
+    document.getElementById('saveBtn').addEventListener('click', async function() {
+        try {
+            const selectedIds = getSelectedServiceIds();
+            const result = await saveBlockedServices(selectedIds);
+            alert('设置保存成功！');
+        } catch (error) {
+            alert('保存设置失败: ' + error.message);
+        }
+    });
+});
+</script>
+{% endblock %}

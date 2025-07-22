@@ -436,3 +436,10 @@ def refresh_domain_mapping(mapping_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'刷新域名映射IP地址失败：{str(e)}'}), 500
+
+@admin.route('/blocked-services')
+@login_required
+@admin_required
+def blocked_services():
+    """全局阻止服务配置页面"""
+    return render_template('admin/blocked_services.html')
