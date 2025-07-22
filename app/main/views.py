@@ -357,6 +357,8 @@ def global_blocked_services():
             log = OperationLog(
                 user_id=current_user.id,
                 operation_type='update_global_blocked_services',
+                target_type='GLOBAL_SETTING',
+                target_id='blocked_services',
                 details=f"更新全局阻止服务设置，阻止的服务数量：{len(blocked_services)}"
             )
             db.session.add(log)

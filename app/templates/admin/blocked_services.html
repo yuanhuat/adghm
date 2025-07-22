@@ -128,11 +128,14 @@ function getSelectedServiceIds() {
 async function initPage() {
     try {
         // 获取所有可用服务
-        const services = await getAvailableServices();
+        const servicesResponse = await getAvailableServices();
         const servicesContainer = document.getElementById('blockedServicesContainer');
         
         // 清空现有选项
         servicesContainer.innerHTML = '';
+        
+        // 检查API返回的数据结构
+        const services = servicesResponse.services || [];
         
         // 添加服务选项
         services.forEach(service => {
@@ -172,7 +175,9 @@ async function initPage() {
         
         // 获取当前设置并选中对应服务
         const currentSettings = await getCurrentBlockedServices();
-        selectServicesByIds(currentSettings.ids || []);
+        // 检查API返回的数据结构
+        const blockedIds = currentSettings.success ? (currentSettings.blocked_services || []) : [];
+        selectServicesByIds(blockedIds);
         
     } catch (error) {
         alert('初始化页面失败: ' + error.message);
@@ -247,7 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const selectedIds = getSelectedServiceIds();
             const result = await saveBlockedServices(selectedIds);
-            alert('设置保存成功！');
+            if (result.success) {
+                alert('设置保存成功！');
+            } else {
+                throw new Error(result.error || '保存失败');
+            }
         } catch (error) {
             alert('保存设置失败: ' + error.message);
         }
