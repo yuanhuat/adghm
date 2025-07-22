@@ -1,5 +1,5 @@
-from datetime import datetime
 from app import db
+from app.utils.timezone import beijing_time
 
 class DomainConfig(db.Model):
     """阿里云域名解析配置模型
@@ -13,7 +13,7 @@ class DomainConfig(db.Model):
     access_key_id = db.Column(db.String(50), nullable=False)
     access_key_secret = db.Column(db.String(255), nullable=False)
     domain_name = db.Column(db.String(255), nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
     def __init__(self, access_key_id=None, access_key_secret=None, domain_name=None):
         """初始化配置对象

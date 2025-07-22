@@ -166,7 +166,7 @@ class DomainService:
             ip: IP地址
             
         Returns:
-            str: 'A'表示IPv4, 'AAAA'表示IPv6
+            str: 'A'表示IPv4, 'AAAA'表示IPv6, 空字符串表示无效IP
         """
         import re
         ip = ip.strip()
@@ -174,10 +174,16 @@ class DomainService:
         # IPv4地址格式验证
         ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
         
+        # IPv6地址格式验证 (简化版)
+        ipv6_pattern = r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$'
+        
         if re.match(ipv4_pattern, ip):
             return "A"
-        else:
+        elif re.match(ipv6_pattern, ip):
             return "AAAA"
+        else:
+            # 无效的IP地址
+            return ""
             
     def get_ip_address(self) -> str:
         """

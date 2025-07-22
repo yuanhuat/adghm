@@ -8,24 +8,25 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     line-height: 1.6;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: #f8f9fa; /* 更浅的背景色 */
+    color: #2c3e50; /* 深蓝色文本 */
 }
 
 /* 认证容器样式 */
 .auth-container {
     max-width: 400px;
     margin: 50px auto;
-    padding: 20px;
+    padding: 40px;
     background-color: #fff;
+    border: 1px solid #dee2e6; /* 扁平化边框 */
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .auth-container h1 {
     text-align: center;
     margin-bottom: 30px;
-    color: #2c3e50;
+    color: #007bff; /* 蓝色标题 */
+    font-weight: 500;
 }
 
 /* 表单样式 */
@@ -50,10 +51,19 @@ body {
 .form-group input[type="password"],
 .form-group input[type="number"] {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
+    padding: 12px;
+    border: 1px solid #ced4da;
     border-radius: 4px;
     font-size: 16px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus,
+.form-group input[type="number"]:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 /* 移除number类型输入框的上下箭头 */
@@ -74,17 +84,17 @@ body {
 .form-group button {
     width: 100%;
     padding: 12px;
-    background-color: #3498db;
+    background-color: #007bff; /* 蓝色按钮 */
     color: #fff;
     border: none;
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s;
 }
 
 .form-group button:hover {
-    background-color: #2980b9;
+    background-color: #0056b3; /* 深蓝色 hover */
 }
 
 /* 链接样式 */
@@ -94,7 +104,7 @@ body {
 }
 
 .form-links a {
-    color: #3498db;
+    color: #007bff; /* 蓝色链接 */
     text-decoration: none;
 }
 
@@ -111,15 +121,21 @@ body {
 }
 
 .alert-success {
-    background-color: #d4edda;
     color: #155724;
-    border: 1px solid #c3e6cb;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
 }
 
 .alert-error {
-    background-color: #f8d7da;
     color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
 }
 
 
@@ -141,8 +157,9 @@ body {
 
 .admin-nav a {
     margin-left: 20px;
-    color: #3498db;
+    color: #007bff; /* 蓝色导航链接 */
     text-decoration: none;
+    font-weight: 500;
 }
 
 .admin-nav a:hover {
@@ -168,12 +185,13 @@ th, td {
 }
 
 th {
-    background-color: #f8f9fa;
+    background-color: #e9ecef; /* 浅蓝色表头 */
     font-weight: 600;
+    color: #495057;
 }
 
 tr:hover {
-    background-color: #f5f5f5;
+    background-color: #f1f3f5;
 }
 
 /* 按钮样式 */
@@ -188,13 +206,26 @@ tr:hover {
     margin-right: 10px;
 }
 
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
 .btn-primary {
-    background-color: #3498db;
+    background-color: #007bff;
     color: #fff;
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    background-color: #0069d9;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
 }
 
 .btn-danger {

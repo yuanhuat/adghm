@@ -21,7 +21,7 @@
                     <tbody>
                         {% for log in logs.items %}
                         <tr>
-                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }} (北京时间)</td>
                             <td>{{ log.user.username }}</td>
                             <td>{{ log.operation_type }}</td>
                             <td>{{ log.target_type }}</td>

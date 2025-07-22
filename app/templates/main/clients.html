@@ -55,7 +55,7 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                <button onclick="editClient({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-primary">编辑设置</button>
+                                <button onclick="editClient('{{ mapping.id }}', '{{ mapping.client_name }}')" class="btn btn-primary">编辑设置</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -473,7 +473,7 @@
         };
         
         // 只有管理员才能修改设备标识
-        const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+        const isAdmin = {{ current_user.is_admin | tojson }};
         if (isAdmin) {
             requestData.client_ids = clientIds;
         }

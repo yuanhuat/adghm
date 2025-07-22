@@ -1,6 +1,6 @@
-from datetime import datetime
 from app import db
 from urllib.parse import urlparse
+from app.utils.timezone import beijing_time
 
 class AdGuardConfig(db.Model):
     """AdGuardHome配置模型
@@ -14,7 +14,7 @@ class AdGuardConfig(db.Model):
     api_base_url = db.Column(db.String(255), nullable=False)
     auth_username = db.Column(db.String(50), nullable=False)
     auth_password = db.Column(db.String(255), nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
     def __init__(self, api_base_url=None, auth_username=None, auth_password=None):
         """初始化配置对象

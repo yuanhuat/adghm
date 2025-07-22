@@ -1,5 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import db
+
+def beijing_time():
+    """返回北京时间（UTC+8）"""
+    return datetime.utcnow() + timedelta(hours=8)
 
 class OperationLog(db.Model):
     """操作日志模型"""
@@ -11,7 +15,7 @@ class OperationLog(db.Model):
     target_type = db.Column(db.String(50), nullable=False)    # USER/CLIENT
     target_id = db.Column(db.String(50), nullable=False)
     details = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=beijing_time)
 
     # 关联用户
     user = db.relationship('User', backref='operation_logs')

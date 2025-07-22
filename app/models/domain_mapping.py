@@ -1,5 +1,5 @@
-from datetime import datetime
 from app import db
+from app.utils.timezone import beijing_time
 
 class DomainMapping(db.Model):
     """用户域名映射模型
@@ -17,8 +17,8 @@ class DomainMapping(db.Model):
     ip_address = db.Column(db.String(50), nullable=False)  # 解析的IP地址
     ipv6_address = db.Column(db.String(50), nullable=True)  # IPv6地址
     ipv6_record_id = db.Column(db.String(50), nullable=True)  # IPv6解析记录ID
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=beijing_time)
+    updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
     # 关联用户
     user = db.relationship('User', backref='domain_mappings')
