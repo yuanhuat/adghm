@@ -2,11 +2,13 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_apscheduler import APScheduler
 from app.config import Config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
+scheduler = APScheduler()
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -36,5 +38,13 @@ def create_app():
     # 在应用上下文中创建所有数据库表
     with app.app_context():
         db.create_all()
+    
+    # 初始化调度器
+    scheduler.init_app(app)
+    scheduler.start()
+    
+    # 添加自动更新IP地址的定时任务
+    from app.tasks import init_scheduler_tasks
+    init_scheduler_tasks(app)
 
     return app

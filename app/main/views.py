@@ -51,7 +51,6 @@ def domain_info():
             'domain_mapping': {
                 'subdomain': domain_mapping.subdomain,
                 'full_domain': domain_mapping.full_domain,
-                'ip_address': domain_mapping.ip_address,
                 'created_at': domain_mapping.created_at.strftime('%Y-%m-%d %H:%M:%S')
             }
         })
@@ -155,7 +154,6 @@ def manage_domain_mapping():
                 'domain_mapping': {
                     'subdomain': domain_mapping.subdomain,
                     'full_domain': domain_mapping.full_domain,
-                    'ip_address': domain_mapping.ip_address,
                     'created_at': domain_mapping.created_at.strftime('%Y-%m-%d %H:%M:%S')
                 }
             })
@@ -232,101 +230,7 @@ def manage_domain_mapping():
                 'error': f'删除域名映射失败: {str(e)}'
             })
 
-@main.route('/refresh-domain', methods=['POST'])
-@login_required
-def refresh_domain():
-    """刷新用户的域名IP地址
-    
-    获取最新的IP地址并更新域名解析记录
-    """
-    data = request.get_json()
-    client_id = data.get('client_id') if data else None
-    
-    # 确定要刷新的域名映射
-    if client_id:
-        # 检查客户端是否属于当前用户
-        client_mapping = ClientMapping.query.filter_by(id=client_id, user_id=current_user.id).first()
-        if not client_mapping:
-            return jsonify({
-                'success': False,
-                'message': '客户端不存在或无权访问'
-            }), 403
-        
-        # 获取与客户端关联的域名映射
-        domain_mapping = DomainMapping.query.filter_by(client_mapping_id=client_id).first()
-    else:
-        # 获取用户的任意域名映射（用于主页刷新）
-        # 直接查询用户的域名映射，不需要join操作
-        domain_mapping = DomainMapping.query.filter_by(user_id=current_user.id).first()
-    
-    if not domain_mapping:
-        return jsonify({
-            'success': False,
-            'message': '您还没有域名映射记录'
-        }), 404
-    
-    try:
-        # 获取域名配置
-        domain_config = DomainConfig.query.first()
-        if not domain_config or not domain_config.is_valid():
-            return jsonify({
-                'success': False,
-                'message': '域名服务未配置或配置无效'
-            }), 500
-            
-        # 创建域名服务实例
-        domain_service = DomainService(domain_config)
-        
-        # 获取最新IP地址
-        ip_address = domain_service.get_current_ip()
-        
-        if not ip_address:
-            return jsonify({
-                'success': False,
-                'message': '无法获取当前IP地址'
-            }), 500
-        
-        if ip_address == domain_mapping.ip_address:
-            return jsonify({
-                'success': True,
-                'message': 'IP地址未变化，无需更新',
-                'ip_address': ip_address
-            })
-            
-        # 更新阿里云域名解析记录
-        domain_service.update_domain_record(
-            domain_mapping.record_id,
-            domain_mapping.subdomain,
-            ip_address
-        )
-        
-        # 更新映射记录
-        old_ip = domain_mapping.ip_address
-        domain_mapping.ip_address = ip_address
-            
-        # 记录操作日志
-        log = OperationLog(
-            user_id=current_user.id,
-            operation_type='refresh_domain',
-            target_type='domain_mapping',
-            target_id=str(domain_mapping.id),
-            details=f'刷新域名映射IP地址：{domain_mapping.full_domain}，从 {old_ip} 更新为 {ip_address}'
-        )
-        db.session.add(log)
-        
-        db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': '域名映射IP地址刷新成功',
-            'ip_address': ip_address
-        })
-    except Exception as e:
-        db.session.rollback()
-        logging.error(f'刷新域名映射IP地址失败: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': f'刷新域名映射IP地址失败：{str(e)}'
-        }), 500
+
 
 @main.route('/clients')
 @login_required

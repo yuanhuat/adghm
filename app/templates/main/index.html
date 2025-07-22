@@ -49,9 +49,7 @@
                     <div class="info-list" id="domain-info">
                         {% if domain_mapping %}
                         <p><strong>域名：</strong>{{ domain_mapping.full_domain }}</p>
-                        <p><strong>当前IP：</strong>{{ domain_mapping.ip_address }}</p>
                         <p><strong>创建时间：</strong>{{ domain_mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                        <button id="refresh-domain" class="btn btn-primary">刷新IP地址</button>
                         {% else %}
                         <p>您还没有域名映射记录</p>
                         {% endif %}
@@ -59,45 +57,7 @@
                 </div>
             </div>
             
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const refreshButton = document.getElementById('refresh-domain');
-                if (refreshButton) {
-                    refreshButton.addEventListener('click', async function() {
-                        try {
-                            refreshButton.disabled = true;
-                            refreshButton.textContent = '正在刷新...';
-                            
-                            const response = await fetch('/refresh-domain', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({})
-                            });
-                            
-                            const data = await response.json();
-                            
-                            if (response.ok && data.success) {
-                                alert('域名IP地址刷新成功');
-                                // 更新页面上的IP地址
-                                const ipElement = document.querySelector('#domain-info p:nth-child(2)');
-                                if (ipElement) {
-                                    ipElement.innerHTML = `<strong>当前IP：</strong>${data.ip_address}`;
-                                }
-                            } else {
-                                alert(data.message || '刷新IP地址失败');
-                            }
-                        } catch (error) {
-                            alert('操作失败：' + error.message);
-                        } finally {
-                            refreshButton.disabled = false;
-                            refreshButton.textContent = '刷新IP地址';
-                        }
-                    });
-                }
-            });
-            </script>
+
         </main>
     </div>
 </body>
