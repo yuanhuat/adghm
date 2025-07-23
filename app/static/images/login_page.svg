@@ -1,0 +1,28 @@
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="800" height="500" fill="#f5f5f5"/>
+  
+  <!-- 登录框 -->
+  <rect x="200" y="50" width="400" height="400" rx="10" fill="white" stroke="#ddd" stroke-width="1"/>
+  
+  <!-- 标题 -->
+  <text x="400" y="100" font-family="Arial" font-size="24" text-anchor="middle" fill="#333">登录</text>
+  
+  <!-- 用户名输入框 -->
+  <rect x="250" y="150" width="300" height="40" rx="5" fill="white" stroke="#ccc" stroke-width="1"/>
+  <text x="250" y="140" font-family="Arial" font-size="14" fill="#666">用户名（6-12位数字）</text>
+  
+  <!-- 密码输入框 -->
+  <rect x="250" y="230" width="300" height="40" rx="5" fill="white" stroke="#ccc" stroke-width="1"/>
+  <text x="250" y="220" font-family="Arial" font-size="14" fill="#666">密码</text>
+  
+  <!-- 登录按钮 -->
+  <rect x="250" y="310" width="300" height="40" rx="5" fill="#007bff" stroke="none"/>
+  <text x="400" y="335" font-family="Arial" font-size="16" text-anchor="middle" fill="white">登录</text>
+  
+  <!-- 注册链接 -->
+  <text x="400" y="380" font-family="Arial" font-size="14" text-anchor="middle" fill="#007bff">没有账号？点击注册</text>
+  
+  <!-- 页脚 -->
+  <text x="400" y="430" font-family="Arial" font-size="12" text-anchor="middle" fill="#999">AdGuardHome用户管理系统</text>
+</svg>

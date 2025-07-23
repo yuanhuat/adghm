@@ -1,0 +1,65 @@
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="800" height="500" fill="#f5f5f5"/>
+  
+  <!-- 顶部导航栏 -->
+  <rect x="0" y="0" width="800" height="60" fill="#343a40"/>
+  <text x="30" y="38" font-family="Arial" font-size="20" fill="white">AdGuardHome管理系统</text>
+  
+  <!-- 导航链接 -->
+  <text x="550" y="38" font-family="Arial" font-size="16" fill="white">返回主页</text>
+  <text x="670" y="38" font-family="Arial" font-size="16" fill="white">退出登录</text>
+  
+  <!-- 页面标题 -->
+  <text x="50" y="100" font-family="Arial" font-size="24" fill="#333">域名管理</text>
+  
+  <!-- 域名配置卡片 -->
+  <rect x="50" y="130" width="700" height="150" rx="5" fill="white" stroke="#ddd" stroke-width="1"/>
+  <text x="70" y="160" font-family="Arial" font-size="18" fill="#333">域名配置</text>
+  
+  <!-- 域名信息 -->
+  <text x="70" y="190" font-family="Arial" font-size="14" fill="#666">子域名前缀：</text>
+  <rect x="170" y="175" width="150" height="25" rx="3" fill="white" stroke="#ccc" stroke-width="1"/>
+  <text x="180" y="192" font-family="Arial" font-size="14" fill="#333">user123456</text>
+  
+  <text x="350" y="190" font-family="Arial" font-size="14" fill="#666">主域名：</text>
+  <rect x="420" y="175" width="150" height="25" rx="3" fill="white" stroke="#ccc" stroke-width="1"/>
+  <text x="430" y="192" font-family="Arial" font-size="14" fill="#333">example.com</text>
+  
+  <text x="70" y="230" font-family="Arial" font-size="14" fill="#666">完整域名：</text>
+  <text x="150" y="230" font-family="Arial" font-size="14" fill="#333">user123456.example.com</text>
+  
+  <text x="350" y="230" font-family="Arial" font-size="14" fill="#666">当前IP：</text>
+  <text x="420" y="230" font-family="Arial" font-size="14" fill="#333">192.168.1.100</text>
+  
+  <rect x="600" y="220" width="120" height="30" rx="3" fill="#007bff" stroke="none"/>
+  <text x="660" y="240" font-family="Arial" font-size="14" text-anchor="middle" fill="white">保存配置</text>
+  
+  <!-- 域名解析记录卡片 -->
+  <rect x="50" y="300" width="700" height="180" rx="5" fill="white" stroke="#ddd" stroke-width="1"/>
+  <text x="70" y="330" font-family="Arial" font-size="18" fill="#333">域名解析记录</text>
+  
+  <!-- 表头 -->
+  <rect x="70" y="350" width="660" height="30" rx="3" fill="#f8f9fa" stroke="#ddd" stroke-width="1"/>
+  <text x="120" y="370" font-family="Arial" font-size="14" fill="#333">记录类型</text>
+  <text x="250" y="370" font-family="Arial" font-size="14" fill="#333">主机记录</text>
+  <text x="400" y="370" font-family="Arial" font-size="14" fill="#333">记录值</text>
+  <text x="550" y="370" font-family="Arial" font-size="14" fill="#333">TTL</text>
+  <text x="650" y="370" font-family="Arial" font-size="14" fill="#333">状态</text>
+  
+  <!-- 记录1 -->
+  <line x1="70" y1="380" x2="730" y2="380" stroke="#ddd" stroke-width="1"/>
+  <text x="120" y="405" font-family="Arial" font-size="14" fill="#333">A</text>
+  <text x="250" y="405" font-family="Arial" font-size="14" fill="#333">user123456</text>
+  <text x="400" y="405" font-family="Arial" font-size="14" fill="#333">192.168.1.100</text>
+  <text x="550" y="405" font-family="Arial" font-size="14" fill="#333">600</text>
+  <text x="650" y="405" font-family="Arial" font-size="14" fill="#28a745">正常</text>
+  
+  <!-- 记录2 -->
+  <line x1="70" y1="420" x2="730" y2="420" stroke="#ddd" stroke-width="1"/>
+  <text x="120" y="445" font-family="Arial" font-size="14" fill="#333">AAAA</text>
+  <text x="250" y="445" font-family="Arial" font-size="14" fill="#333">user123456</text>
+  <text x="400" y="445" font-family="Arial" font-size="14" fill="#333">2001:db8::1</text>
+  <text x="550" y="445" font-family="Arial" font-size="14" fill="#333">600</text>
+  <text x="650" y="445" font-family="Arial" font-size="14" fill="#28a745">正常</text>
+</svg>
