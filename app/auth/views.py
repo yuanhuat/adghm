@@ -1,5 +1,5 @@
 from . import auth
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
@@ -8,6 +8,63 @@ from app.models.domain_config import DomainConfig
 from app.models.domain_mapping import DomainMapping
 from app.services.adguard_service import AdGuardService
 from app.services.domain_service import DomainService
+from app.services.email_service import EmailService
+import re
+
+@auth.route('/send-verification-code', methods=['POST'])
+def send_verification_code():
+    """发送邮箱验证码API
+    
+    接收邮箱地址，发送验证码到指定邮箱。
+    用于用户注册时的邮箱验证。
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': '请求数据格式错误'}), 400
+        
+        email = data.get('email', '').strip()
+        if not email:
+            return jsonify({'success': False, 'message': '请输入邮箱地址'}), 400
+        
+        # 验证邮箱格式
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            return jsonify({'success': False, 'message': '邮箱格式不正确'}), 400
+        
+        # 检查邮箱是否已被注册
+        if User.query.filter_by(email=email).first():
+            return jsonify({'success': False, 'message': '该邮箱已被注册'}), 400
+        
+        # 发送验证码
+        success, code, error_msg = EmailService.send_verification_code(email, 'register')
+        
+        if success:
+            return jsonify({
+                'success': True, 
+                'message': '验证码已发送到您的邮箱，请查收'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'验证码发送失败：{error_msg}'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False, 
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
+@auth.route('/check_first_user', methods=['GET'])
+def check_first_user():
+    """检查是否为第一个用户"""
+    try:
+        user_count = User.query.count()
+        is_first_user = user_count == 0
+        return jsonify({'is_first_user': is_first_user})
+    except Exception as e:
+        return jsonify({'is_first_user': False, 'error': str(e)})
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -22,18 +79,35 @@ def register():
         
     if request.method == 'POST':
         username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+        verification_code = request.form.get('verification_code')
+        
+        # 检查是否为第一个用户
+        is_first_user = User.query.count() == 0
         
         # 表单验证
-        if not username or not password or not confirm_password:
-            flash('请填写所有必填字段', 'error')
-            return render_template('auth/register.html')
+        if is_first_user:
+            # 第一个用户不需要验证码
+            if not username or not email or not password or not confirm_password:
+                flash('请填写所有必填字段', 'error')
+                return render_template('auth/register.html')
+        else:
+            # 非第一个用户需要验证码
+            if not username or not email or not password or not confirm_password or not verification_code:
+                flash('请填写所有必填字段', 'error')
+                return render_template('auth/register.html')
             
         # 验证用户名是否为6-12位数字
-        import re
         if not re.match(r'^\d{6,12}$', username):
             flash('用户名必须是6-12位数字', 'error')
+            return render_template('auth/register.html')
+        
+        # 验证邮箱格式
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash('邮箱格式不正确', 'error')
             return render_template('auth/register.html')
             
         if password != confirm_password:
@@ -44,11 +118,23 @@ def register():
             flash('用户名已存在', 'error')
             return render_template('auth/register.html')
         
+        if User.query.filter_by(email=email).first():
+            flash('邮箱已被注册', 'error')
+            return render_template('auth/register.html')
+        
+        # 验证邮箱验证码（第一个用户跳过验证）
+        if not is_first_user:
+            is_valid, error_msg = EmailService.verify_email_code(email, verification_code, 'register')
+            if not is_valid:
+                flash(error_msg, 'error')
+                return render_template('auth/register.html')
+        
         # 创建新用户
-        user = User(username=username)
+        user = User(username=username, email=email)
         user.set_password(password)
-        # 检查是否为第一个用户，如果是则设置为管理员
-        if User.query.count() == 0:
+        user.email_verified = True  # 验证码验证通过，标记邮箱已验证
+        # 如果是第一个用户，则设置为管理员
+        if is_first_user:
             user.is_admin = True
         db.session.add(user)
         

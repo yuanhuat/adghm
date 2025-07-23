@@ -1,0 +1,155 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">邮箱配置管理</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.update_email_config') }}">
+                        <div class="mb-3">
+                            <label for="mail_server" class="form-label">邮件服务器地址 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="mail_server" name="mail_server" 
+                                   value="{{ config.mail_server }}" placeholder="例如：smtp.qq.com" required>
+                            <div class="form-text">SMTP服务器地址</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mail_port" class="form-label">邮件服务器端口 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="mail_port" name="mail_port" 
+                                   value="{{ config.mail_port }}" min="1" max="65535" required>
+                            <div class="form-text">通常为587（TLS）或465（ SSL）</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="mail_use_tls" name="mail_use_tls" 
+                                       value="true" {% if config.mail_use_tls %}checked{% endif %}>
+                                <label class="form-check-label" for="mail_use_tls">
+                                    启用TLS加密
+                                </label>
+                            </div>
+                            <div class="form-text">建议启用以确保邮件传输安全</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mail_username" class="form-label">邮箱用户名 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="mail_username" name="mail_username" 
+                                   value="{{ config.mail_username }}" placeholder="your-email@example.com" required>
+                            <div class="form-text">用于SMTP认证的邮箱地址</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mail_password" class="form-label">邮箱密码</label>
+                            <input type="password" class="form-control" id="mail_password" name="mail_password" 
+                                   placeholder="留空则不修改当前密码">
+                            <div class="form-text">邮箱的SMTP授权码或密码</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="mail_default_sender" class="form-label">默认发件人 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="mail_default_sender" name="mail_default_sender" 
+                                   value="{{ config.mail_default_sender }}" placeholder="noreply@example.com" required>
+                            <div class="form-text">邮件的发件人地址</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="verification_code_expire_minutes" class="form-label">验证码过期时间（分钟）</label>
+                            <input type="number" class="form-control" id="verification_code_expire_minutes" 
+                                   name="verification_code_expire_minutes" value="{{ config.verification_code_expire_minutes }}" 
+                                   min="1" max="60" required>
+                            <div class="form-text">验证码的有效期，建议设置为5-15分钟</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-secondary me-md-2" onclick="testEmailConfig(this)">测试配置</button>
+                            <button type="submit" class="btn btn-primary">保存配置</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">配置说明</h5>
+                </div>
+                <div class="card-body">
+                    <h6>常用邮件服务器配置：</h6>
+                    <ul>
+                        <li><strong>QQ邮箱：</strong>smtp.qq.com，端口587，需要开启SMTP服务并使用授权码</li>
+                        <li><strong>163邮箱：</strong>smtp.163.com，端口587，需要开启SMTP服务并使用授权码</li>
+                        <li><strong>Gmail：</strong>smtp.gmail.com，端口587，需要开启两步验证并使用应用专用密码</li>
+                        <li><strong>Outlook：</strong>smtp-mail.outlook.com，端口587</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>注意：</strong>修改邮箱配置后需要重启应用才能生效。建议先使用"测试配置"功能验证设置是否正确。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testEmailConfig(button) {
+    console.log('测试邮箱配置函数被调用');
+    
+    // 获取表单数据
+    const formData = new FormData();
+    formData.append('mail_server', document.getElementById('mail_server').value);
+    formData.append('mail_port', document.getElementById('mail_port').value);
+    formData.append('mail_use_tls', document.getElementById('mail_use_tls').checked ? 'true' : 'false');
+    formData.append('mail_username', document.getElementById('mail_username').value);
+    formData.append('mail_password', document.getElementById('mail_password').value);
+    formData.append('mail_default_sender', document.getElementById('mail_default_sender').value);
+    
+    console.log('表单数据:', {
+        mail_server: document.getElementById('mail_server').value,
+        mail_port: document.getElementById('mail_port').value,
+        mail_use_tls: document.getElementById('mail_use_tls').checked,
+        mail_username: document.getElementById('mail_username').value,
+        mail_default_sender: document.getElementById('mail_default_sender').value
+    });
+    
+    // 显示加载状态
+    const testBtn = button;
+    const originalText = testBtn.textContent;
+    testBtn.disabled = true;
+    testBtn.textContent = '测试中...';
+    
+    // 发送测试请求
+    console.log('准备发送请求到:', '{{ url_for("admin.test_email_config") }}');
+    
+    fetch('{{ url_for("admin.test_email_config") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('收到响应:', response);
+        return response.json();
+    })
+    .then(data => {
+        console.log('响应数据:', data);
+        if (data.success) {
+            alert('邮箱配置测试成功！');
+        } else {
+            alert('邮箱配置测试失败：' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('请求错误:', error);
+        alert('测试请求失败，请检查网络连接');
+    })
+    .finally(() => {
+        // 恢复按钮状态
+        testBtn.disabled = false;
+        testBtn.textContent = originalText;
+    });
+}
+</script>
+{% endblock %}

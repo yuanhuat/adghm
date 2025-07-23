@@ -9,10 +9,12 @@ from app.models.operation_log import OperationLog
 from app.models.domain_config import DomainConfig
 from app.models.domain_mapping import DomainMapping
 from app.models.feedback import Feedback
+from app.models.email_config import EmailConfig
 from app.services.adguard_service import AdGuardService
 from app.services.domain_service import DomainService
 from . import admin
 from functools import wraps
+import os
 
 def admin_required(f):
     """管理员权限装饰器
@@ -937,3 +939,194 @@ def reply_feedback(feedback_id):
             'success': False,
             'error': f'回复留言失败: {str(e)}'
         }), 500
+
+
+@admin.route('/email-config')
+@login_required
+@admin_required
+def email_config():
+    """邮箱配置页面
+    
+    显示当前邮箱配置信息，允许管理员修改邮件服务器设置
+    """
+    # 从数据库读取当前邮箱配置
+    email_config_obj = EmailConfig.get_config()
+    config = email_config_obj.to_dict()
+    return render_template('admin/email_config.html', config=config)
+
+
+@admin.route('/email-config', methods=['POST'])
+@login_required
+@admin_required
+def update_email_config():
+    """更新邮箱配置
+    
+    接收表单数据并更新数据库中的邮箱配置
+    """
+    try:
+        # 获取表单数据
+        form_data = {
+            'mail_server': request.form.get('mail_server', '').strip(),
+            'mail_port': request.form.get('mail_port', '587').strip(),
+            'mail_use_tls': request.form.get('mail_use_tls', 'false'),
+            'mail_username': request.form.get('mail_username', '').strip(),
+            'mail_password': request.form.get('mail_password', '').strip(),
+            'mail_default_sender': request.form.get('mail_default_sender', '').strip(),
+            'verification_code_expire_minutes': request.form.get('verification_code_expire_minutes', '10').strip()
+        }
+        
+        # 获取当前配置
+        email_config_obj = EmailConfig.get_config()
+        
+        # 更新配置
+        email_config_obj.update_from_dict(form_data)
+        
+        # 验证配置
+        is_valid, error_msg = email_config_obj.validate()
+        if not is_valid:
+            flash(error_msg, 'error')
+            return redirect(url_for('admin.email_config'))
+        
+        # 保存到数据库
+        db.session.commit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='update_email_config',
+            target_type='system',
+            target_id='email_config',
+            details=f'更新邮箱配置: 服务器={email_config_obj.mail_server}, 端口={email_config_obj.mail_port}, 用户名={email_config_obj.mail_username}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        flash('邮箱配置更新成功', 'success')
+        return redirect(url_for('admin.email_config'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"更新邮箱配置失败: {str(e)}")
+        flash(f'更新邮箱配置失败: {str(e)}', 'error')
+        return redirect(url_for('admin.email_config'))
+
+
+@admin.route('/test-email-config', methods=['POST'])
+@login_required
+@admin_required
+def test_email_config():
+    """测试邮箱配置
+    
+    使用提供的配置参数发送测试邮件
+    """
+    try:
+        # 获取表单数据
+        mail_server = request.form.get('mail_server', '').strip()
+        mail_port = request.form.get('mail_port', '587').strip()
+        mail_use_tls = request.form.get('mail_use_tls', 'false') == 'true'
+        mail_username = request.form.get('mail_username', '').strip()
+        mail_password = request.form.get('mail_password', '').strip()
+        mail_default_sender = request.form.get('mail_default_sender', '').strip()
+        
+        # 验证必填字段
+        if not all([mail_server, mail_port, mail_username, mail_default_sender]):
+            return jsonify({
+                'success': False,
+                'error': '请填写所有必填字段'
+            })
+        
+        # 如果没有提供密码，使用数据库中的密码
+        if not mail_password:
+            email_config_obj = EmailConfig.get_config()
+            mail_password = email_config_obj.mail_password
+            if not mail_password:
+                return jsonify({
+                    'success': False,
+                    'error': '请提供邮箱密码或确保数据库中已配置密码'
+                })
+        
+        # 验证端口号
+        try:
+            port_num = int(mail_port)
+            if port_num < 1 or port_num > 65535:
+                raise ValueError()
+        except ValueError:
+            return jsonify({
+                'success': False,
+                'error': '邮件服务器端口必须是1-65535之间的数字'
+            })
+        
+        # 创建临时的邮件配置进行测试
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        # 创建邮件内容
+        msg = MIMEMultipart()
+        msg['From'] = mail_default_sender
+        msg['To'] = mail_username  # 发送给自己进行测试
+        msg['Subject'] = '[AdGuardHome管理系统] 邮箱配置测试'
+        
+        body = f"""
+        这是一封测试邮件，用于验证邮箱配置是否正确。
+        
+        配置信息：
+        - 邮件服务器：{mail_server}
+        - 端口：{mail_port}
+        - TLS加密：{'是' if mail_use_tls else '否'}
+        - 发件人：{mail_default_sender}
+        
+        如果您收到这封邮件，说明邮箱配置正确。
+        
+        发送时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        """
+        
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        # 连接SMTP服务器并发送邮件
+        server = smtplib.SMTP(mail_server, port_num)
+        
+        if mail_use_tls:
+            server.starttls()
+        
+        server.login(mail_username, mail_password)
+        server.send_message(msg)
+        server.quit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='test_email_config',
+            target_type='system',
+            target_id='email_config',
+            details=f'测试邮箱配置: 服务器={mail_server}, 端口={mail_port}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'测试邮件已发送到 {mail_username}，请检查收件箱'
+        })
+        
+    except smtplib.SMTPAuthenticationError:
+        return jsonify({
+            'success': False,
+            'error': 'SMTP认证失败，请检查用户名和密码是否正确'
+        })
+    except smtplib.SMTPConnectError:
+        return jsonify({
+            'success': False,
+            'error': f'无法连接到邮件服务器 {mail_server}:{mail_port}，请检查服务器地址和端口'
+        })
+    except smtplib.SMTPException as e:
+        return jsonify({
+            'success': False,
+            'error': f'SMTP错误: {str(e)}'
+        })
+    except Exception as e:
+        logging.error(f"测试邮箱配置失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'测试失败: {str(e)}'
+        })

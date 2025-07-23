@@ -5,5 +5,7 @@ from .adguard_config import AdGuardConfig
 from .domain_config import DomainConfig
 from .domain_mapping import DomainMapping
 from .feedback import Feedback
+from .verification_code import VerificationCode
+from .email_config import EmailConfig
 
-__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DomainConfig', 'DomainMapping', 'Feedback']
+__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DomainConfig', 'DomainMapping', 'Feedback', 'VerificationCode', 'EmailConfig']

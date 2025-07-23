@@ -49,7 +49,8 @@ body {
 
 .form-group input[type="text"],
 .form-group input[type="password"],
-.form-group input[type="number"] {
+.form-group input[type="number"],
+.form-group input[type="email"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #ced4da;
@@ -60,7 +61,8 @@ body {
 
 .form-group input[type="text"]:focus,
 .form-group input[type="password"]:focus,
-.form-group input[type="number"]:focus {
+.form-group input[type="number"]:focus,
+.form-group input[type="email"]:focus {
     border-color: #80bdff;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
@@ -91,6 +93,36 @@ body {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.2s;
+}
+
+/* 验证码输入框样式 */
+.verification-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.verification-input input {
+    flex: 1;
+    margin: 0;
+}
+
+.verification-input button {
+    width: auto;
+    padding: 12px 20px;
+    white-space: nowrap;
+    font-size: 14px;
+    min-width: 120px;
+}
+
+.verification-input button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.verification-input button:disabled:hover {
+    background-color: #6c757d;
 }
 
 .form-group button:hover {

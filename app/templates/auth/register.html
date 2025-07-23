@@ -6,6 +6,27 @@
     <title>注册 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script>
+        // 检查是否为第一个用户
+        let isFirstUser = false;
+        
+        // 页面加载时检查用户数量
+        window.onload = function() {
+            fetch('{{ url_for("auth.check_first_user") }}')
+                .then(response => response.json())
+                .then(data => {
+                    isFirstUser = data.is_first_user;
+                    if (isFirstUser) {
+                        // 隐藏验证码相关元素
+                        document.querySelector('.verification-group').style.display = 'none';
+                        // 移除验证码字段的required属性
+                        document.getElementById('verification_code').removeAttribute('required');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking first user:', error);
+                });
+        };
+        
         // 获取设备信息函数
         function getDeviceInfo() {
             const deviceInfo = [];
@@ -40,6 +61,80 @@
             }
             return true;
         }
+        
+        // 验证邮箱格式
+        function validateEmail(email) {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return emailRegex.test(email);
+        }
+        
+        // 发送验证码
+        let countdown = 0;
+        function sendVerificationCode() {
+            const email = document.getElementById('email').value.trim();
+            const button = document.getElementById('send-code-btn');
+            
+            if (!email) {
+                alert('请先输入邮箱地址');
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                alert('请输入正确的邮箱格式');
+                return;
+            }
+            
+            if (countdown > 0) {
+                return;
+            }
+            
+            // 禁用按钮并显示加载状态
+            button.disabled = true;
+            button.textContent = '发送中...';
+            
+            // 发送请求
+            fetch('{{ url_for("auth.send_verification_code") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    startCountdown();
+                } else {
+                    alert(data.message);
+                    button.disabled = false;
+                    button.textContent = '发送验证码';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('发送验证码失败，请稍后重试');
+                button.disabled = false;
+                button.textContent = '发送验证码';
+            });
+        }
+        
+        // 倒计时功能
+        function startCountdown() {
+            countdown = 60;
+            const button = document.getElementById('send-code-btn');
+            
+            const timer = setInterval(() => {
+                button.textContent = `重新发送(${countdown}s)`;
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(timer);
+                    button.disabled = false;
+                    button.textContent = '发送验证码';
+                }
+            }, 1000);
+        }
     </script>
 </head>
 <body>
@@ -58,6 +153,21 @@
                 <label for="username">用户名（6-12位数字）</label>
                 <input type="number" id="username" name="username" pattern="\d{6,12}" placeholder="请输入6-12位数字" oninput="if(this.value.length > 12) this.value = this.value.slice(0, 12)" min="100000" max="999999999999" required>
                 <small class="form-text">用户名只能使用6-12位数字</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">邮箱地址</label>
+                <input type="email" id="email" name="email" placeholder="请输入邮箱地址" required>
+                <small class="form-text">用于接收验证码和重要通知</small>
+            </div>
+            
+            <div class="form-group verification-group">
+                <label for="verification_code">邮箱验证码</label>
+                <div class="verification-input">
+                    <input type="text" id="verification_code" name="verification_code" placeholder="请输入6位验证码" maxlength="6" pattern="\d{6}" required>
+                    <button type="button" id="send-code-btn" onclick="sendVerificationCode()">发送验证码</button>
+                </div>
+                <small class="form-text">验证码有效期10分钟</small>
             </div>
             
             <div class="form-group">

@@ -25,6 +25,9 @@ itsdangerous==2.1.2
 aliyun-python-sdk-core
 aliyun-python-sdk-alidns
 
+# 邮件发送
+Flask-Mail==0.9.1
+
 # 开发工具
 pytest==7.4.3
 pytest-flask==1.2.0
