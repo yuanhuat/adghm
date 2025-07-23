@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdGuardHome使用指南 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .guide-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .guide-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+        .guide-nav {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .guide-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .guide-nav a {
+            color: #495057;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .guide-nav a:hover {
+            background: #007bff;
+            color: white;
+        }
+        .guide-section {
+            background: white;
+            margin-bottom: 25px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .guide-section h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .guide-section h3 {
+            color: #495057;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .step-list {
+            counter-reset: step-counter;
+        }
+        .step-item {
+            counter-increment: step-counter;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 5px;
+        }
+        .step-item::before {
+            content: "步骤 " counter(step-counter) ": ";
+            font-weight: bold;
+            color: #007bff;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .feature-card h4 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="main-header">
+            <h1>AdGuardHome使用指南</h1>
+            <nav class="main-nav">
+                <a href="{{ url_for('main.index') }}"><i class="fas fa-home"></i> 主页</a>
+                <a href="{{ url_for('main.clients') }}"><i class="fas fa-desktop"></i> 客户端管理</a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> 管理员后台</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+            </nav>
+        </header>
+        
+        <main class="main-content">
+            <div class="guide-container">
+                <div class="guide-header">
+                    <h1><i class="fas fa-shield-alt"></i> AdGuardHome使用指南</h1>
+                    <p>全面了解如何使用AdGuardHome进行网络广告拦截和DNS过滤</p>
+                </div>
+                
+                <div class="guide-nav">
+                    <ul>
+                        <li><a href="#overview"><i class="fas fa-info-circle"></i> 概述</a></li>
+                        <li><a href="#setup"><i class="fas fa-cog"></i> 设置指南</a></li>
+                        <li><a href="#features"><i class="fas fa-star"></i> 功能介绍</a></li>
+
+                        <li><a href="#faq"><i class="fas fa-question-circle"></i> 常见问题</a></li>
+                    </ul>
+                </div>
+                
+                <section id="overview" class="guide-section">
+                    <h2><i class="fas fa-info-circle"></i> AdGuardHome概述</h2>
+                    <p>AdGuardHome是一个网络级别的广告和跟踪器拦截DNS服务器。它可以保护您家中的所有设备，无需在每个设备上安装客户端软件。</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4><i class="fas fa-shield-alt"></i> 广告拦截</h4>
+                            <p>拦截网页、应用程序和游戏中的广告</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-eye-slash"></i> 隐私保护</h4>
+                            <p>阻止跟踪器和分析脚本保护您的隐私</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-child"></i> 家长控制</h4>
+                            <p>阻止成人内容和不适宜的网站</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-chart-line"></i> 统计分析</h4>
+                            <p>查看详细的DNS查询统计和分析</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="setup" class="guide-section">
+                    <h2><i class="fas fa-cog"></i> 设置指南</h2>
+                    
+                    <h3>1. DNS服务器配置</h3>
+                    <div class="step-list">
+                        <div class="step-item">
+                            找到您的路由器管理界面（通常是192.168.1.1或192.168.0.1）
+                        </div>
+                        <div class="step-item">
+                            进入DNS设置或DHCP设置页面
+                        </div>
+                        <div class="step-item">
+                            将主DNS服务器设置为AdGuardHome服务器的IP地址
+                        </div>
+                        <div class="step-item">
+                            保存设置并重启路由器
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <strong><i class="fas fa-info-circle"></i> 提示：</strong>
+                        如果您不确定AdGuardHome服务器的IP地址，请联系管理员获取。
+                    </div>
+                    
+                    <h3>2. 设备级DNS配置</h3>
+                    <p>如果无法修改路由器设置，您也可以在单个设备上配置DNS：</p>
+                    
+                    <h4>Windows系统：</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            打开"控制面板" → "网络和Internet" → "网络和共享中心"
+                        </div>
+                        <div class="step-item">
+                            点击"更改适配器设置"
+                        </div>
+                        <div class="step-item">
+                            右键点击您的网络连接，选择"属性"
+                        </div>
+                        <div class="step-item">
+                            选择"Internet协议版本4(TCP/IPv4)"，点击"属性"
+                        </div>
+                        <div class="step-item">
+                            选择"使用下面的DNS服务器地址"，输入AdGuardHome服务器IP
+                        </div>
+                    </div>
+                    
+                    <h4>Android系统：</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            打开"设置" → "网络和互联网" → "Wi-Fi"
+                        </div>
+                        <div class="step-item">
+                            长按您连接的Wi-Fi网络，选择"修改网络"
+                        </div>
+                        <div class="step-item">
+                            展开"高级选项"，将IP设置改为"静态"
+                        </div>
+                        <div class="step-item">
+                            在DNS1字段输入AdGuardHome服务器IP地址
+                        </div>
+                    </div>
+                    
+                    <h4>iOS系统：</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            打开"设置" → "Wi-Fi"
+                        </div>
+                        <div class="step-item">
+                            点击您连接的Wi-Fi网络旁边的"i"图标
+                        </div>
+                        <div class="step-item">
+                            点击"配置DNS" → "手动"
+                        </div>
+                        <div class="step-item">
+                            删除现有DNS服务器，添加AdGuardHome服务器IP
+                        </div>
+                    </div>
+                </section>
+                
+
+                
+                <section id="features" class="guide-section">
+                    <h2><i class="fas fa-star"></i> 功能介绍</h2>
+                    
+                    <h3>过滤设置</h3>
+                    <ul>
+                        <li><strong>广告过滤：</strong>启用后会拦截广告和跟踪器</li>
+                        <li><strong>安全浏览：</strong>保护免受恶意软件和钓鱼网站</li>
+                        <li><strong>家长控制：</strong>阻止成人内容和不适宜的网站</li>
+                        <li><strong>安全搜索：</strong>在搜索引擎中启用安全搜索模式</li>
+                    </ul>
+                    
+                    <h3>阻止服务</h3>
+                    <p>您可以选择阻止特定的在线服务，如：</p>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4><i class="fab fa-facebook"></i> 社交媒体</h4>
+                            <p>Facebook, Twitter, Instagram等</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-video"></i> 视频平台</h4>
+                            <p>YouTube, Netflix, TikTok等</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-gamepad"></i> 游戏平台</h4>
+                            <p>Steam, Epic Games等</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4><i class="fas fa-shopping-cart"></i> 购物网站</h4>
+                            <p>Amazon, eBay等</p>
+                        </div>
+                    </div>
+                    
+
+                </section>
+                
+
+                
+                <section id="faq" class="guide-section">
+                    <h2><i class="fas fa-question-circle"></i> 常见问题</h2>
+                    
+                    <h3>Q: AdGuardHome会影响网络速度吗？</h3>
+                    <p>A: 正常情况下不会。AdGuardHome通过拦截广告和跟踪器，实际上可能会提高网页加载速度。如果配置了快速的上游DNS服务器，DNS解析速度也会很快。</p>
+                    
+                    <h3>Q: 可以在移动网络下使用吗？</h3>
+                    <p>A: 可以，但需要配置VPN或使用DNS over HTTPS (DoH)等技术。具体配置方法请咨询管理员。</p>
+                    
+                    <h3>Q: 如何知道AdGuardHome是否正在工作？</h3>
+                    <p>A: 您可以访问以下DNS检测网站来验证AdGuardHome是否正常工作：</p>
+                    <ul>
+                        <li><a href="https://test.dns1.top/" target="_blank">https://test.dns1.top/</a></li>
+                        <li><a href="https://help.18bit.cn/" target="_blank">https://help.18bit.cn/</a></li>
+                        <li><a href="https://dns.66a.net/" target="_blank">https://dns.66a.net/</a></li>
+                    </ul>
+                    <p>其中一个网站检测生效就代表AdGuardHome正在正常工作。管理员也可以在后台查看查询日志和统计信息。</p>
+                    
+                    <h3>Q: 可以为不同设备设置不同的过滤策略吗？</h3>
+                    <p>A: 可以。通过客户端管理功能，您可以为每个设备创建独立的配置，包括不同的过滤级别和阻止服务。</p>
+                    
+                    <h3>Q: 如果某个网站被误拦截怎么办？</h3>
+                    <p>A: 您可以联系管理员将该网站添加到白名单，或者临时禁用过滤功能访问该网站。</p>
+                    
+                    <h3>Q: AdGuardHome支持IPv6吗？</h3>
+                    <p>A: 支持。AdGuardHome可以处理IPv4和IPv6的DNS查询，确保在双栈网络环境中正常工作。</p>
+                    
+                    <div class="warning-box">
+                        <strong><i class="fas fa-info-circle"></i> 需要帮助？</strong>
+                        如果您有其他问题或需要技术支持，请联系系统管理员。
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <button class="back-to-top" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <script>
+        // 返回顶部按钮
+        window.onscroll = function() {
+            const backToTop = document.querySelector('.back-to-top');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTop.style.display = 'block';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        };
+        
+        function scrollToTop() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+        
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

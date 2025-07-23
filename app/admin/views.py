@@ -254,20 +254,109 @@ def update_adguard_config():
 @login_required
 @admin_required
 def query_log():
-    """查询 AdGuardHome 的日志"""
+    """查询 AdGuardHome 的日志
+    
+    实现分页功能，每页显示50条记录
+    """
     adguard_service = AdGuardService()
+    page = request.args.get('page', 1, type=int)
     older_than = request.args.get('older_than')
+    
+    # 每页显示50条记录
+    per_page = 50
+    
     try:
-        logs_data = adguard_service.get_query_log(older_than=older_than)
+        # 获取日志数据，限制为每页记录数
+        logs_data = adguard_service.get_query_log(older_than=older_than, limit=per_page)
         logs = logs_data.get('data', [])
-        print(f"传递给模板的日志数据: {logs[:5]}") # 打印前5条日志以供调试
+        
+        # 计算分页信息
+        total_logs = len(logs)
+        has_next = total_logs == per_page  # 如果返回的记录数等于限制数，说明可能还有更多记录
+        
+        # 获取下一页的older_than参数
         next_older_than = None
-        if logs:
+        if has_next and logs:
             next_older_than = logs[-1].get('time')
-        return render_template('admin/query_log.html', logs=logs, next_older_than=next_older_than)
+        
+        # 获取上一页的older_than参数（这里简化处理，实际应该维护一个页面历史）
+        prev_older_than = request.args.get('prev_older_than')
+        
+        print(f"传递给模板的日志数据: {logs[:5]}") # 打印前5条日志以供调试
+        
+        return render_template('admin/query_log.html', 
+                             logs=logs, 
+                             page=page,
+                             has_next=has_next,
+                             has_prev=page > 1,
+                             next_older_than=next_older_than,
+                             prev_older_than=prev_older_than,
+                             per_page=per_page)
     except Exception as e:
         flash(f'获取查询日志失败: {str(e)}', 'error')
-        return render_template('admin/query_log.html', logs=[], next_older_than=None)
+        return render_template('admin/query_log.html', 
+                             logs=[], 
+                             page=1,
+                             has_next=False,
+                             has_prev=False,
+                             next_older_than=None,
+                             prev_older_than=None,
+                             per_page=per_page)
+
+@admin.route('/query-log/api')
+@login_required
+@admin_required
+def query_log_api():
+    """查询 AdGuardHome 日志的 API 接口
+    
+    返回 JSON 格式的日志数据，用于 AJAX 刷新
+    """
+    adguard_service = AdGuardService()
+    page = request.args.get('page', 1, type=int)
+    older_than = request.args.get('older_than')
+    
+    # 每页显示50条记录
+    per_page = 50
+    
+    try:
+        # 获取日志数据，限制为每页记录数
+        logs_data = adguard_service.get_query_log(older_than=older_than, limit=per_page)
+        logs = logs_data.get('data', [])
+        
+        # 计算分页信息
+        total_logs = len(logs)
+        has_next = total_logs == per_page  # 如果返回的记录数等于限制数，说明可能还有更多记录
+        
+        # 获取下一页的older_than参数
+        next_older_than = None
+        if has_next and logs:
+            next_older_than = logs[-1].get('time')
+        
+        # 获取上一页的older_than参数
+        prev_older_than = request.args.get('prev_older_than')
+        
+        return jsonify({
+            'success': True,
+            'logs': logs,
+            'page': page,
+            'has_next': has_next,
+            'has_prev': page > 1,
+            'next_older_than': next_older_than,
+            'prev_older_than': prev_older_than,
+            'per_page': per_page
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'logs': [],
+            'page': 1,
+            'has_next': False,
+            'has_prev': False,
+            'next_older_than': None,
+            'prev_older_than': None,
+            'per_page': per_page
+        }), 500
 
 @admin.route('/adguard-status')
 @login_required

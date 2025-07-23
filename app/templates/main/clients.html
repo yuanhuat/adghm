@@ -14,6 +14,7 @@
             <h1>客户端管理</h1>
             <nav class="main-nav">
                 <a href="{{ url_for('main.index') }}">返回主页</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('admin.index') }}">管理员后台</a>
                 {% endif %}

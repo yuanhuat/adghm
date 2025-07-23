@@ -4,35 +4,351 @@
 
 {% block page_content %}
 <div class="container">
-    <h1 class="mt-4">查询日志</h1>
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-                <th>时间</th>
-                <th>客户端</th>
-                <th>请求域名</th>
-                <th>状态</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for log in logs %}
-            <tr>
-                <td>{{ log.time }}</td>
-                <td>{{ log.client }}</td>
-                <td>{{ log.question.name }}</td>
-                <td>{{ log.reason }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4">没有日志记录。</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% if next_older_than %}
-    <div class="text-center">
-        <a href="{{ url_for('admin.query_log', older_than=next_older_than) }}" class="btn btn-primary">加载更早的日志</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mt-4">查询日志</h1>
+        <div>
+            <button id="refreshBtn" class="btn btn-success me-2">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+            <button id="autoRefreshBtn" class="btn btn-outline-primary" data-auto="false">
+                <i class="fas fa-play"></i> 自动刷新
+            </button>
+        </div>
     </div>
+    
+    <!-- 分页信息 -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="text-muted">每页显示 {{ per_page }} 条记录，当前第 {{ page }} 页</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <small class="text-muted">最后更新：<span id="lastUpdate"></span></small>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="20%">时间</th>
+                            <th width="15%">客户端</th>
+                            <th width="30%">请求域名</th>
+                            <th width="15%">查询类型</th>
+                            <th width="20%">状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        {% for log in logs %}
+                        <tr>
+                            <td>
+                                <small class="log-time" data-time="{{ log.time }}">{{ log.time }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ log.client }}</span>
+                            </td>
+                            <td>
+                                <span class="text-break">{{ log.question.name if log.question else 'N/A' }}</span>
+                                {% if log.question and log.question.type %}
+                                <br><small class="text-muted">{{ log.question.type }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.question %}
+                                <span class="badge bg-secondary">{{ log.question.type or 'Unknown' }}</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.reason == 'NotFilteredNotFound' %}
+                                <span class="badge bg-warning text-dark">未找到</span>
+                                {% elif log.reason == 'NotFilteredWhiteList' %}
+                                <span class="badge bg-success">白名单</span>
+                                {% elif log.reason == 'FilteredBlackList' %}
+                                <span class="badge bg-danger">黑名单</span>
+                                {% elif log.reason == 'FilteredSafeBrowsing' %}
+                                <span class="badge bg-warning">安全浏览</span>
+                                {% elif log.reason == 'FilteredParental' %}
+                                <span class="badge bg-info">家长控制</span>
+                                {% elif log.reason == 'FilteredInvalid' %}
+                                <span class="badge bg-secondary">无效请求</span>
+                                {% elif log.reason == 'FilteredSafeSearch' %}
+                                <span class="badge bg-primary">安全搜索</span>
+                                {% elif log.reason == 'FilteredBlockedService' %}
+                                <span class="badge bg-dark">服务屏蔽</span>
+                                {% elif log.reason == 'Rewritten' %}
+                                <span class="badge bg-info">重写</span>
+                                {% elif log.reason == 'RewrittenAutoHosts' %}
+                                <span class="badge bg-secondary">自动主机</span>
+                                {% elif log.reason == 'RewrittenRule' %}
+                                <span class="badge bg-primary">规则重写</span>
+                                {% elif log.reason == 'NotFilteredAllowList' %}
+                                <span class="badge bg-success">允许列表</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">{{ log.reason or 'Unknown' }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                没有日志记录
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分页导航 -->
+    {% if has_next or has_prev %}
+    <nav aria-label="查询日志分页" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.query_log', page=page-1, prev_older_than=prev_older_than) }}">
+                    <i class="fas fa-chevron-left"></i> 上一页
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-chevron-left"></i> 上一页
+                </span>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">第 {{ page }} 页</span>
+            </li>
+            
+            {% if has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.query_log', page=page+1, older_than=next_older_than) }}">
+                    下一页 <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    下一页 <i class="fas fa-chevron-right"></i>
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
     {% endif %}
 </div>
+
+<script>
+// 实时刷新功能
+let autoRefreshInterval = null;
+let isAutoRefresh = false;
+let currentPage = {{ page }};
+let currentOlderThan = '{{ request.args.get("older_than", "") }}';
+let currentPrevOlderThan = '{{ request.args.get("prev_older_than", "") }}';
+
+// AJAX 刷新日志数据
+function refreshLogData() {
+    const params = new URLSearchParams();
+    params.append('page', currentPage);
+    if (currentOlderThan) {
+        params.append('older_than', currentOlderThan);
+    }
+    if (currentPrevOlderThan) {
+        params.append('prev_older_than', currentPrevOlderThan);
+    }
+    
+    fetch('/admin/query-log/api?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateLogTable(data.logs);
+                updatePagination(data);
+                updateLastUpdateTime();
+                formatLogTimes();
+            } else {
+                console.error('刷新日志失败:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('刷新日志出错:', error);
+        });
+}
+
+// 更新日志表格
+function updateLogTable(logs) {
+    const tbody = document.getElementById('logTableBody');
+    if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                    没有日志记录
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    logs.forEach(log => {
+        const questionName = log.question ? log.question.name || 'N/A' : 'N/A';
+        const questionType = log.question ? log.question.type || 'Unknown' : 'N/A';
+        
+        // 状态标签
+        let statusBadge = '';
+        switch (log.reason) {
+            case 'NotFilteredNotFound':
+                statusBadge = '<span class="badge bg-warning text-dark">未找到</span>';
+                break;
+            case 'NotFilteredWhiteList':
+                statusBadge = '<span class="badge bg-success">白名单</span>';
+                break;
+            case 'FilteredBlackList':
+                statusBadge = '<span class="badge bg-danger">黑名单</span>';
+                break;
+            case 'FilteredSafeBrowsing':
+                statusBadge = '<span class="badge bg-warning">安全浏览</span>';
+                break;
+            case 'FilteredParental':
+                statusBadge = '<span class="badge bg-info">家长控制</span>';
+                break;
+            case 'FilteredInvalid':
+                statusBadge = '<span class="badge bg-secondary">无效请求</span>';
+                break;
+            case 'FilteredSafeSearch':
+                statusBadge = '<span class="badge bg-primary">安全搜索</span>';
+                break;
+            case 'FilteredBlockedService':
+                statusBadge = '<span class="badge bg-dark">服务屏蔽</span>';
+                break;
+            case 'Rewritten':
+                statusBadge = '<span class="badge bg-info">重写</span>';
+                break;
+            case 'RewrittenAutoHosts':
+                statusBadge = '<span class="badge bg-secondary">自动主机</span>';
+                break;
+            case 'RewrittenRule':
+                statusBadge = '<span class="badge bg-primary">规则重写</span>';
+                break;
+            case 'NotFilteredAllowList':
+                statusBadge = '<span class="badge bg-success">允许列表</span>';
+                break;
+            default:
+                statusBadge = `<span class="badge bg-light text-dark">${log.reason || 'Unknown'}</span>`;
+        }
+        
+        html += `
+            <tr>
+                <td>
+                    <small class="log-time" data-time="${log.time}">${log.time}</small>
+                </td>
+                <td>
+                    <span class="badge bg-info">${log.client}</span>
+                </td>
+                <td>
+                    <span class="text-break">${questionName}</span>
+                    ${log.question && log.question.type ? `<br><small class="text-muted">${log.question.type}</small>` : ''}
+                </td>
+                <td>
+                    ${log.question ? `<span class="badge bg-secondary">${questionType}</span>` : '<span class="badge bg-light text-dark">N/A</span>'}
+                </td>
+                <td>
+                    ${statusBadge}
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// 更新分页导航
+function updatePagination(data) {
+    // 这里可以根据需要更新分页导航，暂时保持当前页面的分页状态
+    // 因为我们主要是刷新当前页的数据
+}
+
+// 刷新按钮点击事件
+document.getElementById('refreshBtn').addEventListener('click', function() {
+    refreshLogData();
+});
+
+// 自动刷新按钮点击事件
+document.getElementById('autoRefreshBtn').addEventListener('click', function() {
+    const btn = this;
+    const icon = btn.querySelector('i');
+    
+    if (!isAutoRefresh) {
+        // 开始自动刷新
+        isAutoRefresh = true;
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-primary');
+        icon.classList.remove('fa-play');
+        icon.classList.add('fa-pause');
+        btn.innerHTML = '<i class="fas fa-pause"></i> 停止刷新';
+        
+        // 每1秒刷新一次
+        autoRefreshInterval = setInterval(function() {
+            refreshLogData();
+        }, 1000);
+    } else {
+        // 停止自动刷新
+        isAutoRefresh = false;
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+        btn.innerHTML = '<i class="fas fa-play"></i> 自动刷新';
+        
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+});
+
+// 页面卸载时清理定时器
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
+
+// 更新最后更新时间
+function updateLastUpdateTime() {
+    const now = new Date();
+    const timeString = now.getFullYear() + '-' + 
+                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(now.getDate()).padStart(2, '0') + ' ' + 
+                      String(now.getHours()).padStart(2, '0') + ':' + 
+                      String(now.getMinutes()).padStart(2, '0') + ':' + 
+                      String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('lastUpdate').textContent = timeString;
+}
+
+// 格式化时间显示
+function formatLogTimes() {
+    const logTimeElements = document.querySelectorAll('.log-time');
+    logTimeElements.forEach(function(element) {
+        const timeString = element.getAttribute('data-time');
+        if (timeString) {
+            const formatted = moment(timeString).format('MM-DD HH:mm:ss');
+            element.textContent = formatted;
+        }
+    });
+}
+
+// 页面加载完成后更新时间
+document.addEventListener('DOMContentLoaded', function() {
+    updateLastUpdateTime();
+    formatLogTimes();
+});
+</script>
 {% endblock %}

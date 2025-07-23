@@ -244,6 +244,15 @@ def clients():
     """
     return render_template('main/clients.html')
 
+@main.route('/guide')
+@login_required
+def guide():
+    """AdGuardHome使用指南页面
+    
+    显示AdGuardHome的使用指南和帮助文档
+    """
+    return render_template('main/guide.html')
+
 @main.route('/api/blocked_services')
 @login_required
 def get_blocked_services():

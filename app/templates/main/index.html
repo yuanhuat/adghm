@@ -12,6 +12,7 @@
             <h1>欢迎，{{ current_user.username }}</h1>
             <nav class="main-nav">
                 <a href="{{ url_for('main.clients') }}">客户端管理</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('admin.index') }}">管理员后台</a>
                 {% endif %}
