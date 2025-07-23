@@ -40,6 +40,9 @@
                       <h2>我的DNS请求数</h2>
                       <p class="dashboard-stat" id="user-request-count">{{ user_request_count or 0 }}</p>
                       <p>您的客户端总请求数量</p>
+                      <div class="ranking-info" id="user-ranking-info" style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff;">
+                          <p style="margin: 0; font-size: 14px; color: #6c757d;">排行榜排名：<span id="user-ranking" style="font-weight: bold; color: #007bff;">-</span> / <span id="total-clients" style="font-weight: bold;">-</span></p>
+                      </div>
                   </div>
                   
                   <div class="dashboard-card">
@@ -123,6 +126,22 @@ function updateStats() {
             const totalQueriesElement = document.getElementById('total-dns-queries');
             if (totalQueriesElement) {
                 totalQueriesElement.textContent = data.total_dns_queries || 0;
+            }
+            
+            // 更新用户排名信息
+            const userRankingElement = document.getElementById('user-ranking');
+            const totalClientsElement = document.getElementById('total-clients');
+            const rankingInfoElement = document.getElementById('user-ranking-info');
+            
+            if (userRankingElement && totalClientsElement && rankingInfoElement) {
+                if (data.user_ranking && data.user_ranking > 0 && data.total_clients > 0) {
+                    userRankingElement.textContent = data.user_ranking;
+                    totalClientsElement.textContent = data.total_clients;
+                    rankingInfoElement.style.display = 'block';
+                } else {
+                    // 如果没有排名数据，隐藏排名信息
+                    rankingInfoElement.style.display = 'none';
+                }
             }
         })
         .catch(error => {

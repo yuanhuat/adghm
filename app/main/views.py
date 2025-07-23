@@ -43,12 +43,17 @@ def index():
                 # 查找当前用户的客户端
                 user_clients = ClientMapping.query.filter_by(user_id=current_user.id).all()
                 user_client_names = [client.client_name for client in user_clients]
+                # 获取所有客户端ID
+                user_client_ids = []
+                for client in user_clients:
+                    user_client_ids.extend(client.client_ids)
                 
                 # 在top_clients中查找用户的客户端请求数
                 for client_stat in stats['top_clients']:
                     # top_clients格式: {"client_name": request_count}
                     for client_name, request_count in client_stat.items():
-                        if client_name in user_client_names:
+                        # 匹配客户端名称或客户端ID
+                        if client_name in user_client_names or client_name in user_client_ids:
                             user_request_count += request_count
                         
     except Exception as e:
@@ -298,10 +303,12 @@ def api_stats():
     返回JSON格式的统计数据，用于前端动态更新
     
     Returns:
-        JSON: 包含用户请求数和总DNS查询数的统计数据
+        JSON: 包含用户请求数、总DNS查询数和用户排名的统计数据
     """
     user_request_count = 0
     total_dns_queries = 0
+    user_ranking = 0
+    total_clients = 0
     
     try:
         from app.services.adguard_service import AdGuardService
@@ -314,27 +321,54 @@ def api_stats():
             # 获取总DNS查询数量
             total_dns_queries = stats.get('num_dns_queries', 0)
             
-            # 获取用户客户端请求数量
+            # 获取用户客户端请求数量和排名
             if 'top_clients' in stats:
                 # 查找当前用户的客户端
                 user_clients = ClientMapping.query.filter_by(user_id=current_user.id).all()
                 user_client_names = [client.client_name for client in user_clients]
+                user_client_ids = []
+                for client in user_clients:
+                    user_client_ids.extend(client.client_ids)
+                
+                # 构建所有客户端的请求数列表，用于排名计算
+                all_clients_requests = []
                 
                 # 在top_clients中查找用户的客户端请求数
                 for client_stat in stats['top_clients']:
                     # top_clients格式: {"client_name": request_count}
                     for client_name, request_count in client_stat.items():
-                        if client_name in user_client_names:
+                        all_clients_requests.append(request_count)
+                        # 检查客户端名称或客户端ID是否匹配
+                        if client_name in user_client_names or client_name in user_client_ids:
                             user_request_count += request_count
+                
+                # 计算用户排名
+                if all_clients_requests:
+                    # 按请求数降序排序
+                    all_clients_requests.sort(reverse=True)
+                    total_clients = len(all_clients_requests)
+                    
+                    # 查找用户请求数在排序列表中的位置
+                    if user_request_count > 0:
+                        for i, count in enumerate(all_clients_requests):
+                            if count <= user_request_count:
+                                user_ranking = i + 1
+                                break
+                        if user_ranking == 0:  # 如果没找到，说明用户排在最后
+                            user_ranking = total_clients
                         
     except Exception as e:
         logging.error(f"API获取AdGuardHome统计数据失败: {str(e)}")
         user_request_count = 0
         total_dns_queries = 0
+        user_ranking = 0
+        total_clients = 0
     
     return jsonify({
         'user_request_count': user_request_count,
-        'total_dns_queries': total_dns_queries
+        'total_dns_queries': total_dns_queries,
+        'user_ranking': user_ranking,
+        'total_clients': total_clients
     })
 
 @main.route('/api/client_ranking')
@@ -363,6 +397,15 @@ def api_client_ranking():
                 for client_name, request_count in client_stat.items():
                     # 查找客户端对应的用户信息
                     client_mapping = ClientMapping.query.filter_by(client_name=client_name).first()
+                    
+                    # 如果通过客户端名称没找到，尝试通过客户端ID查找
+                    if not client_mapping:
+                        # 查找包含此客户端ID的映射
+                        all_mappings = ClientMapping.query.all()
+                        for mapping in all_mappings:
+                            if client_name in mapping.client_ids:
+                                client_mapping = mapping
+                                break
                     
                     client_info = {
                         'client_name': client_name,
