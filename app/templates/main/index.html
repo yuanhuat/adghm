@@ -37,16 +37,16 @@
                 </div>
                 
                 <div class="dashboard-card">
-                     <h2>我的DNS请求数</h2>
-                     <p class="dashboard-stat">{{ user_request_count or 0 }}</p>
-                     <p>您的客户端总请求数量</p>
-                 </div>
-                 
-                 <div class="dashboard-card">
-                     <h2>总DNS查询数</h2>
-                     <p class="dashboard-stat">{{ total_dns_queries or 0 }}</p>
-                     <p>AdGuardHome总查询数量</p>
-                 </div>
+                      <h2>我的DNS请求数</h2>
+                      <p class="dashboard-stat" id="user-request-count">{{ user_request_count or 0 }}</p>
+                      <p>您的客户端总请求数量</p>
+                  </div>
+                  
+                  <div class="dashboard-card">
+                      <h2>总DNS查询数</h2>
+                      <p class="dashboard-stat" id="total-dns-queries">{{ total_dns_queries or 0 }}</p>
+                      <p>AdGuardHome总查询数量</p>
+                  </div>
                 
                 <div class="dashboard-card">
                     <h2>账号信息</h2>
@@ -68,10 +68,89 @@
                         {% endif %}
                     </div>
                 </div>
+                
+                <div class="dashboard-card">
+                    <h2>客户端排行榜</h2>
+                    <div class="ranking-list" id="client-ranking">
+                        <p>加载中...</p>
+                    </div>
+                </div>
             </div>
             
 
         </main>
     </div>
+
+<script>
+// 动态更新统计数据
+function updateStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            // 更新用户请求数
+            const userRequestElement = document.getElementById('user-request-count');
+            if (userRequestElement) {
+                userRequestElement.textContent = data.user_request_count || 0;
+            }
+            
+            // 更新总DNS查询数
+            const totalQueriesElement = document.getElementById('total-dns-queries');
+            if (totalQueriesElement) {
+                totalQueriesElement.textContent = data.total_dns_queries || 0;
+            }
+        })
+        .catch(error => {
+            // 静默处理错误，不显示日志
+        });
+}
+
+// 动态更新客户端排行数据
+function updateClientRanking() {
+    fetch('/api/client_ranking')
+        .then(response => response.json())
+        .then(data => {
+            const rankingElement = document.getElementById('client-ranking');
+            if (rankingElement && data.client_ranking) {
+                if (data.client_ranking.length === 0) {
+                    rankingElement.innerHTML = '<p>暂无数据</p>';
+                } else {
+                    let html = '<div class="ranking-items">';
+                    data.client_ranking.forEach((client, index) => {
+                        const rankClass = index < 3 ? `rank-${index + 1}` : 'rank-other';
+                        const currentUserClass = client.is_current_user ? 'current-user' : '';
+                        html += `
+                            <div class="ranking-item ${rankClass} ${currentUserClass}">
+                                <span class="rank-number">${index + 1}</span>
+                                <div class="client-info">
+                                    <div class="client-name">${client.client_name}</div>
+                                    <div class="user-name">${client.user_name}</div>
+                                </div>
+                                <span class="request-count">${client.request_count.toLocaleString()}</span>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    rankingElement.innerHTML = html;
+                }
+            }
+        })
+        .catch(error => {
+            // 静默处理错误，不显示日志
+        });
+}
+
+// 页面加载完成后开始定期更新
+document.addEventListener('DOMContentLoaded', function() {
+    // 立即更新一次
+    updateStats();
+    updateClientRanking();
+    
+    // 每1秒更新一次统计数据
+    setInterval(updateStats, 1000);
+    
+    // 每5秒更新一次客户端排行
+    setInterval(updateClientRanking, 5000);
+});
+</script>
 </body>
 </html>

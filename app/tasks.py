@@ -28,15 +28,19 @@ def init_scheduler_tasks(app):
     flask_app = app
     
     with app.app_context():
-        # 添加自动更新IP地址的定时任务，每60秒执行一次
-        scheduler.add_job(
-            id='auto_update_ip',
-            func=auto_update_ip,
-            trigger='interval',
-            seconds=60,
-            replace_existing=True
-        )
-        logging.info('已添加自动更新IP地址的定时任务')
+        # 检查任务是否已存在，避免重复添加
+        if not scheduler.get_job('auto_update_ip'):
+            # 添加自动更新IP地址的定时任务，每60秒执行一次
+            scheduler.add_job(
+                id='auto_update_ip',
+                func=auto_update_ip,
+                trigger='interval',
+                seconds=60,
+                replace_existing=True
+            )
+            logging.info('已添加自动更新IP地址的定时任务')
+        else:
+            logging.info('自动更新IP地址的定时任务已存在，跳过添加')
 
 def auto_update_ip():
     """自动更新所有用户的域名解析IP地址，同时支持IPv4和IPv6"""

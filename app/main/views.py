@@ -289,6 +289,102 @@ def guide():
     """
     return render_template('main/guide.html')
 
+@main.route('/api/stats')
+@login_required
+def api_stats():
+    """获取AdGuardHome统计数据的API接口
+    
+    返回JSON格式的统计数据，用于前端动态更新
+    
+    Returns:
+        JSON: 包含用户请求数和总DNS查询数的统计数据
+    """
+    user_request_count = 0
+    total_dns_queries = 0
+    
+    try:
+        from app.services.adguard_service import AdGuardService
+        adguard_service = AdGuardService()
+        
+        # 获取统计数据
+        stats = adguard_service.get_stats()
+        
+        if stats:
+            # 获取总DNS查询数量
+            total_dns_queries = stats.get('num_dns_queries', 0)
+            
+            # 获取用户客户端请求数量
+            if 'top_clients' in stats:
+                # 查找当前用户的客户端
+                user_clients = ClientMapping.query.filter_by(user_id=current_user.id).all()
+                user_client_names = [client.client_name for client in user_clients]
+                
+                # 在top_clients中查找用户的客户端请求数
+                for client_stat in stats['top_clients']:
+                    # top_clients格式: {"client_name": request_count}
+                    for client_name, request_count in client_stat.items():
+                        if client_name in user_client_names:
+                            user_request_count += request_count
+                        
+    except Exception as e:
+        logging.error(f"API获取AdGuardHome统计数据失败: {str(e)}")
+        user_request_count = 0
+        total_dns_queries = 0
+    
+    return jsonify({
+        'user_request_count': user_request_count,
+        'total_dns_queries': total_dns_queries
+    })
+
+@main.route('/api/client_ranking')
+@login_required
+def api_client_ranking():
+    """获取AdGuardHome客户端排行数据的API接口
+    
+    返回JSON格式的客户端排行数据，显示请求数量最多的客户端
+    
+    Returns:
+        JSON: 包含客户端排行数据的列表
+    """
+    client_ranking = []
+    
+    try:
+        from app.services.adguard_service import AdGuardService
+        adguard_service = AdGuardService()
+        
+        # 获取统计数据
+        stats = adguard_service.get_stats()
+        
+        if stats and 'top_clients' in stats:
+            # 处理top_clients数据
+            for client_stat in stats['top_clients']:
+                # top_clients格式: {"client_name": request_count}
+                for client_name, request_count in client_stat.items():
+                    # 查找客户端对应的用户信息
+                    client_mapping = ClientMapping.query.filter_by(client_name=client_name).first()
+                    
+                    client_info = {
+                        'client_name': client_name,
+                        'request_count': request_count,
+                        'user_name': client_mapping.user.username if client_mapping else '未知用户',
+                        'is_current_user': client_mapping.user_id == current_user.id if client_mapping else False
+                    }
+                    client_ranking.append(client_info)
+            
+            # 按请求数量降序排序
+            client_ranking.sort(key=lambda x: x['request_count'], reverse=True)
+            
+            # 只返回前10名
+            client_ranking = client_ranking[:10]
+                        
+    except Exception as e:
+        logging.error(f"API获取客户端排行数据失败: {str(e)}")
+        client_ranking = []
+    
+    return jsonify({
+        'client_ranking': client_ranking
+    })
+
 @main.route('/api/blocked_services')
 @login_required
 def get_blocked_services():

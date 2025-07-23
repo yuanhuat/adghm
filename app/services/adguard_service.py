@@ -86,12 +86,7 @@ class AdGuardService:
             
         url = f"{self.base_url}{endpoint}"
         
-        # 记录请求信息（不包含敏感信息）
-        print(f"发送请求到AdGuardHome API: 方法={method}, URL={url}")
-        if json is not None:
-            print(f"请求体数据: {json}")
-        if params is not None:
-            print(f"URL参数: {params}")
+        # 静默处理请求，不输出日志
         
         try:
             response = self.session.request(
@@ -103,8 +98,7 @@ class AdGuardService:
                 timeout=10  # 设置超时时间
             )
 
-            print(f"收到来自 AdGuardHome API 的响应: 状态码={response.status_code}")
-            print(f"响应内容: {response.content[:500]}") # 打印前500个字符以供调试
+            # 静默处理响应，不输出日志
             
             # 处理常见的HTTP错误
             if response.status_code == 401:
@@ -127,8 +121,7 @@ class AdGuardService:
             except ValueError:
                 # 对于成功的响应，即使不是JSON格式也返回空字典
                 if 200 <= response.status_code < 300:
-                    # 记录警告但不抛出异常
-                    print(f"警告：成功的响应不是JSON格式，状态码：{response.status_code}，内容：{response.content[:100]}...")
+                    # 静默处理非JSON响应
                     return {}
                 # 对于错误响应，提供更详细的错误信息
                 error_content = response.content.decode('utf-8', errors='replace')[:200]
@@ -181,8 +174,7 @@ class AdGuardService:
         ignore_querylog: bool = False,
         ignore_statistics: bool = False
     ) -> Dict:
-        # 记录创建客户端的请求信息
-        print(f"开始创建AdGuardHome客户端：名称={name}, IDs={ids}")
+        # 静默处理客户端创建请求
         """创建新的AdGuardHome客户端
         
         Args:

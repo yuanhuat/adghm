@@ -379,3 +379,130 @@ tr:hover {
         margin-bottom: 20px;
     }
 }
+
+/* 客户端排行榜样式 */
+.ranking-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ranking-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border-left: 4px solid #dee2e6;
+}
+
+.ranking-item:hover {
+    background-color: #e9ecef;
+    transform: translateX(2px);
+}
+
+.ranking-item.current-user {
+    background-color: #e3f2fd;
+    border-left-color: #2196f3;
+}
+
+.ranking-item.current-user:hover {
+    background-color: #bbdefb;
+}
+
+.rank-number {
+    font-size: 18px;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+    margin-right: 15px;
+    color: #666;
+}
+
+.ranking-item.rank-1 .rank-number {
+    color: #ffd700;
+    font-size: 20px;
+}
+
+.ranking-item.rank-2 .rank-number {
+    color: #c0c0c0;
+    font-size: 19px;
+}
+
+.ranking-item.rank-3 .rank-number {
+    color: #cd7f32;
+    font-size: 18px;
+}
+
+.client-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.client-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.user-name {
+    font-size: 12px;
+    color: #666;
+}
+
+.request-count {
+    font-weight: bold;
+    color: #3498db;
+    font-size: 14px;
+    min-width: 80px;
+    text-align: right;
+}
+
+.ranking-item.rank-1 {
+    border-left-color: #ffd700;
+    background: linear-gradient(135deg, #fff9c4 0%, #f8f9fa 100%);
+}
+
+.ranking-item.rank-2 {
+    border-left-color: #c0c0c0;
+    background: linear-gradient(135deg, #f5f5f5 0%, #f8f9fa 100%);
+}
+
+.ranking-item.rank-3 {
+    border-left-color: #cd7f32;
+    background: linear-gradient(135deg, #ffeaa7 0%, #f8f9fa 100%);
+}
+
+/* 响应式设计 - 排行榜 */
+@media (max-width: 768px) {
+    .ranking-item {
+        padding: 10px;
+    }
+    
+    .rank-number {
+        min-width: 25px;
+        margin-right: 10px;
+        font-size: 16px;
+    }
+    
+    .client-name {
+        font-size: 13px;
+    }
+    
+    .user-name {
+        font-size: 11px;
+    }
+    
+    .request-count {
+        font-size: 13px;
+        min-width: 60px;
+    }
+}
