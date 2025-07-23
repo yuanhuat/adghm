@@ -37,10 +37,16 @@
                 </div>
                 
                 <div class="dashboard-card">
-                    <h2>我的DNS请求数</h2>
-                    <p class="dashboard-stat">{{ user_request_count or 0 }}</p>
-                    <p>您的客户端总请求数量</p>
-                </div>
+                     <h2>我的DNS请求数</h2>
+                     <p class="dashboard-stat">{{ user_request_count or 0 }}</p>
+                     <p>您的客户端总请求数量</p>
+                 </div>
+                 
+                 <div class="dashboard-card">
+                     <h2>总DNS查询数</h2>
+                     <p class="dashboard-stat">{{ total_dns_queries or 0 }}</p>
+                     <p>AdGuardHome总查询数量</p>
+                 </div>
                 
                 <div class="dashboard-card">
                     <h2>账号信息</h2>

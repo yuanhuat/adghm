@@ -23,8 +23,9 @@ def index():
     # 获取用户的域名映射信息
     domain_mapping = DomainMapping.query.filter_by(user_id=current_user.id).first()
     
-    # 获取当前用户的AdGuardHome客户端请求数量
+    # 获取当前用户的AdGuardHome客户端请求数量和总DNS查询数量
     user_request_count = 0
+    total_dns_queries = 0
     try:
         from app.services.adguard_service import AdGuardService
         adguard_service = AdGuardService()
@@ -32,25 +33,32 @@ def index():
         # 获取统计数据
         stats = adguard_service.get_stats()
         
-        if stats and 'top_clients' in stats:
-            # 查找当前用户的客户端
-            user_clients = ClientMapping.query.filter_by(user_id=current_user.id).all()
-            user_client_names = [client.client_name for client in user_clients]
+        if stats:
+            # 获取总DNS查询数量
+            total_dns_queries = stats.get('num_dns_queries', 0)
             
-            # 在top_clients中查找用户的客户端请求数
-            for client_stat in stats['top_clients']:
-                # top_clients格式: {"client_name": request_count}
-                for client_name, request_count in client_stat.items():
-                    if client_name in user_client_names:
-                        user_request_count += request_count
+            # 获取用户客户端请求数量
+            if 'top_clients' in stats:
+                # 查找当前用户的客户端
+                user_clients = ClientMapping.query.filter_by(user_id=current_user.id).all()
+                user_client_names = [client.client_name for client in user_clients]
+                
+                # 在top_clients中查找用户的客户端请求数
+                for client_stat in stats['top_clients']:
+                    # top_clients格式: {"client_name": request_count}
+                    for client_name, request_count in client_stat.items():
+                        if client_name in user_client_names:
+                            user_request_count += request_count
                         
     except Exception as e:
-        logging.error(f"获取用户AdGuardHome请求数量失败: {str(e)}")
+        logging.error(f"获取AdGuardHome统计数据失败: {str(e)}")
         user_request_count = 0
+        total_dns_queries = 0
     
     return render_template('main/index.html', 
                          domain_mapping=domain_mapping,
-                         user_request_count=user_request_count)
+                         user_request_count=user_request_count,
+                         total_dns_queries=total_dns_queries)
 
 @main.route('/domain-info')
 @login_required
