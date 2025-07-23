@@ -143,6 +143,28 @@ def register():
                             ignore_statistics=False
                         )
                         
+                        # 将客户端加入允许列表
+                        try:
+                            # 获取当前的访问控制列表
+                            access_list = adguard._make_request('GET', '/access/list')
+                            allowed_clients = access_list.get('allowed_clients', [])
+                            
+                            # 将新客户端ID添加到允许列表
+                            if client_ids[0] not in allowed_clients:
+                                allowed_clients.append(client_ids[0])
+                                
+                                # 更新访问控制列表
+                                access_data = {
+                                    'allowed_clients': allowed_clients,
+                                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                                }
+                                adguard._make_request('POST', '/access/set', json=access_data)
+                                print(f"已将客户端 {client_ids[0]} 添加到允许列表")
+                        except Exception as e:
+                            print(f"将客户端添加到允许列表失败: {str(e)}")
+                            # 继续执行，不影响用户注册流程
+                        
                         # 创建客户端映射
                         client_mapping = ClientMapping(
                             user_id=user.id,
