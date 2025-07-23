@@ -71,9 +71,11 @@ class DomainService:
         
         # 定义IPv6获取API
         ipv6_apis = [
-            {'url': 'https://api6.ipify.org', 'type': 'text', 'parser': lambda r: r.text},
-            {'url': 'https://ifconfig.co/ip', 'type': 'text', 'parser': lambda r: r.text.strip()},
-            {'url': 'https://api6.ipify.org?format=json', 'type': 'json', 'parser': lambda r: r.json().get('ip')}
+            {'url': 'https://api6.ipify.org', 'type': 'text', 'parser': lambda r: r.text.strip()},
+            {'url': 'https://v6.ident.me', 'type': 'text', 'parser': lambda r: r.text.strip()},
+            {'url': 'https://ipv6.icanhazip.com', 'type': 'text', 'parser': lambda r: r.text.strip()},
+            {'url': 'https://api6.ipify.org?format=json', 'type': 'json', 'parser': lambda r: r.json().get('ip')},
+            {'url': 'https://v6.myip.la/json', 'type': 'json', 'parser': lambda r: r.json().get('ip')}
         ]
         
         # 根据请求的IP类型选择API
@@ -147,16 +149,15 @@ class DomainService:
         Returns:
             bool: 是否是有效的IP地址
         """
-        import re
-        ip = ip.strip()
+        import ipaddress
         
-        # IPv4地址格式验证
-        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
-        
-        # IPv6地址格式验证 (简化版)
-        ipv6_pattern = r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$'
-        
-        return bool(re.match(ipv4_pattern, ip)) or bool(re.match(ipv6_pattern, ip))
+        try:
+            ip = ip.strip()
+            # 使用Python内置的ipaddress模块进行验证，更准确可靠
+            ipaddress.ip_address(ip)
+            return True
+        except ValueError:
+            return False
         
     def _get_ip_type(self, ip: str) -> str:
         """
@@ -168,20 +169,19 @@ class DomainService:
         Returns:
             str: 'A'表示IPv4, 'AAAA'表示IPv6, 空字符串表示无效IP
         """
-        import re
-        ip = ip.strip()
+        import ipaddress
         
-        # IPv4地址格式验证
-        ipv4_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
-        
-        # IPv6地址格式验证 (简化版)
-        ipv6_pattern = r'^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$'
-        
-        if re.match(ipv4_pattern, ip):
-            return "A"
-        elif re.match(ipv6_pattern, ip):
-            return "AAAA"
-        else:
+        try:
+            ip = ip.strip()
+            ip_obj = ipaddress.ip_address(ip)
+            
+            if isinstance(ip_obj, ipaddress.IPv4Address):
+                return "A"
+            elif isinstance(ip_obj, ipaddress.IPv6Address):
+                return "AAAA"
+            else:
+                return ""
+        except ValueError:
             # 无效的IP地址
             return ""
             
@@ -330,6 +330,87 @@ class DomainService:
         except Exception as e:
             logging.error(f"添加域名解析记录失败: {str(e)}")
             raise e
+    
+    def add_ipv6_record(self, subdomain: str, ipv6_address: str) -> Dict:
+        """
+        添加IPv6域名解析记录（AAAA记录）
+        
+        Args:
+            subdomain: 子域名
+            ipv6_address: IPv6地址
+            
+        Returns:
+            Dict: 创建结果，包含RecordId
+            
+        Raises:
+            Exception: 当添加IPv6域名解析记录失败时抛出异常
+        """
+        try:
+            from aliyunsdkalidns.request.v20150109.AddDomainRecordRequest import AddDomainRecordRequest
+            
+            request = AddDomainRecordRequest()
+            request.set_accept_format('json')
+            
+            # 设置域名解析参数
+            request.set_DomainName(self.domain_name)
+            request.set_RR(subdomain)  # 子域名前缀
+            request.set_Type("AAAA")   # AAAA记录，将域名解析到IPv6地址
+            request.set_Value(ipv6_address)  # 解析到的IPv6地址
+            request.set_TTL(600)       # 生存时间，单位秒
+            
+            # 发送请求
+            response = self.client.do_action_with_exception(request)
+            result = json.loads(response.decode('utf-8'))
+            
+            logging.info(f"创建IPv6域名解析成功: {subdomain}.{self.domain_name} -> {ipv6_address}")
+            return result
+        except Exception as e:
+            error_str = str(e)
+            if "DomainRecordDuplicate" in error_str:
+                logging.warning(f"IPv6域名记录已存在: {subdomain}.{self.domain_name} -> {ipv6_address}")
+                # 尝试查找现有记录
+                existing_record = self.find_ipv6_subdomain_record(subdomain)
+                if existing_record:
+                    return {'RecordId': existing_record['RecordId']}
+            logging.error(f"添加IPv6域名解析记录失败: {str(e)}")
+            raise e
+    
+    def find_ipv6_subdomain_record(self, subdomain: str) -> Optional[Dict]:
+        """
+        查找IPv6子域名解析记录
+        
+        Args:
+            subdomain: 子域名
+            
+        Returns:
+            Optional[Dict]: IPv6解析记录信息，如果不存在则返回None
+        """
+        try:
+            from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import DescribeDomainRecordsRequest
+            
+            request = DescribeDomainRecordsRequest()
+            request.set_accept_format('json')
+            
+            # 设置查询参数
+            request.set_DomainName(self.domain_name)
+            request.set_RRKeyWord(subdomain)  # 按照子域名前缀关键词查询
+            request.set_Type("AAAA")         # 只查询AAAA记录（IPv6）
+            
+            # 发送请求
+            response = self.client.do_action_with_exception(request)
+            result = json.loads(response.decode('utf-8'))
+            
+            # 检查是否有匹配的记录
+            if result.get('TotalCount', 0) > 0:
+                records = result.get('DomainRecords', {}).get('Record', [])
+                for record in records:
+                    if record.get('RR') == subdomain:
+                        return record
+            
+            return None
+        except Exception as e:
+            logging.error(f"查询IPv6子域名解析记录失败: {str(e)}")
+            return None
     
     def update_subdomain(self, username: str, ip: str, record_id: str) -> Dict:
         """

@@ -109,6 +109,7 @@ def auto_update_ip():
                     # 更新IPv6地址
                     if ipv6_changed:
                         if mapping.ipv6_record_id:
+                            # 更新现有的IPv6记录
                             domain_service.update_domain_record(
                                 mapping.ipv6_record_id,
                                 mapping.subdomain,
@@ -118,22 +119,19 @@ def auto_update_ip():
                             mapping.ipv6_address = ipv6_address
                             logging.info(f'成功更新域名映射 {mapping.full_domain} 的IPv6地址为 {ipv6_address}')
                         else:
-                            request = AddDomainRecordRequest()
-                            request.set_accept_format('json')
-                            request.set_DomainName(domain_config.domain_name)
-                            request.set_RR(mapping.subdomain)
-                            request.set_Type("AAAA")
-                            request.set_Value(ipv6_address)
-                            request.set_TTL(600)
-                            
-                            response = domain_service.client.do_action_with_exception(request)
-                            result = json.loads(response.decode('utf-8'))
-                            ipv6_record_id = result.get('RecordId', '')
-                            if ipv6_record_id:
-                                details_parts.append(f'IPv6创建为 {ipv6_address}')
-                                mapping.ipv6_address = ipv6_address
-                                mapping.ipv6_record_id = ipv6_record_id
-                                logging.info(f'成功创建域名映射 {mapping.full_domain} 的IPv6记录，地址为 {ipv6_address}')
+                            # 创建新的IPv6记录
+                            try:
+                                result = domain_service.add_ipv6_record(mapping.subdomain, ipv6_address)
+                                ipv6_record_id = result.get('RecordId', '')
+                                if ipv6_record_id:
+                                    details_parts.append(f'IPv6创建为 {ipv6_address}')
+                                    mapping.ipv6_address = ipv6_address
+                                    mapping.ipv6_record_id = ipv6_record_id
+                                    logging.info(f'成功创建域名映射 {mapping.full_domain} 的IPv6记录，地址为 {ipv6_address}')
+                                else:
+                                    logging.warning(f'创建IPv6记录失败，未获取到记录ID: {mapping.full_domain}')
+                            except Exception as ipv6_error:
+                                logging.error(f'创建IPv6记录失败: {mapping.full_domain}, 错误: {str(ipv6_error)}')
 
                     # 记录统一的操作日志
                     log = OperationLog(
