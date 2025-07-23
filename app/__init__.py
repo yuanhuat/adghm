@@ -40,6 +40,7 @@ def create_app():
 
     # 导入所有模型以确保它们在创建数据库表之前被定义
     from app.models import User, ClientMapping, OperationLog, AdGuardConfig, DomainMapping, DomainConfig, Feedback, VerificationCode, EmailConfig
+    from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
     # 在应用上下文中创建所有数据库表
     with app.app_context():

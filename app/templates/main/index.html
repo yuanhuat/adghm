@@ -113,9 +113,31 @@
 <script>
 // 动态更新统计数据
 function updateStats() {
-    fetch('/api/stats')
-        .then(response => response.json())
+    fetch('/api/stats', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => {
+            console.log('Stats API response status:', response.status);
+            if (response.status === 401 || response.status === 403) {
+                console.log('Stats API: 认证失败，用户未登录');
+                return null;
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) {
+                console.log('Stats API: 跳过处理（认证失败）');
+                return;
+            }
+            console.log('Stats API data:', data);
+            
             // 更新用户请求数
             const userRequestElement = document.getElementById('user-request-count');
             if (userRequestElement) {
@@ -145,15 +167,37 @@ function updateStats() {
             }
         })
         .catch(error => {
-            // 静默处理错误，不显示日志
+            console.error('Stats API error:', error);
         });
 }
 
 // 动态更新客户端排行数据
 function updateClientRanking() {
-    fetch('/api/client_ranking')
-        .then(response => response.json())
+    fetch('/api/client_ranking', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => {
+            console.log('Client ranking API response status:', response.status);
+            if (response.status === 401 || response.status === 403) {
+                console.log('Client ranking API: 认证失败，用户未登录');
+                return null;
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) {
+                console.log('Client ranking API: 跳过处理（认证失败）');
+                return;
+            }
+            console.log('Client ranking API data:', data);
+            
             const rankingElement = document.getElementById('client-ranking');
             if (rankingElement && data.client_ranking) {
                 if (data.client_ranking.length === 0) {
@@ -180,7 +224,7 @@ function updateClientRanking() {
             }
         })
         .catch(error => {
-            // 静默处理错误，不显示日志
+            console.error('Client ranking API error:', error);
         });
 }
 
@@ -202,8 +246,16 @@ function submitFeedback(event) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.status === 401 || response.status === 403) {
+            alert('请先登录后再提交留言');
+            return null;
+        }
+        return response.json();
+    })
     .then(data => {
+        if (!data) return; // 认证失败时跳过处理
+        
         if (data.success) {
             form.reset();
             updateFeedbackList();
@@ -220,8 +272,19 @@ function submitFeedback(event) {
 // 更新留言列表
 function updateFeedbackList() {
     fetch('/api/feedback')
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                // 认证失败，可能需要重新登录
+                return null;
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data) return; // 认证失败时跳过处理
+            
             const feedbackItemsElement = document.getElementById('feedback-items');
             if (feedbackItemsElement && data.feedbacks) {
                 if (data.feedbacks.length === 0) {
@@ -250,7 +313,7 @@ function updateFeedbackList() {
             }
         })
         .catch(error => {
-            // 静默处理错误
+            console.error('Feedback API error:', error);
         });
 }
 

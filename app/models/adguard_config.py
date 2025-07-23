@@ -16,6 +16,11 @@ class AdGuardConfig(db.Model):
     auth_password = db.Column(db.String(255), nullable=False)
     updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
+    # AI分析配置
+    deepseek_api_key = db.Column(db.Text)
+    auto_analysis_enabled = db.Column(db.Boolean, default=False)
+    analysis_threshold = db.Column(db.Float, default=0.8)
+    
     def __init__(self, api_base_url=None, auth_username=None, auth_password=None):
         """初始化配置对象
         

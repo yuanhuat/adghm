@@ -10,8 +10,12 @@ from app.models.domain_config import DomainConfig
 from app.models.domain_mapping import DomainMapping
 from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
+from app.models.adguard_config import AdGuardConfig
+from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 from app.services.adguard_service import AdGuardService
 from app.services.domain_service import DomainService
+from app.services.query_log_service import QueryLogService
+from app.services.ai_analysis_service import AIAnalysisService
 from . import admin
 from functools import wraps
 import os
@@ -195,7 +199,6 @@ def operation_logs():
 @admin_required
 def adguard_config():
     """AdGuardHome配置页面"""
-    from app.models.adguard_config import AdGuardConfig
     config = AdGuardConfig.get_config()
     return render_template('admin/adguard_config.html', config=config)
 
@@ -306,6 +309,13 @@ def query_log():
                              next_older_than=None,
                              prev_older_than=None,
                              per_page=per_page)
+
+@admin.route('/query-log-enhanced')
+@login_required
+@admin_required
+def query_log_enhanced():
+    """增强查询日志页面"""
+    return render_template('admin/query_log_enhanced.html')
 
 @admin.route('/query-log/api')
 @login_required
@@ -1130,3 +1140,467 @@ def test_email_config():
             'success': False,
             'error': f'测试失败: {str(e)}'
         })
+
+
+@admin.route('/query-log-analysis')
+@login_required
+@admin_required
+def query_log_analysis():
+    """查询日志分析页面"""
+    return render_template('admin/query_log_analysis.html')
+
+
+@admin.route('/api/query-log-analysis/start', methods=['POST'])
+@login_required
+@admin_required
+def start_query_log_analysis():
+    """启动查询日志分析任务"""
+    try:
+        data = request.get_json()
+        analysis_type = data.get('analysis_type', 'basic')
+        time_range = data.get('time_range', '1h')
+        
+        # 创建分析任务
+        analysis = QueryLogAnalysis(
+            user_id=current_user.id,
+            analysis_type=analysis_type,
+            time_range=time_range,
+            status='pending'
+        )
+        db.session.add(analysis)
+        db.session.flush()  # 获取ID
+        
+        # 启动后台分析任务
+        query_log_service = QueryLogService()
+        query_log_service.start_analysis_task(analysis.id)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'analysis_id': analysis.id,
+            'message': '分析任务已启动'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+             'success': False,
+             'error': str(e)
+         }), 500
+
+
+@admin.route('/api/query-log/advanced-search', methods=['POST'])
+@login_required
+@admin_required
+def advanced_search_query_log():
+    """高级搜索查询日志"""
+    try:
+        data = request.get_json()
+        filters = data.get('filters', {})
+        page_size = data.get('page_size', 50)
+        older_than = data.get('older_than')
+        
+        query_log_service = QueryLogService()
+        result = query_log_service.advanced_search(
+            filters=filters,
+            page_size=page_size,
+            older_than=older_than
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/query-log/export', methods=['POST'])
+@login_required
+@admin_required
+def export_query_log():
+    """导出查询日志"""
+    try:
+        data = request.get_json()
+        export_format = data.get('format', 'csv')
+        filters = data.get('filters', {})
+        max_records = data.get('max_records', 10000)
+        
+        query_log_service = QueryLogService()
+        file_path = query_log_service.export_logs(
+            export_format=export_format,
+            filters=filters,
+            max_records=max_records,
+            user_id=current_user.id
+        )
+        
+        if file_path:
+            return jsonify({
+                'success': True,
+                'file_path': file_path,
+                'message': '导出成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': '导出失败'
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/query-log/analysis-report', methods=['POST'])
+@login_required
+@admin_required
+def generate_analysis_report():
+    """生成DNS查询趋势分析报告"""
+    try:
+        data = request.get_json()
+        time_range = data.get('time_range', '24h')
+        
+        query_log_service = QueryLogService()
+        report = query_log_service.generate_analysis_report(time_range=time_range)
+        
+        return jsonify({
+            'success': True,
+            'report': report
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/ai-analysis/domain', methods=['POST'])
+@login_required
+@admin_required
+def analyze_domain_with_ai():
+    """使用AI分析域名"""
+    try:
+        data = request.get_json()
+        domain = data.get('domain')
+        
+        if not domain:
+            return jsonify({
+                'success': False,
+                'error': '域名不能为空'
+            }), 400
+        
+        ai_service = AIAnalysisService()
+        result = ai_service.analyze_domain(domain)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'analysis': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'AI分析失败，请检查API配置'
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/ai-analysis/domains/batch', methods=['POST'])
+@login_required
+@admin_required
+def analyze_domains_batch():
+    """批量分析域名"""
+    try:
+        data = request.get_json()
+        domains = data.get('domains', [])
+        
+        if not domains:
+            return jsonify({
+                'success': False,
+                'error': '域名列表不能为空'
+            }), 400
+        
+        ai_service = AIAnalysisService()
+        results = ai_service.analyze_domains_batch(domains)
+        
+        return jsonify({
+            'success': True,
+            'results': results
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/ai-analysis/pending-reviews')
+@login_required
+@admin_required
+def get_pending_reviews():
+    """获取待审核的AI分析结果"""
+    try:
+        ai_service = AIAnalysisService()
+        pending_reviews = ai_service.get_pending_reviews()
+        
+        return jsonify({
+            'success': True,
+            'reviews': [review.to_dict() for review in pending_reviews]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/ai-analysis/review', methods=['POST'])
+@login_required
+@admin_required
+def review_ai_analysis():
+    """审核AI分析结果"""
+    try:
+        data = request.get_json()
+        analysis_id = data.get('analysis_id')
+        admin_action = data.get('action')  # block, allow, ignore
+        admin_notes = data.get('notes', '')
+        
+        if not analysis_id or not admin_action:
+            return jsonify({
+                'success': False,
+                'error': '分析ID和操作不能为空'
+            }), 400
+        
+        ai_service = AIAnalysisService()
+        success = ai_service.review_analysis(
+            analysis_id=analysis_id,
+            admin_action=admin_action,
+            admin_notes=admin_notes,
+            reviewer_id=current_user.id
+        )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': '审核完成'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': '审核失败'
+            }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/ai-analysis/stats')
+@login_required
+@admin_required
+def get_ai_analysis_stats():
+    """获取AI分析统计信息"""
+    try:
+        ai_service = AIAnalysisService()
+        stats = ai_service.get_analysis_stats()
+        
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/ai-analysis-config')
+@login_required
+@admin_required
+def ai_analysis_config():
+    """AI分析配置页面"""
+    return render_template('admin/ai_analysis_config.html')
+
+
+@admin.route('/api/ai-analysis/config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_ai_analysis_config():
+    """管理AI分析配置"""
+    if request.method == 'GET':
+        try:
+            config = AdGuardConfig.get_config()
+            return jsonify({
+                'success': True,
+                'config': {
+                    'deepseek_api_key': getattr(config, 'deepseek_api_key', ''),
+                    'auto_analysis_enabled': getattr(config, 'auto_analysis_enabled', False),
+                    'analysis_threshold': getattr(config, 'analysis_threshold', 0.8)
+                }
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            config = AdGuardConfig.get_config()
+            
+            # 更新配置
+            if 'deepseek_api_key' in data:
+                config.deepseek_api_key = data['deepseek_api_key']
+            if 'auto_analysis_enabled' in data:
+                config.auto_analysis_enabled = data['auto_analysis_enabled']
+            if 'analysis_threshold' in data:
+                config.analysis_threshold = float(data['analysis_threshold'])
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_ai_config',
+                target_type='config',
+                target_id='ai_analysis',
+                details='更新AI分析配置'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'AI分析配置已更新'
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+
+@admin.route('/api/query-log-analysis/<int:analysis_id>/status')
+@login_required
+@admin_required
+def get_analysis_status(analysis_id):
+    """获取分析任务状态"""
+    try:
+        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
+        return jsonify({
+            'success': True,
+            'analysis': analysis.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/query-log-analysis/<int:analysis_id>/result')
+@login_required
+@admin_required
+def get_analysis_result(analysis_id):
+    """获取分析结果"""
+    try:
+        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
+        if analysis.status != 'completed':
+            return jsonify({
+                'success': False,
+                'error': '分析尚未完成'
+            }), 400
+            
+        return jsonify({
+            'success': True,
+            'result': analysis.result_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/query-log-analysis/export', methods=['POST'])
+@login_required
+@admin_required
+def export_query_log_analysis():
+    """导出查询日志分析结果"""
+    try:
+        data = request.get_json()
+        analysis_id = data.get('analysis_id')
+        export_format = data.get('format', 'json')
+        
+        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
+        
+        # 创建导出任务
+        export_task = QueryLogExport(
+            analysis_id=analysis_id,
+            user_id=current_user.id,
+            export_format=export_format,
+            status='pending'
+        )
+        db.session.add(export_task)
+        db.session.flush()
+        
+        # 启动导出任务
+        query_log_service = QueryLogService()
+        query_log_service.start_export_task(export_task.id)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'export_id': export_task.id,
+            'message': '导出任务已启动'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/query-log-analysis/ai-insights', methods=['POST'])
+@login_required
+@admin_required
+def get_ai_insights():
+    """获取AI分析洞察"""
+    try:
+        data = request.get_json()
+        analysis_id = data.get('analysis_id')
+        
+        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
+        if analysis.status != 'completed':
+            return jsonify({
+                'success': False,
+                'error': '分析尚未完成'
+            }), 400
+        
+        # 使用AI服务生成洞察
+        ai_service = AIAnalysisService()
+        insights = ai_service.generate_insights(analysis.result_data)
+        
+        return jsonify({
+            'success': True,
+            'insights': insights
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

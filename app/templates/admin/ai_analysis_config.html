@@ -1,0 +1,678 @@
+{% extends "admin/base.html" %}
+
+{% block title %}AI分析配置 - AdGuard Home 管理{% endblock %}
+
+{% block extra_css %}
+<style>
+.config-panel {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.config-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.config-header h5 {
+    margin: 0;
+    color: #495057;
+}
+
+.config-header p {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-text {
+    font-size: 0.85rem;
+}
+
+.api-status {
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.api-status.connected {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.api-status.disconnected {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.api-status.testing {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.pending-review-item {
+    border: 1px solid #e3f2fd;
+    background: #f8f9ff;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.confidence-bar {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-high { background: #4caf50; }
+.confidence-medium { background: #ff9800; }
+.confidence-low { background: #f44336; }
+
+.domain-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.tag-ad { background: #ffebee; color: #c62828; }
+.tag-tracker { background: #fff3e0; color: #ef6c00; }
+.tag-malware { background: #fce4ec; color: #ad1457; }
+.tag-legitimate { background: #e8f5e8; color: #2e7d32; }
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-ai {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+}
+
+.btn-ai:hover {
+    background: linear-gradient(45deg, #5a6fd8, #6a4190);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-robot"></i> AI分析配置</h2>
+                <div>
+                    <a href="{{ url_for('admin.query_log_enhanced') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> 返回日志</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 配置面板 -->
+        <div class="col-md-8">
+            <div class="config-panel">
+                <div class="config-header">
+                    <h5><i class="fas fa-cog"></i> DeepSeek API 配置</h5>
+                    <p>配置DeepSeek AI API以启用智能域名分析功能</p>
+                </div>
+                
+                <form id="configForm">
+                    <div class="form-group">
+                        <label for="apiKey">API密钥</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="apiKey" placeholder="输入DeepSeek API密钥">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleApiKeyVisibility()">
+                                    <i class="fas fa-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">
+                            请在 <a href="https://platform.deepseek.com/" target="_blank">DeepSeek平台</a> 获取API密钥
+                        </small>
+                        <div id="apiStatus" class="api-status" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="autoAnalysis">
+                            <label class="form-check-label" for="autoAnalysis">
+                                启用自动分析
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            启用后，系统将自动分析新出现的域名
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="analysisThreshold">分析阈值</label>
+                        <input type="range" class="form-control-range" id="analysisThreshold" min="0.1" max="1.0" step="0.1" value="0.8">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">0.1 (低)</small>
+                            <small class="text-muted" id="thresholdValue">0.8</small>
+                            <small class="text-muted">1.0 (高)</small>
+                        </div>
+                        <small class="form-text text-muted">
+                            只有置信度高于此阈值的分析结果才会被推荐采取行动
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary" onclick="saveConfig()">
+                            <i class="fas fa-save"></i> 保存配置
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ml-2" onclick="testConnection()">
+                            <i class="fas fa-plug"></i> 测试连接
+                        </button>
+                        <button type="button" class="btn btn-outline-info ml-2" onclick="loadConfig()">
+                            <i class="fas fa-sync"></i> 重新加载
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 待审核分析结果 -->
+            <div class="config-panel">
+                <div class="config-header">
+                    <h5><i class="fas fa-clipboard-check"></i> 待审核分析结果</h5>
+                    <p>需要管理员审核的AI分析结果</p>
+                </div>
+                
+                <div id="pendingReviews">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary" onclick="loadPendingReviews()">
+                        <i class="fas fa-sync"></i> 刷新列表
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计面板 -->
+        <div class="col-md-4">
+            <div class="config-panel">
+                <div class="config-header">
+                    <h5><i class="fas fa-chart-bar"></i> 分析统计</h5>
+                    <p>AI分析功能使用统计</p>
+                </div>
+                
+                <div id="analysisStats">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-panel">
+                <div class="config-header">
+                    <h5><i class="fas fa-info-circle"></i> 使用说明</h5>
+                </div>
+                
+                <div class="small">
+                    <h6>功能介绍</h6>
+                    <ul>
+                        <li>使用DeepSeek AI分析DNS查询中的域名</li>
+                        <li>识别广告、追踪器、恶意软件等威胁</li>
+                        <li>提供智能阻止建议</li>
+                        <li>支持批量分析和自动分析</li>
+                    </ul>
+                    
+                    <h6>配置说明</h6>
+                    <ul>
+                        <li><strong>API密钥:</strong> 从DeepSeek平台获取</li>
+                        <li><strong>自动分析:</strong> 自动分析新域名</li>
+                        <li><strong>分析阈值:</strong> 控制推荐的敏感度</li>
+                    </ul>
+                    
+                    <h6>审核流程</h6>
+                    <ul>
+                        <li>AI分析完成后生成建议</li>
+                        <li>管理员审核分析结果</li>
+                        <li>选择允许、阻止或忽略</li>
+                        <li>系统自动执行相应操作</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 页面加载完成后初始化
+$(document).ready(function() {
+    loadConfig();
+    loadAnalysisStats();
+    loadPendingReviews();
+    
+    // 阈值滑块事件
+    $('#analysisThreshold').on('input', function() {
+        $('#thresholdValue').text($(this).val());
+    });
+});
+
+// 加载配置
+function loadConfig() {
+    $.ajax({
+        url: '/admin/api/ai-analysis/config',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const config = response.config;
+                $('#apiKey').val(config.deepseek_api_key || '');
+                $('#autoAnalysis').prop('checked', config.auto_analysis_enabled || false);
+                $('#analysisThreshold').val(config.analysis_threshold || 0.8);
+                $('#thresholdValue').text(config.analysis_threshold || 0.8);
+                
+                // 如果有API密钥，测试连接
+                if (config.deepseek_api_key) {
+                    testConnection();
+                }
+            } else {
+                showAlert('加载配置失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('加载配置请求失败', 'danger');
+        }
+    });
+}
+
+// 保存配置
+function saveConfig() {
+    const configData = {
+        deepseek_api_key: $('#apiKey').val(),
+        auto_analysis_enabled: $('#autoAnalysis').is(':checked'),
+        analysis_threshold: parseFloat($('#analysisThreshold').val())
+    };
+    
+    console.log('Saving config:', configData);
+    
+    $.ajax({
+        url: '/admin/api/ai-analysis/config',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(configData),
+        success: function(response) {
+            console.log('Save response:', response);
+            if (response.success) {
+                showAlert('配置保存成功', 'success');
+                // 测试连接
+                if (configData.deepseek_api_key) {
+                    testConnection();
+                }
+            } else {
+                showAlert('保存配置失败: ' + response.error, 'danger');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Save error:', xhr, status, error);
+            console.error('Response text:', xhr.responseText);
+            showAlert('保存配置请求失败: ' + error, 'danger');
+        }
+    });
+}
+
+// 测试连接
+function testConnection() {
+    const apiKey = $('#apiKey').val();
+    if (!apiKey) {
+        showApiStatus('请先输入API密钥', 'disconnected');
+        return;
+    }
+    
+    showApiStatus('正在测试连接...', 'testing');
+    
+    // 使用一个简单的域名测试API连接
+    $.ajax({
+        url: '/admin/api/ai-analysis/domain',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ domain: 'test.example.com' }),
+        success: function(response) {
+            if (response.success || response.error.includes('API')) {
+                showApiStatus('API连接正常', 'connected');
+            } else {
+                showApiStatus('API连接失败: ' + response.error, 'disconnected');
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 500) {
+                showApiStatus('API连接失败，请检查密钥是否正确', 'disconnected');
+            } else {
+                showApiStatus('连接测试失败', 'disconnected');
+            }
+        }
+    });
+}
+
+// 显示API状态
+function showApiStatus(message, status) {
+    const statusDiv = $('#apiStatus');
+    statusDiv.removeClass('connected disconnected testing')
+             .addClass(status)
+             .text(message)
+             .show();
+}
+
+// 切换API密钥可见性
+function toggleApiKeyVisibility() {
+    const apiKeyInput = $('#apiKey');
+    const eyeIcon = $('#eyeIcon');
+    
+    if (apiKeyInput.attr('type') === 'password') {
+        apiKeyInput.attr('type', 'text');
+        eyeIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        apiKeyInput.attr('type', 'password');
+        eyeIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+}
+
+// 加载分析统计
+function loadAnalysisStats() {
+    $.ajax({
+        url: '/admin/api/ai-analysis/stats',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                displayAnalysisStats(response.stats);
+            } else {
+                $('#analysisStats').html('<div class="text-muted">加载统计失败</div>');
+            }
+        },
+        error: function() {
+            $('#analysisStats').html('<div class="text-muted">加载统计失败</div>');
+        }
+    });
+}
+
+// 显示分析统计
+function displayAnalysisStats(stats) {
+    const html = `
+        <div class="row">
+            <div class="col-6">
+                <div class="stats-card mb-3">
+                    <div class="stats-number">${stats.total_analyzed || 0}</div>
+                    <div class="stats-label">已分析域名</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stats-card mb-3">
+                    <div class="stats-number">${stats.pending_reviews || 0}</div>
+                    <div class="stats-label">待审核</div>
+                </div>
+            </div>
+        </div>
+        
+        <h6>分析类型分布</h6>
+        <div class="mb-3">
+    `;
+    
+    let typeHtml = '';
+    const typeDistribution = stats.type_distribution || {};
+    Object.entries(typeDistribution).forEach(([type, count]) => {
+        const percentage = stats.total_analyzed > 0 ? (count / stats.total_analyzed * 100).toFixed(1) : 0;
+        typeHtml += `
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="domain-tag tag-${type}">${type}</span>
+                <span>${count} (${percentage}%)</span>
+            </div>
+        `;
+    });
+    
+    const finalHtml = html + (typeHtml || '<div class="text-muted">暂无数据</div>') + '</div>';
+    $('#analysisStats').html(finalHtml);
+}
+
+// 加载待审核列表
+function loadPendingReviews() {
+    $.ajax({
+        url: '/admin/api/ai-analysis/pending-reviews',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                displayPendingReviews(response.reviews);
+            } else {
+                $('#pendingReviews').html('<div class="text-muted">加载待审核列表失败</div>');
+            }
+        },
+        error: function() {
+            $('#pendingReviews').html('<div class="text-muted">加载待审核列表失败</div>');
+        }
+    });
+}
+
+// 显示待审核列表
+function displayPendingReviews(reviews) {
+    if (reviews.length === 0) {
+        $('#pendingReviews').html('<div class="text-muted text-center">暂无待审核项目</div>');
+        return;
+    }
+    
+    let html = '';
+    reviews.forEach(review => {
+        const confidenceClass = review.confidence >= 0.8 ? 'confidence-high' : 
+                               review.confidence >= 0.5 ? 'confidence-medium' : 'confidence-low';
+        
+        const typeClass = {
+            'ad': 'tag-ad',
+            'tracker': 'tag-tracker', 
+            'malware': 'tag-malware',
+            'legitimate': 'tag-legitimate'
+        }[review.analysis_type] || 'tag-legitimate';
+        
+        html += `
+            <div class="pending-review-item">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="mb-1">${review.domain}</h6>
+                        <span class="domain-tag ${typeClass}">${review.analysis_type}</span>
+                        ${review.category ? `<span class="badge badge-secondary">${review.category}</span>` : ''}
+                    </div>
+                    <div class="text-right">
+                        <small class="text-muted">置信度: ${(review.confidence * 100).toFixed(1)}%</small>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill ${confidenceClass}" style="width: ${review.confidence * 100}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="mb-2">${review.description || '无详细描述'}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge badge-${review.recommendation === 'block' ? 'danger' : review.recommendation === 'monitor' ? 'warning' : 'success'}">
+                        推荐: ${review.recommendation}
+                    </span>
+                    <div>
+                        <button class="btn btn-sm btn-outline-success" onclick="reviewAnalysis(${review.id}, 'allow')" title="允许">
+                            <i class="fas fa-check"></i> 允许
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="reviewAnalysis(${review.id}, 'block')" title="阻止">
+                            <i class="fas fa-ban"></i> 阻止
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="reviewAnalysis(${review.id}, 'ignore')" title="忽略">
+                            <i class="fas fa-times"></i> 忽略
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#pendingReviews').html(html);
+}
+
+// 审核分析结果
+function reviewAnalysis(analysisId, action) {
+    const notes = prompt('请输入审核备注（可选）:');
+    
+    $.ajax({
+        url: '/admin/api/ai-analysis/review',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            analysis_id: analysisId,
+            action: action,
+            notes: notes || ''
+        }),
+        success: function(response) {
+            if (response.success) {
+                showAlert('审核完成', 'success');
+                // 刷新待审核列表和统计
+                loadPendingReviews();
+                loadAnalysisStats();
+            } else {
+                showAlert('审核失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('审核请求失败', 'danger');
+        }
+    });
+}
+
+// 显示提示信息
+function showAlert(message, type = 'info', title = '') {
+    const alertClass = {
+        'success': 'alert-success',
+        'danger': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const iconClass = {
+        'success': 'fas fa-check-circle',
+        'danger': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    }[type] || 'fas fa-info-circle';
+    
+    // 创建唯一ID
+    const alertId = 'alert-' + Date.now();
+    
+    const alertHtml = `
+        <div id="${alertId}" class="toast-alert ${alertClass}" style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            border-left: 4px solid;
+        ">
+            <div class="d-flex align-items-start">
+                <i class="${iconClass} me-2 mt-1"></i>
+                <div class="flex-grow-1">
+                    ${title ? `<strong>${title}</strong><br>` : ''}
+                    ${message}
+                </div>
+                <button type="button" class="btn-close ms-2" onclick="closeToast('${alertId}')" style="
+                    background: none;
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    opacity: 0.7;
+                    padding: 0;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <span>&times;</span>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // 添加到body
+    $('body').append(alertHtml);
+    
+    // 动画显示
+    setTimeout(() => {
+        $(`#${alertId}`).css('transform', 'translateX(0)');
+    }, 10);
+    
+    // 5秒后自动消失
+    setTimeout(() => {
+        closeToast(alertId);
+    }, 5000);
+}
+
+// 关闭toast提示
+function closeToast(alertId) {
+    const alert = $(`#${alertId}`);
+    if (alert.length > 0) {
+        alert.css('transform', 'translateX(100%)');
+        setTimeout(() => {
+            alert.remove();
+        }, 300);
+    }
+}
+</script>
+{% endblock %}

@@ -143,12 +143,18 @@ class AdGuardService:
                 raise Exception(f"请求AdGuardHome API失败：{error_msg}")
             raise Exception(f"请求AdGuardHome API失败：{str(e)}")
 
-    def get_query_log(self, older_than: Optional[str] = None, limit: int = 100) -> Dict:
+    def get_query_log(self, older_than: Optional[str] = None, limit: int = 100, 
+                     offset: Optional[int] = None, search: Optional[str] = None,
+                     response_status: Optional[str] = None) -> Dict:
         """获取查询日志
 
         Args:
             older_than: 用于分页，获取比指定时间更早的日志
             limit: 返回的日志条目数
+            offset: 指定页面上第一项的排名编号
+            search: 按域名或客户端IP过滤
+            response_status: 按响应状态过滤（all, filtered, blocked, blocked_safebrowsing, 
+                           blocked_parental, whitelisted, rewritten, safe_search, processed）
 
         Returns:
             查询日志数据
@@ -156,6 +162,12 @@ class AdGuardService:
         params = {'limit': limit}
         if older_than:
             params['older_than'] = older_than
+        if offset is not None:
+            params['offset'] = offset
+        if search:
+            params['search'] = search
+        if response_status:
+            params['response_status'] = response_status
         return self._make_request('GET', '/querylog', params=params)
     
     def create_client(

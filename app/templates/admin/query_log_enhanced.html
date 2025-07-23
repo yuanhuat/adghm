@@ -1,0 +1,1823 @@
+{% extends "admin/base.html" %}
+
+{% block title %}查询日志增强 - AdGuard Home 管理{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 主题色彩变量 */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    --shadow-light: 0 2px 10px rgba(0,0,0,0.1);
+    --shadow-medium: 0 4px 20px rgba(0,0,0,0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 搜索面板现代化设计 */
+.search-panel {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.search-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.search-panel h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 10px 15px;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    transform: translateY(-1px);
+}
+
+/* 分析面板 */
+.analysis-panel {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+    overflow: hidden;
+}
+
+.analysis-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--info-gradient);
+}
+
+/* 统计卡片现代化 */
+.stats-card {
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 25px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-medium);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+}
+
+.stats-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.stats-card:hover::before {
+    transform: scale(1.5);
+}
+
+.stats-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+}
+
+/* 不同类型的统计卡片 */
+.stats-card.success {
+    background: var(--success-gradient);
+}
+
+.stats-card.warning {
+    background: var(--warning-gradient);
+}
+
+.stats-card.info {
+    background: var(--info-gradient);
+}
+
+.stats-card.dark {
+    background: var(--dark-gradient);
+}
+
+/* AI分析卡片 */
+.ai-analysis-card {
+    border: none;
+    background: linear-gradient(145deg, #f8f9ff 0%, #e3f2fd 100%);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow-light);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-analysis-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--info-gradient);
+}
+
+.ai-analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* 置信度条 */
+.confidence-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+    position: relative;
+}
+
+.confidence-fill {
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.confidence-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.confidence-high { background: linear-gradient(90deg, #4caf50, #66bb6a); }
+.confidence-medium { background: linear-gradient(90deg, #ff9800, #ffb74d); }
+.confidence-low { background: linear-gradient(90deg, #f44336, #ef5350); }
+
+/* 域名标签 */
+.domain-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-right: 8px;
+    margin-bottom: 4px;
+    font-weight: 500;
+    transition: var(--transition);
+    cursor: default;
+}
+
+.domain-tag:hover {
+    transform: scale(1.05);
+}
+
+.tag-ad { 
+    background: linear-gradient(135deg, #ffebee, #ffcdd2); 
+    color: #c62828; 
+    border: 1px solid #ffcdd2;
+}
+.tag-tracker { 
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2); 
+    color: #ef6c00; 
+    border: 1px solid #ffe0b2;
+}
+.tag-malware { 
+    background: linear-gradient(135deg, #fce4ec, #f8bbd9); 
+    color: #ad1457; 
+    border: 1px solid #f8bbd9;
+}
+.tag-legitimate { 
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9); 
+    color: #2e7d32; 
+    border: 1px solid #c8e6c9;
+}
+
+/* 导出进度 */
+.export-progress {
+    display: none;
+    margin-top: 15px;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--primary-gradient);
+    transition: width 0.3s ease;
+}
+
+/* 图表容器 */
+.chart-container {
+    height: 350px;
+    margin: 25px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+}
+
+/* 加载动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 按钮样式现代化 */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: var(--transition);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    transition: width 0.3s, height 0.3s;
+    transform: translate(-50%, -50%);
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-ai {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-ai:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: var(--success-gradient);
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+}
+
+.btn-outline-primary {
+    border: 2px solid #667eea;
+    color: #667eea;
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-gradient);
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-medium);
+}
+
+.card-header {
+    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: none;
+    padding: 20px 25px;
+    position: relative;
+}
+
+.card-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+}
+
+.card-body {
+    padding: 25px;
+}
+
+/* 表格样式现代化 */
+.table {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-light);
+}
+
+.table thead th {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+    transition: var(--transition);
+}
+
+.table tbody tr:hover {
+    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    transform: scale(1.01);
+}
+
+.table tbody td {
+    padding: 15px;
+    border-color: #e9ecef;
+    vertical-align: middle;
+}
+
+/* 模态框样式 */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: var(--primary-gradient);
+    color: white;
+    border-bottom: none;
+    padding: 20px 25px;
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 0.8;
+    font-size: 1.5rem;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 20px 25px;
+    background: #f8f9fa;
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-search"></i> 查询日志增强</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="showExportModal()"><i class="fas fa-download"></i> 导出日志</button>
+                    <button class="btn btn-ai" onclick="showAIAnalysisModal()"><i class="fas fa-robot"></i> AI分析</button>
+                    <a href="{{ url_for('admin.ai_analysis_config') }}" class="btn btn-ai mr-2"><i class="fas fa-cog"></i> AI配置</a>
+                    <a href="{{ url_for('admin.query_log') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> 返回原版</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 高级搜索面板 -->
+    <div class="search-panel">
+        <h5><i class="fas fa-filter"></i> 高级搜索</h5>
+        <form id="searchForm">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="domainFilter">域名</label>
+                        <input type="text" class="form-control" id="domainFilter" placeholder="支持通配符 *.example.com">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="clientFilter">客户端</label>
+                        <input type="text" class="form-control" id="clientFilter" placeholder="IP地址或客户端名称">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="queryTypeFilter">查询类型</label>
+                        <select class="form-control" id="queryTypeFilter">
+                            <option value="">全部</option>
+                            <option value="A">A</option>
+                            <option value="AAAA">AAAA</option>
+                            <option value="CNAME">CNAME</option>
+                            <option value="MX">MX</option>
+                            <option value="TXT">TXT</option>
+                            <option value="PTR">PTR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label for="blockedFilter">状态</label>
+                        <select class="form-control" id="blockedFilter">
+                            <option value="">全部</option>
+                            <option value="true">已阻止</option>
+                            <option value="false">已允许</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="filter-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="button" class="btn btn-primary" onclick="performSearch()"><i class="fas fa-search"></i> 搜索</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearFilters()"><i class="fas fa-times"></i> 清除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="startTimeFilter">开始时间</label>
+                        <input type="datetime-local" class="form-control" id="startTimeFilter">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="endTimeFilter">结束时间</label>
+                        <input type="datetime-local" class="form-control" id="endTimeFilter">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-group">
+                        <label for="reasonFilter">阻止原因</label>
+                        <input type="text" class="form-control" id="reasonFilter" placeholder="过滤规则、黑名单等">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="row" id="statsContainer" style="display: none;">
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="totalQueries">0</div>
+                        <div class="stats-label">总查询数</div>
+                    </div>
+                    <i class="fas fa-search fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card warning">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="blockedQueries">0</div>
+                        <div class="stats-label">已阻止</div>
+                    </div>
+                    <i class="fas fa-shield-alt fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card success">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="allowedQueries">0</div>
+                        <div class="stats-label">已允许</div>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="blockRate">0%</div>
+                        <div class="stats-label">阻止率</div>
+                    </div>
+                    <i class="fas fa-percentage fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card dark">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="uniqueDomains">0</div>
+                        <div class="stats-label">唯一域名</div>
+                    </div>
+                    <i class="fas fa-globe fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+            <div class="stats-card info">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stats-number" id="uniqueClients">0</div>
+                        <div class="stats-label">唯一客户端</div>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查询日志表格 -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list"></i> 查询日志</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()"><i class="fas fa-sync"></i> 刷新</button>
+                <button class="btn btn-sm btn-outline-success" onclick="generateReport()"><i class="fas fa-chart-line"></i> 生成报告</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="loadingIndicator" class="text-center py-5" style="display: none;">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="loading-spinner mb-3" style="width: 3rem; height: 3rem;"></div>
+                    <h6 class="text-muted mb-2">正在加载数据...</h6>
+                    <small class="text-muted">请稍候，正在处理您的请求</small>
+                </div>
+            </div>
+            
+            <div class="table-responsive" id="logTableContainer">
+                <table class="table table-hover mb-0" id="logTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-clock me-1"></i>时间</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-globe me-1"></i>域名</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-tag me-1"></i>类型</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-desktop me-1"></i>客户端</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-info-circle me-1"></i>状态</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-stopwatch me-1"></i>响应时间</th>
+                            <th class="border-0 fw-semibold text-muted"><i class="fas fa-cog me-1"></i>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        <!-- 日志数据将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="row mt-4" id="paginationContainer">
+                <div class="col-md-6 d-flex align-items-center">
+                    <div id="resultInfo" class="text-muted small">显示 0 条结果</div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-outline-primary btn-sm px-4" id="loadMoreBtn" onclick="loadMoreLogs()" style="display: none;">
+                        <i class="fas fa-plus me-2"></i>加载更多
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI分析结果面板 -->
+    <div class="card border-0 shadow-sm mt-4" id="aiAnalysisPanel" style="display: none;">
+        <div class="card-header bg-gradient-primary text-white border-0">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>AI 智能分析</h5>
+                <span class="badge bg-light text-primary">Beta</span>
+            </div>
+        </div>
+        <div class="card-body p-4" id="aiAnalysisContent">
+            <div class="d-flex align-items-center justify-content-center py-4">
+                <div class="text-center">
+                    <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">AI分析结果将在这里显示</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 导出模态框 -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-download me-2"></i>导出查询日志</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="exportForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label for="exportFormat" class="form-label fw-semibold"><i class="fas fa-file-export me-2"></i>导出格式</label>
+                                <select class="form-control" id="exportFormat">
+                                    <option value="csv">📊 CSV 格式</option>
+                                    <option value="json">📄 JSON 格式</option>
+                                    <option value="xlsx">📈 Excel 格式</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label for="maxRecords" class="form-label fw-semibold"><i class="fas fa-list-ol me-2"></i>最大记录数</label>
+                                <input type="number" class="form-control" id="maxRecords" value="10000" min="1" max="100000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="border rounded p-3 bg-light">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="useCurrentFilters" checked>
+                                <label class="form-check-label fw-semibold" for="useCurrentFilters">
+                                    <i class="fas fa-filter me-2"></i>使用当前搜索条件
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info border-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>提示：</strong>导出将包含当前搜索条件下的所有结果。大量数据可能需要较长时间处理。
+                    </div>
+                </form>
+                <div class="export-progress">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted">正在导出，请稍候...</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>取消
+                </button>
+                <button type="button" class="btn btn-primary" onclick="startExport()">
+                    <i class="fas fa-download me-2"></i>开始导出
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI分析模态框 -->
+<div class="modal fade" id="aiAnalysisModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-gradient-primary text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-robot me-2"></i>AI域名分析</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <label for="analysisMode" class="form-label fw-semibold"><i class="fas fa-cogs me-2"></i>分析模式</label>
+                    <select class="form-control" id="analysisMode">
+                        <option value="single">🎯 单个域名分析</option>
+                        <option value="batch">📋 批量域名分析</option>
+                        <option value="auto">🤖 自动分析当前结果</option>
+                    </select>
+                </div>
+                
+                <div id="singleAnalysisPanel" class="border rounded p-3 bg-light">
+                    <div class="form-group">
+                        <label for="singleDomain" class="form-label fw-semibold"><i class="fas fa-globe me-2"></i>域名</label>
+                        <input type="text" class="form-control" id="singleDomain" placeholder="输入要分析的域名">
+                    </div>
+                </div>
+                
+                <div id="batchAnalysisPanel" class="border rounded p-3 bg-light" style="display: none;">
+                    <div class="form-group">
+                        <label for="batchDomains" class="form-label fw-semibold"><i class="fas fa-list me-2"></i>域名列表</label>
+                        <textarea class="form-control" id="batchDomains" rows="5" placeholder="每行一个域名"></textarea>
+                        <small class="form-text text-muted">支持批量输入，每行一个域名</small>
+                    </div>
+                </div>
+                
+                <div id="autoAnalysisPanel" class="border rounded p-3 bg-light" style="display: none;">
+                    <div class="alert alert-info border-0 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>自动分析模式：</strong>将自动分析当前搜索结果中的所有域名
+                    </div>
+                </div>
+                
+                <div id="aiAnalysisProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted"><i class="fas fa-spinner fa-spin me-2"></i>AI分析中，请稍候...</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>取消
+                </button>
+                <button type="button" class="btn btn-ai" onclick="startAIAnalysis()">
+                    <i class="fas fa-brain me-2"></i>开始分析
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 分析报告模态框 -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-gradient-success text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-chart-line me-2"></i>DNS查询趋势分析报告</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <label for="reportTimeRange" class="form-label fw-semibold"><i class="fas fa-clock me-2"></i>时间范围</label>
+                                <div class="d-flex gap-2">
+                                    <select class="form-control" id="reportTimeRange">
+                                        <option value="1h">⏰ 最近1小时</option>
+                                        <option value="6h">🕕 最近6小时</option>
+                                        <option value="24h" selected>📅 最近24小时</option>
+                                        <option value="7d">📊 最近7天</option>
+                                        <option value="30d">📈 最近30天</option>
+                                    </select>
+                                    <button class="btn btn-primary" onclick="generateAnalysisReport()">
+                                        <i class="fas fa-chart-bar me-2"></i>生成报告
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="reportContent" class="border rounded p-3 bg-light">
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">选择时间范围并点击"生成报告"开始分析</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>关闭
+                </button>
+                <button type="button" class="btn btn-success" onclick="exportReport()">
+                    <i class="fas fa-file-export me-2"></i>导出报告
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let currentLogs = [];
+let currentOlderThan = null;
+let hasMoreLogs = false;
+let currentFilters = {};
+
+// 页面加载完成后初始化
+$(document).ready(function() {
+    // 设置默认时间范围（最近1小时）
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    
+    $('#endTimeFilter').val(formatDateTimeLocal(now));
+    $('#startTimeFilter').val(formatDateTimeLocal(oneHourAgo));
+    
+    // 初始加载
+    performSearch();
+    
+    // 分析模式切换
+    $('#analysisMode').change(function() {
+        const mode = $(this).val();
+        $('#singleAnalysisPanel, #batchAnalysisPanel, #autoAnalysisPanel').hide();
+        $('#' + mode + 'AnalysisPanel').show();
+    });
+    
+    // 模态框关闭时重置状态
+    $('#aiAnalysisModal').on('hidden.bs.modal', function () {
+        resetAIAnalysisModal();
+    });
+});
+
+// 格式化日期时间为本地格式
+function formatDateTimeLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// 执行搜索
+function performSearch() {
+    // 收集过滤条件
+    currentFilters = {
+        domain: $('#domainFilter').val(),
+        client: $('#clientFilter').val(),
+        query_type: $('#queryTypeFilter').val(),
+        blocked: $('#blockedFilter').val() ? $('#blockedFilter').val() === 'true' : null,
+        start_time: $('#startTimeFilter').val() ? new Date($('#startTimeFilter').val()).toISOString() : null,
+        end_time: $('#endTimeFilter').val() ? new Date($('#endTimeFilter').val()).toISOString() : null,
+        reason: $('#reasonFilter').val()
+    };
+    
+    // 清除空值
+    Object.keys(currentFilters).forEach(key => {
+        if (currentFilters[key] === '' || currentFilters[key] === null) {
+            delete currentFilters[key];
+        }
+    });
+    
+    // 重置分页
+    currentLogs = [];
+    currentOlderThan = null;
+    
+    // 执行搜索
+    searchLogs();
+}
+
+// 搜索日志
+function searchLogs() {
+    $('#loadingIndicator').show();
+    
+    $.ajax({
+        url: '/admin/api/query-log/advanced-search',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            filters: currentFilters,
+            page_size: 50,
+            older_than: currentOlderThan
+        }),
+        success: function(response) {
+            if (response.success) {
+                const data = response.data;
+                
+                if (currentOlderThan === null) {
+                    // 首次搜索，清空表格
+                    currentLogs = data.data;
+                    updateLogTable(currentLogs);
+                    updateStats(data.stats);
+                } else {
+                    // 加载更多，追加数据
+                    currentLogs = currentLogs.concat(data.data);
+                    appendLogTable(data.data);
+                }
+                
+                currentOlderThan = data.oldest;
+                hasMoreLogs = data.has_more;
+                
+                $('#loadMoreBtn').toggle(hasMoreLogs);
+                $('#resultInfo').text(`显示 ${currentLogs.length} 条结果`);
+            } else {
+                showAlert('搜索失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('搜索请求失败', 'danger');
+        },
+        complete: function() {
+            $('#loadingIndicator').hide();
+        }
+    });
+}
+
+// 更新日志表格
+function updateLogTable(logs) {
+    const tbody = $('#logTableBody');
+    tbody.empty();
+    appendLogTable(logs);
+}
+
+// 追加日志到表格
+function appendLogTable(logs) {
+    const tbody = $('#logTableBody');
+    
+    logs.forEach(function(log) {
+        const row = createLogRow(log);
+        tbody.append(row);
+    });
+}
+
+// 创建日志行
+function createLogRow(log) {
+    // 使用新的API字段格式
+    const time = log.time ? new Date(log.time).toLocaleString() : 'Invalid Date';
+    const question = log.question || {};
+    const domain = question.name || '';
+    const queryType = question.type || '';
+    const client = log.client || '';
+    const clientInfo = log.client_info || {};
+    const clientName = clientInfo.name || client;
+    const elapsed = log.elapsedMs ? log.elapsedMs + 'ms' : '';
+    
+    // 判断是否被阻止
+    const reason = log.reason || '';
+    const isBlocked = reason && reason !== 'NotFilteredNotFound';
+    
+    let statusBadge;
+    if (isBlocked) {
+        statusBadge = `<span class="badge badge-danger">已阻止</span>`;
+        if (reason) {
+            statusBadge += `<br><small class="text-muted">${reason}</small>`;
+        }
+    } else {
+        statusBadge = `<span class="badge badge-success">已允许</span>`;
+    }
+    
+    return `
+        <tr>
+            <td>${time}</td>
+            <td>
+                <span class="domain-name">${domain}</span>
+                <button class="btn btn-sm btn-outline-primary ml-1" onclick="analyzeDomain('${domain}')" title="AI分析">
+                    <i class="fas fa-robot"></i>
+                </button>
+            </td>
+            <td>${queryType}</td>
+            <td>${clientName}</td>
+            <td>${statusBadge}</td>
+            <td>${elapsed}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-info" onclick="showLogDetails('${encodeURIComponent(JSON.stringify(log))}')" title="详情">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// 更新统计信息
+function updateStats(stats) {
+    if (stats) {
+        $('#totalQueries').text(stats.total_queries || 0);
+        $('#blockedQueries').text(stats.blocked_queries || 0);
+        $('#allowedQueries').text(stats.allowed_queries || 0);
+        
+        const blockRate = stats.total_queries > 0 ? 
+            ((stats.blocked_queries / stats.total_queries) * 100).toFixed(1) : 0;
+        $('#blockRate').text(blockRate + '%');
+        
+        $('#uniqueDomains').text(Object.keys(stats.top_domains || {}).length);
+        $('#uniqueClients').text(Object.keys(stats.top_clients || {}).length);
+        
+        $('#statsContainer').show();
+    }
+}
+
+// 清除过滤条件
+function clearFilters() {
+    $('#searchForm')[0].reset();
+    currentFilters = {};
+    performSearch();
+}
+
+// 刷新日志
+function refreshLogs() {
+    performSearch();
+}
+
+// 加载更多日志
+function loadMoreLogs() {
+    if (hasMoreLogs) {
+        searchLogs();
+    }
+}
+
+// 显示导出模态框
+function showExportModal() {
+    $('#exportModal').modal('show');
+}
+
+// 开始导出
+function startExport() {
+    const format = $('#exportFormat').val();
+    const maxRecords = parseInt($('#maxRecords').val());
+    const useCurrentFilters = $('#useCurrentFilters').is(':checked');
+    
+    const exportData = {
+        format: format,
+        max_records: maxRecords,
+        filters: useCurrentFilters ? currentFilters : {}
+    };
+    
+    $('.export-progress').show();
+    
+    $.ajax({
+        url: '/admin/api/query-log/export',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(exportData),
+        success: function(response) {
+            if (response.success) {
+                showAlert('导出成功！文件路径: ' + response.file_path, 'success');
+                $('#exportModal').modal('hide');
+            } else {
+                showAlert('导出失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('导出请求失败', 'danger');
+        },
+        complete: function() {
+            $('.export-progress').hide();
+        }
+    });
+}
+
+// 显示AI分析模态框
+function showAIAnalysisModal() {
+    $('#aiAnalysisModal').modal('show');
+}
+
+// 开始AI分析
+function startAIAnalysis() {
+    const mode = $('#analysisMode').val();
+    let analysisData = {};
+    
+    if (mode === 'single') {
+        const domain = $('#singleDomain').val().trim();
+        if (!domain) {
+            showAlert('请输入要分析的域名', 'warning');
+            return;
+        }
+        analysisData = { domain: domain };
+    } else if (mode === 'batch') {
+        const domainsText = $('#batchDomains').val().trim();
+        if (!domainsText) {
+            showAlert('请输入要分析的域名列表', 'warning');
+            return;
+        }
+        const domains = domainsText.split('\n').map(d => d.trim()).filter(d => d);
+        analysisData = { domains: domains };
+    } else if (mode === 'auto') {
+        const domains = [...new Set(currentLogs.map(log => log.question?.name).filter(d => d))];
+        if (domains.length === 0) {
+            showAlert('当前搜索结果中没有域名可分析', 'warning');
+            return;
+        }
+        analysisData = { domains: domains };
+    }
+    
+    $('#aiAnalysisProgress').show();
+    
+    const url = mode === 'single' ? '/admin/api/ai-analysis/domain' : '/admin/api/ai-analysis/domains/batch';
+    
+    $.ajax({
+        url: url,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(analysisData),
+        success: function(response) {
+            if (response.success) {
+                displayAIAnalysisResultsInModal(response);
+                // 不关闭模态框，在模态框中显示结果
+            } else {
+                showAlert('AI分析失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('AI分析请求失败', 'danger');
+        },
+        complete: function() {
+            $('#aiAnalysisProgress').hide();
+        }
+    });
+}
+
+// 分析单个域名
+function analyzeDomain(domain) {
+    // 重置模态框状态
+    resetAIAnalysisModal();
+    
+    // 设置域名和模式
+    $('#singleDomain').val(domain);
+    $('#analysisMode').val('single').trigger('change');
+    
+    // 显示模态框
+    showAIAnalysisModal();
+}
+
+// 显示AI分析结果
+function displayAIAnalysisResults(response) {
+    const panel = $('#aiAnalysisPanel');
+    const content = $('#aiAnalysisContent');
+    
+    let html = '';
+    
+    if (response.analysis) {
+        // 单个域名分析结果
+        html = createAnalysisCard(response.analysis.domain, response.analysis);
+    } else if (response.results) {
+        // 批量分析结果
+        Object.entries(response.results).forEach(([domain, analysis]) => {
+            html += createAnalysisCard(domain, analysis);
+        });
+    }
+    
+    content.html(html);
+    panel.show();
+}
+
+// 在模态框中显示AI分析结果
+function displayAIAnalysisResultsInModal(response) {
+    // 隐藏分析进度条
+    $('#aiAnalysisProgress').hide();
+    
+    // 隐藏分析配置面板
+    $('#singleAnalysisPanel, #batchAnalysisPanel, #autoAnalysisPanel').hide();
+    $('#analysisMode').closest('.mb-4').hide();
+    
+    let html = '<div id="aiAnalysisResults" class="mt-3">';
+    html += '<h6 class="mb-3"><i class="fas fa-brain me-2"></i>AI分析结果</h6>';
+    
+    if (response.analysis) {
+        // 单个域名分析结果
+        html += createAnalysisCardForModal(response.analysis.domain, response.analysis);
+    } else if (response.results) {
+        // 批量分析结果
+        Object.entries(response.results).forEach(([domain, analysis]) => {
+            html += createAnalysisCardForModal(domain, analysis);
+        });
+    }
+    
+    html += '</div>';
+    
+    // 在模态框body中添加结果
+    $('.modal-body').append(html);
+    
+    // 修改模态框底部按钮
+    $('.modal-footer').html(`
+        <button type="button" class="btn btn-outline-secondary" onclick="resetAIAnalysisModal()">
+            <i class="fas fa-arrow-left me-2"></i>重新分析
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>关闭
+        </button>
+    `);
+}
+
+// 创建分析结果卡片
+function createAnalysisCard(domain, analysis) {
+    const confidenceClass = analysis.confidence >= 0.8 ? 'confidence-high' : 
+                           analysis.confidence >= 0.5 ? 'confidence-medium' : 'confidence-low';
+    
+    const typeClass = {
+        'ad': 'tag-ad',
+        'tracker': 'tag-tracker', 
+        'malware': 'tag-malware',
+        'legitimate': 'tag-legitimate'
+    }[analysis.analysis_type] || 'tag-legitimate';
+    
+    return `
+        <div class="ai-analysis-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">${domain}</h6>
+                    <span class="domain-tag ${typeClass}">${analysis.analysis_type}</span>
+                    ${analysis.category ? `<span class="badge badge-secondary">${analysis.category}</span>` : ''}
+                </div>
+                <div class="text-right">
+                    <small class="text-muted">置信度: ${(analysis.confidence * 100).toFixed(1)}%</small>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill ${confidenceClass}" style="width: ${analysis.confidence * 100}%"></div>
+                    </div>
+                </div>
+            </div>
+            <p class="mb-2 mt-2">${analysis.description || '无详细描述'}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="badge badge-${analysis.recommendation === 'block' ? 'danger' : analysis.recommendation === 'monitor' ? 'warning' : 'success'}">
+                    推荐: ${analysis.recommendation}
+                </span>
+                <div>
+                    <button class="btn btn-sm btn-outline-success" onclick="reviewAnalysis(${analysis.id}, 'allow')" title="允许">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="reviewAnalysis(${analysis.id}, 'block')" title="阻止">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="reviewAnalysis(${analysis.id}, 'ignore')" title="忽略">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 创建模态框中的分析结果卡片
+function createAnalysisCardForModal(domain, analysis) {
+    const confidenceClass = analysis.confidence >= 0.8 ? 'confidence-high' : 
+                           analysis.confidence >= 0.5 ? 'confidence-medium' : 'confidence-low';
+    
+    const typeClass = {
+        'ad': 'tag-ad',
+        'tracker': 'tag-tracker', 
+        'malware': 'tag-malware',
+        'legitimate': 'tag-legitimate'
+    }[analysis.analysis_type] || 'tag-legitimate';
+    
+    const recommendationText = {
+        'block': '阻止',
+        'allow': '允许',
+        'monitor': '监控'
+    }[analysis.recommendation] || analysis.recommendation;
+    
+    return `
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="mb-1 text-primary">${domain}</h6>
+                        <span class="badge bg-${analysis.analysis_type === 'ad' ? 'danger' : analysis.analysis_type === 'tracker' ? 'warning' : analysis.analysis_type === 'malware' ? 'dark' : 'success'} me-2">
+                            ${analysis.analysis_type}
+                        </span>
+                        ${analysis.category ? `<span class="badge bg-secondary">${analysis.category}</span>` : ''}
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">置信度</small>
+                        <strong class="text-${analysis.confidence >= 0.8 ? 'success' : analysis.confidence >= 0.5 ? 'warning' : 'danger'}">
+                            ${(analysis.confidence * 100).toFixed(1)}%
+                        </strong>
+                    </div>
+                </div>
+                
+                <p class="text-muted mb-3">${analysis.description || '无详细描述'}</p>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-${analysis.recommendation === 'block' ? 'danger' : analysis.recommendation === 'monitor' ? 'warning' : 'success'} fs-6">
+                        AI推荐: ${recommendationText}
+                    </span>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-success btn-sm" onclick="reviewAnalysisInModal(${analysis.id}, 'allow', '${domain}')" title="允许此域名">
+                            <i class="fas fa-check me-1"></i>允许
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="reviewAnalysisInModal(${analysis.id}, 'block', '${domain}')" title="阻止此域名">
+                            <i class="fas fa-ban me-1"></i>阻止
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="reviewAnalysisInModal(${analysis.id}, 'ignore', '${domain}')" title="忽略此分析">
+                            <i class="fas fa-times me-1"></i>忽略
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 审核分析结果
+function reviewAnalysis(analysisId, action) {
+    const notes = prompt('请输入审核备注（可选）:');
+    
+    $.ajax({
+        url: '/admin/api/ai-analysis/review',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            analysis_id: analysisId,
+            action: action,
+            notes: notes || ''
+        }),
+        success: function(response) {
+            if (response.success) {
+                showAlert('审核完成', 'success');
+                // 刷新分析结果
+                location.reload();
+            } else {
+                showAlert('审核失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('审核请求失败', 'danger');
+        }
+    });
+}
+
+// 在模态框中审核分析结果
+function reviewAnalysisInModal(analysisId, action, domain) {
+    const actionText = {
+        'allow': '允许',
+        'block': '阻止',
+        'ignore': '忽略'
+    }[action];
+    
+    const confirmMessage = `确定要${actionText}域名 "${domain}" 吗？`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    const notes = prompt('请输入审核备注（可选）:');
+    
+    $.ajax({
+        url: '/admin/api/ai-analysis/review',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            analysis_id: analysisId,
+            action: action,
+            notes: notes || ''
+        }),
+        success: function(response) {
+            if (response.success) {
+                showAlert(`已${actionText}域名 "${domain}"`, 'success');
+                // 移除已审核的卡片
+                $(`button[onclick*="reviewAnalysisInModal(${analysisId}"]`).closest('.card').fadeOut(300, function() {
+                    $(this).remove();
+                    // 检查是否还有未审核的结果
+                    if ($('#aiAnalysisResults .card').length === 0) {
+                        $('#aiAnalysisResults').html('<div class="alert alert-success text-center"><i class="fas fa-check-circle me-2"></i>所有分析结果已审核完成</div>');
+                    }
+                });
+            } else {
+                showAlert('审核失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('审核请求失败', 'danger');
+        }
+    });
+}
+
+// 重置AI分析模态框
+function resetAIAnalysisModal() {
+    // 移除分析结果
+    $('#aiAnalysisResults').remove();
+    
+    // 显示分析配置面板
+    $('#analysisMode').closest('.mb-4').show();
+    $('#analysisMode').val('single').trigger('change');
+    
+    // 清空输入
+    $('#singleDomain').val('');
+    $('#batchDomains').val('');
+    
+    // 隐藏进度条
+    $('#aiAnalysisProgress').hide();
+    
+    // 恢复原始底部按钮
+    $('.modal-footer').html(`
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>取消
+        </button>
+        <button type="button" class="btn btn-ai" onclick="startAIAnalysis()">
+            <i class="fas fa-brain me-2"></i>开始分析
+        </button>
+    `);
+}
+
+// 生成报告
+function generateReport() {
+    $('#reportModal').modal('show');
+}
+
+// 生成分析报告
+function generateAnalysisReport() {
+    const timeRange = $('#reportTimeRange').val();
+    
+    $.ajax({
+        url: '/admin/api/query-log/analysis-report',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ time_range: timeRange }),
+        success: function(response) {
+            if (response.success) {
+                displayReport(response.report);
+            } else {
+                showAlert('生成报告失败: ' + response.error, 'danger');
+            }
+        },
+        error: function() {
+            showAlert('生成报告请求失败', 'danger');
+        }
+    });
+}
+
+// 显示报告
+function displayReport(report) {
+    const content = $('#reportContent');
+    
+    let html = `
+        <div class="row">
+            <div class="col-md-12">
+                <h6>概览</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">${report.summary.total_queries}</h5>
+                                <p class="card-text">总查询数</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">${report.summary.blocked_queries}</h5>
+                                <p class="card-text">已阻止</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">${report.summary.block_rate}%</h5>
+                                <p class="card-text">阻止率</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">${report.summary.unique_domains}</h5>
+                                <p class="card-text">唯一域名</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h6>查询趋势</h6>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h6>热门域名</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>域名</th><th>查询次数</th></tr>
+                        </thead>
+                        <tbody>
+    `;
+    
+    Object.entries(report.top_domains || {}).slice(0, 10).forEach(([domain, count]) => {
+        html += `<tr><td>${domain}</td><td>${count}</td></tr>`;
+    });
+    
+    html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6>热门被阻止域名</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr><th>域名</th><th>阻止次数</th></tr>
+                        </thead>
+                        <tbody>
+    `;
+    
+    Object.entries(report.top_blocked_domains || {}).slice(0, 10).forEach(([domain, count]) => {
+        html += `<tr><td>${domain}</td><td>${count}</td></tr>`;
+    });
+    
+    html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    content.html(html);
+    
+    // 绘制趋势图
+    drawTrendChart(report.time_series);
+}
+
+// 绘制趋势图
+function drawTrendChart(timeSeries) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    
+    const labels = timeSeries.map(item => new Date(item.timestamp).toLocaleTimeString());
+    const totalData = timeSeries.map(item => item.total_queries);
+    const blockedData = timeSeries.map(item => item.blocked_queries);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '总查询数',
+                data: totalData,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: '被阻止查询数',
+                data: blockedData,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// 显示日志详情
+function showLogDetails(encodedLog) {
+    const log = JSON.parse(decodeURIComponent(encodedLog));
+    const question = log.question || {};
+    const clientInfo = log.client_info || {};
+    
+    let details = `
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong><i class="fas fa-clock me-2"></i>时间:</strong> ${log.time ? new Date(log.time).toLocaleString() : 'N/A'}</p>
+                <p><strong><i class="fas fa-globe me-2"></i>域名:</strong> ${question.name || 'N/A'}</p>
+                <p><strong><i class="fas fa-tag me-2"></i>查询类型:</strong> ${question.type || 'N/A'}</p>
+                <p><strong><i class="fas fa-desktop me-2"></i>客户端IP:</strong> ${log.client || 'N/A'}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong><i class="fas fa-user me-2"></i>客户端名称:</strong> ${clientInfo.name || log.client || 'N/A'}</p>
+                <p><strong><i class="fas fa-stopwatch me-2"></i>响应时间:</strong> ${log.elapsedMs ? log.elapsedMs + 'ms' : 'N/A'}</p>
+                <p><strong><i class="fas fa-server me-2"></i>上游服务器:</strong> ${log.upstream || 'N/A'}</p>
+                <p><strong><i class="fas fa-memory me-2"></i>缓存:</strong> 
+                    <span class="badge ${log.cached ? 'bg-success' : 'bg-secondary'}">
+                        ${log.cached ? '是' : '否'}
+                    </span>
+                </p>
+            </div>
+        </div>
+    `;
+    
+    // 添加状态信息
+    const reason = log.reason || '';
+    const isBlocked = reason && reason !== 'NotFilteredNotFound';
+    
+    details += `
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong><i class="fas fa-code me-2"></i>状态:</strong> ${log.status || 'N/A'}</p>
+                <p><strong><i class="fas fa-shield-alt me-2"></i>是否被过滤:</strong> 
+                    <span class="badge ${isBlocked ? 'bg-danger' : 'bg-success'}">
+                        ${isBlocked ? '是' : '否'}
+                    </span>
+                </p>
+            </div>
+            <div class="col-md-6">
+    `;
+    
+    if (isBlocked && reason) {
+        details += `<p><strong><i class="fas fa-ban me-2"></i>阻止原因:</strong> <span class="text-danger">${reason}</span></p>`;
+    }
+    
+    details += `</div></div>`;
+    
+    // 显示DNS应答
+    if (log.answer && log.answer.length > 0) {
+        details += `
+            <hr>
+            <h6><i class="fas fa-list me-2"></i>DNS应答:</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>值</th>
+                            <th>TTL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        log.answer.forEach(answer => {
+            details += `<tr><td><span class="badge bg-primary">${answer.type || 'N/A'}</span></td><td><code>${answer.value || 'N/A'}</code></td><td>${answer.ttl || 'N/A'}</td></tr>`;
+        });
+        details += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    showLogDetailsModal(details);
+}
+
+// 显示日志详情模态框
+function showLogDetailsModal(content) {
+    // 创建模态框HTML
+    const modalHtml = `
+        <div class="modal fade" id="logDetailsModal" tabindex="-1" aria-labelledby="logDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white border-0">
+                        <h5 class="modal-title" id="logDetailsModalLabel">
+                            <i class="fas fa-info-circle me-2"></i>日志详情
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-4">
+                        ${content}
+                    </div>
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的模态框
+    $('#logDetailsModal').remove();
+    
+    // 添加新的模态框到页面
+    $('body').append(modalHtml);
+    
+    // 显示模态框
+    $('#logDetailsModal').modal('show');
+    
+    // 模态框关闭后移除DOM元素
+    $('#logDetailsModal').on('hidden.bs.modal', function () {
+        $(this).remove();
+    });
+}
+
+// 显示提示信息
+function showAlert(message, type = 'info', title = '') {
+    const alertClass = {
+        'success': 'alert-success',
+        'danger': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${title ? `<strong>${title}</strong><br>` : ''}
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    
+    // 在页面内容区域顶部显示提示，避免添加到导航栏
+    // 选择导航栏之后的第一个container，这是页面主要内容区域
+    const container = $('nav').next('.container, .container-fluid');
+    if (container.length > 0) {
+        container.prepend(alertHtml);
+    } else {
+        // 备用方案：选择页面中的最后一个container-fluid（通常是页面内容）
+        $('.container-fluid').last().prepend(alertHtml);
+    }
+    
+    // 5秒后自动消失
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>
+{% endblock %}
