@@ -495,3 +495,21 @@ class AdGuardService:
             }
             
         return self._make_request('POST', '/access/set', json=data)
+    
+    def get_stats(self) -> Dict:
+        """获取AdGuardHome统计数据
+        
+        获取DNS服务器的统计信息，包括查询数量、阻止数量、客户端统计等
+        
+        Returns:
+            Dict: 包含统计数据的字典，包括：
+                - num_dns_queries: 总DNS查询数
+                - num_blocked_filtering: 被过滤规则阻止的请求数
+                - top_clients: 客户端请求排行
+                - 其他统计信息
+        """
+        try:
+            return self._make_request('GET', '/stats')
+        except Exception as e:
+            print(f"获取AdGuardHome统计数据失败: {str(e)}")
+            return {}

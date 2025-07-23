@@ -37,6 +37,12 @@
                 </div>
                 
                 <div class="dashboard-card">
+                    <h2>我的DNS请求数</h2>
+                    <p class="dashboard-stat">{{ user_request_count or 0 }}</p>
+                    <p>您的客户端总请求数量</p>
+                </div>
+                
+                <div class="dashboard-card">
                     <h2>账号信息</h2>
                     <div class="info-list">
                         <p><strong>用户名：</strong>{{ current_user.username }}</p>
