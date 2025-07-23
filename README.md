@@ -4,7 +4,7 @@
 
 AdGuardHome 管理系统（ADGHM）是一个基于 Flask 的 Web 应用程序，旨在简化 AdGuardHome 的管理和配置过程。该系统提供了用户友好的界面，允许多用户管理各自的 AdGuardHome 客户端，并通过阿里云域名解析服务自动更新动态 IP 地址。
 
-![用户主页](/app/static/images/user_dashboard.svg)
+![用户主页](/app/static/images/png/user_dashboard.png)
 
 ### 主要功能
 
@@ -15,21 +15,21 @@ AdGuardHome 管理系统（ADGHM）是一个基于 Flask 的 Web 应用程序，
    - 配置客户端过滤规则
    - 查看客户端状态和统计信息
    
-   ![客户端管理](/app/static/images/client_management.svg)
+   ![客户端管理](/app/static/images/png/client_management.png)
 
 3. **动态域名解析**：
    - 自动检测公网 IP 变化（支持 IPv4 和 IPv6）
    - 通过阿里云 DNS 服务自动更新域名解析记录
    - 为每个客户端分配唯一的子域名
    
-   ![域名管理](/app/static/images/domain_management.svg)
+   ![域名管理](/app/static/images/png/domain_management.png)
 
 4. **系统管理**：
    - 管理员后台用于系统配置和用户管理
    - 操作日志记录和查看
    - AdGuardHome API 配置管理
    
-   ![管理员后台](/app/static/images/admin_dashboard.svg)
+   ![管理员后台](/app/static/images/png/admin_dashboard.png)
 
 ## 系统架构
 
@@ -129,7 +129,7 @@ python run.py
    - 访问 http://localhost:5000
    - 注册第一个用户账号（将自动成为管理员）
 
-   ![登录页面](/app/static/images/login_page.svg)
+   ![登录页面](/app/static/images/png/login_page.png)
 
 2. **系统配置**：
    - 登录管理员账号
