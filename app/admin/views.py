@@ -552,9 +552,10 @@ def update_access_control():
         list_text = '允许列表' if list_type == 'allowed' else '拒绝列表'
         
         # 获取客户端名称和用户信息
-        client_mapping = ClientMapping.query.filter(
-            ClientMapping.client_ids.contains(client_id)
-        ).first()
+        # 由于client_ids是一个property，不能直接使用contains方法
+        # 需要查找所有客户端映射，然后在Python中过滤
+        client_mappings = ClientMapping.query.all()
+        client_mapping = next((cm for cm in client_mappings if client_id in cm.client_ids), None)
         
         client_name = '未知客户端'
         user_info = '未知用户'

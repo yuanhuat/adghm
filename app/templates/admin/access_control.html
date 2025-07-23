@@ -49,6 +49,104 @@
 {% endblock %}
 
 {% block page_content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<!-- 暂时不使用CSRF令牌 -->
+
+<script>
+    function updateAccessControl(action, clientId, listType) {
+        // 显示加载状态
+        const loadingToast = Toastify({
+            text: "正在处理请求...",
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "#3498db",
+            stopOnFocus: true
+        }).showToast();
+        
+        // 发送请求
+        fetch('{{ url_for("admin.update_access_control") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: action,
+                client_id: clientId,
+                list_type: listType
+            })
+        })
+        .then(response => {
+            // 检查响应状态
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // 检查内容类型
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/html')) {
+                // 如果返回的是HTML，可能是登录页面，表示会话已过期
+                throw new Error('会话已过期，请刷新页面重新登录');
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            // 关闭加载提示
+            loadingToast.hideToast();
+            
+            if (data.success) {
+                // 显示成功提示
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: "#2ecc71",
+                    stopOnFocus: true
+                }).showToast();
+                
+                // 刷新页面以显示更新后的列表
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // 显示错误提示
+                Toastify({
+                    text: data.error || "操作失败，请重试",
+                    duration: 5000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: "#e74c3c",
+                    stopOnFocus: true
+                }).showToast();
+            }
+        })
+        .catch(error => {
+            // 关闭加载提示
+            loadingToast.hideToast();
+            
+            // 显示错误提示
+            Toastify({
+                text: "请求失败：" + error.message,
+                duration: 5000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: "#e74c3c",
+                stopOnFocus: true
+            }).showToast();
+            
+            console.error('Error:', error);
+        });
+    }
+</script>
+
 <div class="container">
     <h1 class="my-4">访问控制列表管理</h1>
     
@@ -162,86 +260,8 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<script>
-    function updateAccessControl(action, clientId, listType) {
-        // 显示加载状态
-        const loadingToast = Toastify({
-            text: "正在处理请求...",
-            duration: -1,
-            close: false,
-            gravity: "top",
-            position: "center",
-            backgroundColor: "#3498db",
-            stopOnFocus: true
-        }).showToast();
-        
-        // 发送请求
-        fetch('{{ url_for("admin.update_access_control") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                action: action,
-                client_id: clientId,
-                list_type: listType
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // 关闭加载提示
-            loadingToast.hideToast();
-            
-            if (data.success) {
-                // 显示成功提示
-                Toastify({
-                    text: data.message,
-                    duration: 3000,
-                    close: true,
-                    gravity: "top",
-                    position: "center",
-                    backgroundColor: "#2ecc71",
-                    stopOnFocus: true
-                }).showToast();
-                
-                // 刷新页面以显示更新后的列表
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                // 显示错误提示
-                Toastify({
-                    text: data.error || "操作失败，请重试",
-                    duration: 5000,
-                    close: true,
-                    gravity: "top",
-                    position: "center",
-                    backgroundColor: "#e74c3c",
-                    stopOnFocus: true
-                }).showToast();
-            }
-        })
-        .catch(error => {
-            // 关闭加载提示
-            loadingToast.hideToast();
-            
-            // 显示错误提示
-            Toastify({
-                text: "请求失败：" + error.message,
-                duration: 5000,
-                close: true,
-                gravity: "top",
-                position: "center",
-                backgroundColor: "#e74c3c",
-                stopOnFocus: true
-            }).showToast();
-        });
-    }
-</script>
 {% endblock %}
