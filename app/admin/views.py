@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
@@ -7,6 +8,7 @@ from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 from app.models.domain_config import DomainConfig
 from app.models.domain_mapping import DomainMapping
+from app.models.feedback import Feedback
 from app.services.adguard_service import AdGuardService
 from app.services.domain_service import DomainService
 from . import admin
@@ -731,3 +733,207 @@ def refresh_domain_mapping(mapping_id):
 def blocked_services():
     """全局阻止服务配置页面"""
     return render_template('admin/blocked_services.html')
+
+
+@admin.route('/feedbacks')
+@login_required
+@admin_required
+def feedbacks():
+    """留言管理页面
+    
+    显示所有用户的留言列表，支持分页和状态筛选
+    """
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'all')
+    per_page = 20
+    
+    # 构建查询
+    query = Feedback.query
+    
+    if status != 'all':
+        query = query.filter_by(status=status)
+    
+    # 按创建时间倒序排列并分页
+    feedbacks = query.order_by(Feedback.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    return render_template('admin/feedbacks.html', feedbacks=feedbacks, current_status=status)
+
+
+@admin.route('/api/feedbacks')
+@login_required
+@admin_required
+def api_feedbacks():
+    """获取留言列表API接口
+    
+    支持分页和状态筛选
+    
+    Returns:
+        JSON: 留言列表数据
+    """
+    try:
+        page = request.args.get('page', 1, type=int)
+        status = request.args.get('status', 'all')
+        per_page = 20
+        
+        # 构建查询
+        query = Feedback.query
+        
+        if status != 'all':
+            query = query.filter_by(status=status)
+        
+        # 按创建时间倒序排列并分页
+        feedbacks_pagination = query.order_by(Feedback.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        feedback_list = []
+        for feedback in feedbacks_pagination.items:
+            feedback_dict = feedback.to_dict()
+            feedback_dict['user_name'] = feedback_dict.get('username', '未知用户')
+            feedback_list.append(feedback_dict)
+        
+        # 获取统计信息
+        total_count = Feedback.query.count()
+        open_count = Feedback.query.filter_by(status='open').count()
+        closed_count = Feedback.query.filter_by(status='closed').count()
+        
+        return jsonify({
+            'success': True,
+            'feedbacks': feedback_list,
+            'pagination': {
+                'page': page,
+                'pages': feedbacks_pagination.pages,
+                'per_page': per_page,
+                'total': feedbacks_pagination.total,
+                'has_prev': feedbacks_pagination.has_prev,
+                'has_next': feedbacks_pagination.has_next,
+                'prev_num': feedbacks_pagination.prev_num,
+                'next_num': feedbacks_pagination.next_num
+            },
+            'stats': {
+                'total': total_count,
+                'open': open_count,
+                'closed': closed_count
+            }
+        })
+    except Exception as e:
+        logging.error(f"获取留言列表失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'获取留言列表失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/feedbacks/<int:feedback_id>/close', methods=['POST'])
+@login_required
+@admin_required
+def close_feedback(feedback_id):
+    """关闭留言API接口
+    
+    Args:
+        feedback_id: 留言ID
+    
+    Returns:
+        JSON: 操作结果
+    """
+    try:
+        feedback = Feedback.query.get_or_404(feedback_id)
+        
+        if feedback.status == 'closed':
+            return jsonify({
+                'success': False,
+                'error': '留言已经关闭'
+            }), 400
+        
+        data = request.get_json()
+        admin_reply = data.get('reply', '').strip() if data else ''
+        
+        # 关闭留言
+        feedback.close_feedback(current_user.id, admin_reply)
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='close_feedback',
+            target_type='feedback',
+            target_id=str(feedback.id),
+            details=f'关闭留言: {feedback.title}' + (f'，回复: {admin_reply}' if admin_reply else '')
+        )
+        db.session.add(log)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '留言已关闭',
+            'feedback': feedback.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"关闭留言失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'关闭留言失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/feedbacks/<int:feedback_id>/reply', methods=['POST'])
+@login_required
+@admin_required
+def reply_feedback(feedback_id):
+    """回复留言API接口
+    
+    Args:
+        feedback_id: 留言ID
+    
+    Returns:
+        JSON: 操作结果
+    """
+    try:
+        feedback = Feedback.query.get_or_404(feedback_id)
+        
+        data = request.get_json()
+        admin_reply = data.get('reply', '').strip()
+        
+        if not admin_reply:
+            return jsonify({
+                'success': False,
+                'error': '回复内容不能为空'
+            }), 400
+        
+        if len(admin_reply) > 2000:
+            return jsonify({
+                'success': False,
+                'error': '回复内容不能超过2000个字符'
+            }), 400
+        
+        # 更新回复内容
+        feedback.admin_reply = admin_reply
+        feedback.updated_at = datetime.utcnow()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='reply_feedback',
+            target_type='feedback',
+            target_id=str(feedback.id),
+            details=f'回复留言: {feedback.title}，回复内容: {admin_reply}'
+        )
+        db.session.add(log)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '回复成功',
+            'feedback': feedback.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"回复留言失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'回复留言失败: {str(e)}'
+        }), 500

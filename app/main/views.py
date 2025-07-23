@@ -6,6 +6,7 @@ from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 from app.models.domain_mapping import DomainMapping
 from app.models.domain_config import DomainConfig
+from app.models.feedback import Feedback
 from app.services.adguard_service import AdGuardService
 from app.services.domain_service import DomainService
 from app.admin.views import admin_required
@@ -628,3 +629,98 @@ def client_details(mapping_id):
             db.session.rollback()
             logging.error(f'更新客户端 {mapping.client_name} 失败: {str(e)}')
             return jsonify({'error': f'更新客户端失败：{str(e)}'}), 500
+
+
+@main.route('/api/feedback', methods=['GET', 'POST'])
+@login_required
+def api_feedback():
+    """留言反馈API接口
+    
+    GET: 获取当前用户的留言列表
+    POST: 创建新的留言
+    
+    Returns:
+        JSON: 操作结果或留言列表
+    """
+    if request.method == 'GET':
+        try:
+            # 获取当前用户的留言列表，按创建时间倒序
+            feedbacks = Feedback.query.filter_by(user_id=current_user.id).order_by(Feedback.created_at.desc()).all()
+            
+            feedback_list = [feedback.to_dict() for feedback in feedbacks]
+            
+            return jsonify({
+                'success': True,
+                'feedbacks': feedback_list
+            })
+        except Exception as e:
+            logging.error(f"获取留言列表失败: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'获取留言列表失败: {str(e)}'
+            }), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            title = data.get('title', '').strip()
+            content = data.get('content', '').strip()
+            
+            # 验证输入
+            if not title:
+                return jsonify({
+                    'success': False,
+                    'error': '留言标题不能为空'
+                }), 400
+            
+            if not content:
+                return jsonify({
+                    'success': False,
+                    'error': '留言内容不能为空'
+                }), 400
+            
+            if len(title) > 200:
+                return jsonify({
+                    'success': False,
+                    'error': '留言标题不能超过200个字符'
+                }), 400
+            
+            if len(content) > 2000:
+                return jsonify({
+                    'success': False,
+                    'error': '留言内容不能超过2000个字符'
+                }), 400
+            
+            # 创建新留言
+            feedback = Feedback(
+                user_id=current_user.id,
+                title=title,
+                content=content
+            )
+            
+            db.session.add(feedback)
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='create_feedback',
+                target_type='feedback',
+                target_id=str(feedback.id),
+                details=f'创建留言: {title}'
+            )
+            db.session.add(log)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': '留言提交成功',
+                'feedback': feedback.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"创建留言失败: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': f'创建留言失败: {str(e)}'
+            }), 500

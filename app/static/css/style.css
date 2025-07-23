@@ -506,3 +506,178 @@ tr:hover {
         min-width: 60px;
     }
 }
+
+/* 留言表单样式 */
+.feedback-form {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 15px;
+}
+
+.feedback-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.feedback-form input[type="text"],
+.feedback-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.feedback-form input[type="text"]:focus,
+.feedback-form textarea:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.feedback-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.feedback-form .btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.feedback-form .btn:hover {
+    background-color: #0056b3;
+}
+
+/* 留言列表样式 */
+.feedback-list {
+    margin-top: 20px;
+}
+
+.feedback-list h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 18px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+.feedback-item {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s ease;
+}
+
+.feedback-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-item.status-open {
+    border-left: 4px solid #28a745;
+}
+
+.feedback-item.status-closed {
+    border-left: 4px solid #6c757d;
+    background-color: #f8f9fa;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.feedback-header h4 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 16px;
+}
+
+.feedback-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-open .feedback-status {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-closed .feedback-status {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.feedback-content {
+    color: #495057;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+}
+
+.feedback-meta {
+    font-size: 12px;
+    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+    padding-top: 10px;
+}
+
+.admin-reply {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    border-left: 3px solid #2196f3;
+}
+
+.admin-reply strong {
+    color: #1976d2;
+}
+
+/* 响应式设计 - 留言 */
+@media (max-width: 768px) {
+    .feedback-form {
+        padding: 15px;
+    }
+    
+    .feedback-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .feedback-header h4 {
+        font-size: 14px;
+    }
+    
+    .feedback-content {
+        font-size: 14px;
+    }
+    
+    .feedback-meta {
+        font-size: 11px;
+    }
+}

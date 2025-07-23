@@ -75,6 +75,28 @@
                         <p>加载中...</p>
                     </div>
                 </div>
+                
+                <div class="dashboard-card">
+                    <h2>需求留言</h2>
+                    <form id="feedback-form" class="feedback-form">
+                        <div class="form-group">
+                            <label for="feedback-title">标题：</label>
+                            <input type="text" id="feedback-title" name="title" required maxlength="100" placeholder="请输入留言标题">
+                        </div>
+                        <div class="form-group">
+                            <label for="feedback-content">内容：</label>
+                            <textarea id="feedback-content" name="content" required maxlength="1000" rows="4" placeholder="请详细描述您的需求或问题"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提交留言</button>
+                    </form>
+                    
+                    <div class="feedback-list" id="feedback-list">
+                        <h3>我的留言</h3>
+                        <div id="feedback-items">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
 
@@ -139,17 +161,97 @@ function updateClientRanking() {
         });
 }
 
+// 提交留言表单
+function submitFeedback(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('feedback-form');
+    const formData = new FormData(form);
+    const data = {
+        title: formData.get('title'),
+        content: formData.get('content')
+    };
+    
+    fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            form.reset();
+            updateFeedbackList();
+            alert('留言提交成功！');
+        } else {
+            alert('提交失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('提交失败，请稍后重试');
+    });
+}
+
+// 更新留言列表
+function updateFeedbackList() {
+    fetch('/api/feedback')
+        .then(response => response.json())
+        .then(data => {
+            const feedbackItemsElement = document.getElementById('feedback-items');
+            if (feedbackItemsElement && data.feedbacks) {
+                if (data.feedbacks.length === 0) {
+                    feedbackItemsElement.innerHTML = '<p>暂无留言</p>';
+                } else {
+                    let html = '';
+                    data.feedbacks.forEach(feedback => {
+                        const statusClass = feedback.status === 'open' ? 'status-open' : 'status-closed';
+                        const statusText = feedback.status === 'open' ? '待处理' : '已关闭';
+                        html += `
+                            <div class="feedback-item ${statusClass}">
+                                <div class="feedback-header">
+                                    <h4>${feedback.title}</h4>
+                                    <span class="feedback-status">${statusText}</span>
+                                </div>
+                                <div class="feedback-content">${feedback.content}</div>
+                                <div class="feedback-meta">
+                                    <span>创建时间：${new Date(feedback.created_at).toLocaleString()}</span>
+                                    ${feedback.admin_reply ? `<div class="admin-reply"><strong>管理员回复：</strong>${feedback.admin_reply}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    feedbackItemsElement.innerHTML = html;
+                }
+            }
+        })
+        .catch(error => {
+            // 静默处理错误
+        });
+}
+
 // 页面加载完成后开始定期更新
 document.addEventListener('DOMContentLoaded', function() {
     // 立即更新一次
     updateStats();
     updateClientRanking();
+    updateFeedbackList();
+    
+    // 绑定留言表单提交事件
+    const feedbackForm = document.getElementById('feedback-form');
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', submitFeedback);
+    }
     
     // 每1秒更新一次统计数据
     setInterval(updateStats, 1000);
     
     // 每5秒更新一次客户端排行
     setInterval(updateClientRanking, 5000);
+    
+    // 每30秒更新一次留言列表
+    setInterval(updateFeedbackList, 30000);
 });
 </script>
 </body>

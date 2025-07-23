@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言管理 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>留言管理</h1>
+            <nav class="admin-nav">
+                <a href="{{ url_for('admin.index') }}">返回后台</a>
+                <a href="{{ url_for('admin.users') }}">用户管理</a>
+                <a href="{{ url_for('admin.operation_logs') }}">操作日志</a>
+                <a href="{{ url_for('main.index') }}">返回主页</a>
+                <a href="{{ url_for('auth.logout') }}">退出登录</a>
+            </nav>
+        </header>
+        
+        <main>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="feedback-management">
+                <div class="feedback-filters">
+                    <h2>筛选条件</h2>
+                    <div class="filter-group">
+                        <label for="status-filter">状态：</label>
+                        <select id="status-filter">
+                            <option value="all">全部</option>
+                            <option value="open">待处理</option>
+                            <option value="closed">已关闭</option>
+                        </select>
+                    </div>
+                    <button id="refresh-btn" class="btn btn-primary">刷新</button>
+                </div>
+                
+                <div class="feedback-stats">
+                    <div class="stat-card">
+                        <h3>总留言数</h3>
+                        <span id="total-count">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>待处理</h3>
+                        <span id="open-count">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>已关闭</h3>
+                        <span id="closed-count">0</span>
+                    </div>
+                </div>
+                
+                <div class="feedback-list-admin" id="feedback-list">
+                    <p>加载中...</p>
+                </div>
+                
+                <div class="pagination" id="pagination">
+                    <!-- 分页控件将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 回复留言模态框 -->
+    <div id="reply-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>回复留言</h3>
+                <span class="close" onclick="closeReplyModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="feedback-detail" id="modal-feedback-detail">
+                    <!-- 留言详情将通过JavaScript填充 -->
+                </div>
+                <form id="reply-form">
+                    <div class="form-group">
+                        <label for="admin-reply">管理员回复：</label>
+                        <textarea id="admin-reply" name="reply" required maxlength="1000" rows="4" placeholder="请输入回复内容"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">发送回复</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeReplyModal()">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+let currentPage = 1;
+let currentStatus = 'all';
+let currentFeedbackId = null;
+
+// 加载留言列表
+function loadFeedbacks(page = 1, status = 'all') {
+    const params = new URLSearchParams({
+        page: page,
+        per_page: 10
+    });
+    
+    if (status !== 'all') {
+        params.append('status', status);
+    }
+    
+    fetch(`/admin/api/feedbacks?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderFeedbacks(data.feedbacks);
+                renderPagination(data.pagination);
+                updateStats(data.stats);
+            } else {
+                document.getElementById('feedback-list').innerHTML = '<p>加载失败</p>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('feedback-list').innerHTML = '<p>加载失败</p>';
+        });
+}
+
+// 渲染留言列表
+function renderFeedbacks(feedbacks) {
+    const listElement = document.getElementById('feedback-list');
+    
+    if (feedbacks.length === 0) {
+        listElement.innerHTML = '<p class="no-data">暂无留言</p>';
+        return;
+    }
+    
+    let html = '';
+    feedbacks.forEach(feedback => {
+        const statusClass = feedback.status === 'open' ? 'status-open' : 'status-closed';
+        const statusText = feedback.status === 'open' ? '待处理' : '已关闭';
+        
+        html += `
+            <div class="feedback-item-admin ${statusClass}">
+                <div class="feedback-header-admin">
+                    <div class="feedback-title-user">
+                        <span class="user-info">用户：${feedback.user_name}</span>
+                        <h4>${feedback.title}</h4>
+                    </div>
+                    <div class="feedback-actions">
+                        <span class="feedback-status">${statusText}</span>
+                        ${feedback.status === 'open' ? `
+                            <button class="btn btn-sm btn-primary" onclick="openReplyModal(${feedback.id})">回复</button>
+                            <button class="btn btn-sm btn-secondary" onclick="closeFeedback(${feedback.id})">关闭</button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="feedback-content">${feedback.content}</div>
+                <div class="feedback-meta">
+                    <span>创建时间：${new Date(feedback.created_at).toLocaleString()}</span>
+                    ${feedback.closed_at ? `<span>关闭时间：${new Date(feedback.closed_at).toLocaleString()}</span>` : ''}
+                    ${feedback.admin_reply ? `
+                        <div class="admin-reply">
+                            <strong>管理员回复：</strong>${feedback.admin_reply}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    listElement.innerHTML = html;
+}
+
+// 渲染分页
+function renderPagination(pagination) {
+    const paginationElement = document.getElementById('pagination');
+    
+    if (pagination.pages <= 1) {
+        paginationElement.innerHTML = '';
+        return;
+    }
+    
+    let html = '<div class="pagination-controls">';
+    
+    // 上一页
+    if (pagination.has_prev) {
+        html += `<button class="btn btn-sm" onclick="loadFeedbacks(${pagination.prev_num}, '${currentStatus}')">上一页</button>`;
+    }
+    
+    // 页码
+    for (let i = 1; i <= pagination.pages; i++) {
+        const activeClass = i === pagination.page ? 'active' : '';
+        html += `<button class="btn btn-sm ${activeClass}" onclick="loadFeedbacks(${i}, '${currentStatus}')">${i}</button>`;
+    }
+    
+    // 下一页
+    if (pagination.has_next) {
+        html += `<button class="btn btn-sm" onclick="loadFeedbacks(${pagination.next_num}, '${currentStatus}')">下一页</button>`;
+    }
+    
+    html += '</div>';
+    paginationElement.innerHTML = html;
+}
+
+// 更新统计信息
+function updateStats(stats) {
+    document.getElementById('total-count').textContent = stats.total || 0;
+    document.getElementById('open-count').textContent = stats.open || 0;
+    document.getElementById('closed-count').textContent = stats.closed || 0;
+}
+
+// 打开回复模态框
+function openReplyModal(feedbackId) {
+    currentFeedbackId = feedbackId;
+    
+    // 获取留言详情
+    fetch(`/admin/api/feedbacks?feedback_id=${feedbackId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.feedbacks.length > 0) {
+                const feedback = data.feedbacks[0];
+                document.getElementById('modal-feedback-detail').innerHTML = `
+                    <div class="feedback-detail-content">
+                        <h4>${feedback.title}</h4>
+                        <p><strong>用户：</strong>${feedback.user_name}</p>
+                        <p><strong>内容：</strong></p>
+                        <div class="feedback-content">${feedback.content}</div>
+                        <p><strong>创建时间：</strong>${new Date(feedback.created_at).toLocaleString()}</p>
+                    </div>
+                `;
+                document.getElementById('reply-modal').style.display = 'block';
+            }
+        });
+}
+
+// 关闭回复模态框
+function closeReplyModal() {
+    document.getElementById('reply-modal').style.display = 'none';
+    document.getElementById('reply-form').reset();
+    currentFeedbackId = null;
+}
+
+// 提交回复
+function submitReply(event) {
+    event.preventDefault();
+    
+    if (!currentFeedbackId) return;
+    
+    const formData = new FormData(event.target);
+    const reply = formData.get('reply');
+    
+    fetch(`/admin/api/feedbacks/${currentFeedbackId}/reply`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reply: reply })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeReplyModal();
+            loadFeedbacks(currentPage, currentStatus);
+            alert('回复成功！');
+        } else {
+            alert('回复失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('回复失败，请稍后重试');
+    });
+}
+
+// 关闭留言
+function closeFeedback(feedbackId) {
+    if (!confirm('确定要关闭这条留言吗？')) return;
+    
+    fetch(`/admin/api/feedbacks/${feedbackId}/close`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadFeedbacks(currentPage, currentStatus);
+            alert('留言已关闭！');
+        } else {
+            alert('关闭失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('关闭失败，请稍后重试');
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载留言列表
+    loadFeedbacks();
+    
+    // 绑定筛选器事件
+    document.getElementById('status-filter').addEventListener('change', function() {
+        currentStatus = this.value;
+        currentPage = 1;
+        loadFeedbacks(currentPage, currentStatus);
+    });
+    
+    // 绑定刷新按钮事件
+    document.getElementById('refresh-btn').addEventListener('click', function() {
+        loadFeedbacks(currentPage, currentStatus);
+    });
+    
+    // 绑定回复表单提交事件
+    document.getElementById('reply-form').addEventListener('submit', submitReply);
+    
+    // 点击模态框外部关闭
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('reply-modal');
+        if (event.target === modal) {
+            closeReplyModal();
+        }
+    });
+});
+</script>
+
+<style>
+/* 留言管理专用样式 */
+.feedback-management {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feedback-filters {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-filters h2 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.filter-group {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+.filter-group label {
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.feedback-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.stat-card span {
+    font-size: 32px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.feedback-item-admin {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-header-admin {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.feedback-title-user {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.feedback-title-user h4 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.user-info {
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.feedback-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 30px;
+}
+
+.pagination-controls .btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* 模态框样式 */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.feedback-detail-content {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .feedback-header-admin {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .feedback-actions {
+        align-self: flex-start;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
+/* 留言内容样式优化 */
+.feedback-content {
+    margin: 15px 0;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.feedback-meta {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid #dee2e6;
+    font-size: 13px;
+    color: #6c757d;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.feedback-meta span {
+    display: inline-block;
+}
+
+.admin-reply {
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #e3f2fd;
+    border-radius: 6px;
+    border-left: 3px solid #2196f3;
+}
+
+.admin-reply strong {
+    color: #1976d2;
+    display: block;
+    margin-bottom: 5px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+</body>
+</html>
