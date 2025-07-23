@@ -276,7 +276,11 @@ function closeFeedback(feedbackId) {
     if (!confirm('确定要关闭这条留言吗？')) return;
     
     fetch(`/admin/api/feedbacks/${feedbackId}/close`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
     })
     .then(response => response.json())
     .then(data => {
