@@ -1,0 +1,247 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}访问控制列表管理{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .card {
+        margin-bottom: 20px;
+    }
+    .client-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .client-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .client-item:last-child {
+        border-bottom: none;
+    }
+    .client-info {
+        flex-grow: 1;
+    }
+    .client-name {
+        font-weight: bold;
+    }
+    .client-user {
+        color: #666;
+        font-size: 0.9em;
+    }
+    .client-id {
+        color: #999;
+        font-size: 0.8em;
+        word-break: break-all;
+    }
+    .action-btn {
+        margin-left: 10px;
+    }
+    .empty-list {
+        padding: 20px;
+        text-align: center;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1 class="my-4">访问控制列表管理</h1>
+    
+    <div class="alert alert-info">
+        <p><strong>访问控制列表说明：</strong></p>
+        <ul>
+            <li><strong>允许列表</strong>：只有在此列表中的客户端才能使用 AdGuardHome 服务。如果允许列表为空，则所有客户端都可以使用（除非在拒绝列表中）。</li>
+            <li><strong>拒绝列表</strong>：在此列表中的客户端将无法使用 AdGuardHome 服务。</li>
+            <li>客户端可以通过 IP 地址、CIDR 或客户端 ID 进行标识。</li>
+            <li>允许列表和拒绝列表不能包含相同的客户端。</li>
+        </ul>
+    </div>
+    
+    <div class="row">
+        <!-- 允许列表 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">允许列表</h5>
+                </div>
+                <div class="card-body client-list">
+                    {% if allowed_clients %}
+                        {% for client in allowed_clients %}
+                            <div class="client-item">
+                                <div class="client-info">
+                                    <div class="client-name">{{ client.name }}</div>
+                                    <div class="client-user">用户：{{ client.user }}</div>
+                                    <div class="client-id">ID：{{ client.id }}</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger action-btn" 
+                                        onclick="updateAccessControl('remove', '{{ client.id }}', 'allowed')">
+                                    移除
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-list">
+                            <p>允许列表为空</p>
+                            <p class="text-muted">当允许列表为空时，所有客户端都可以使用服务（除非在拒绝列表中）</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 拒绝列表 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">拒绝列表</h5>
+                </div>
+                <div class="card-body client-list">
+                    {% if disallowed_clients %}
+                        {% for client in disallowed_clients %}
+                            <div class="client-item">
+                                <div class="client-info">
+                                    <div class="client-name">{{ client.name }}</div>
+                                    <div class="client-user">用户：{{ client.user }}</div>
+                                    <div class="client-id">ID：{{ client.id }}</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger action-btn" 
+                                        onclick="updateAccessControl('remove', '{{ client.id }}', 'disallowed')">
+                                    移除
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-list">
+                            <p>拒绝列表为空</p>
+                            <p class="text-muted">当拒绝列表为空时，没有客户端被明确拒绝</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 可添加的客户端列表 -->
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">可添加的客户端</h5>
+        </div>
+        <div class="card-body client-list">
+            {% if all_clients %}
+                {% for client in all_clients %}
+                    <div class="client-item">
+                        <div class="client-info">
+                            <div class="client-name">{{ client.name }}</div>
+                            <div class="client-user">用户：{{ client.user }}</div>
+                            <div class="client-id">ID：{{ client.id }}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-success action-btn" 
+                                    onclick="updateAccessControl('add', '{{ client.id }}', 'allowed')">
+                                添加到允许列表
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger action-btn" 
+                                    onclick="updateAccessControl('add', '{{ client.id }}', 'disallowed')">
+                                添加到拒绝列表
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-list">
+                    <p>没有可添加的客户端</p>
+                    <p class="text-muted">所有客户端已经在允许列表或拒绝列表中</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function updateAccessControl(action, clientId, listType) {
+        // 显示加载状态
+        const loadingToast = Toastify({
+            text: "正在处理请求...",
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "#3498db",
+            stopOnFocus: true
+        }).showToast();
+        
+        // 发送请求
+        fetch('{{ url_for("admin.update_access_control") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                action: action,
+                client_id: clientId,
+                list_type: listType
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 关闭加载提示
+            loadingToast.hideToast();
+            
+            if (data.success) {
+                // 显示成功提示
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: "#2ecc71",
+                    stopOnFocus: true
+                }).showToast();
+                
+                // 刷新页面以显示更新后的列表
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                // 显示错误提示
+                Toastify({
+                    text: data.error || "操作失败，请重试",
+                    duration: 5000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: "#e74c3c",
+                    stopOnFocus: true
+                }).showToast();
+            }
+        })
+        .catch(error => {
+            // 关闭加载提示
+            loadingToast.hideToast();
+            
+            // 显示错误提示
+            Toastify({
+                text: "请求失败：" + error.message,
+                duration: 5000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: "#e74c3c",
+                stopOnFocus: true
+            }).showToast();
+        });
+    }
+</script>
+{% endblock %}

@@ -399,12 +399,191 @@ def delete_domain_mapping(mapping_id):
             # 删除映射记录
             db.session.delete(mapping)
             db.session.commit()
-            return jsonify({'message': '域名映射删除成功'})
+            
+            return jsonify({'status': 'success'})
         else:
-            return jsonify({'error': '删除阿里云域名解析记录失败'}), 500
+            return jsonify({'status': 'error', 'message': '删除域名解析记录失败'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': f'删除域名映射失败：{str(e)}'}), 500
+        return jsonify({'status': 'error', 'message': str(e)})
+
+@admin.route('/access-control')
+@login_required
+@admin_required
+def access_control():
+    """访问控制列表管理页面
+    
+    显示当前的访问控制列表配置，包括允许的客户端和拒绝的客户端
+    """
+    try:
+        # 获取当前的访问控制列表
+        adguard = AdGuardService()
+        access_list = adguard.get_access_list()
+        
+        # 获取所有用户的客户端映射，用于显示客户端名称
+        client_mappings = ClientMapping.query.all()
+        client_id_to_name = {}
+        client_id_to_user = {}
+        
+        for mapping in client_mappings:
+            user = User.query.get(mapping.user_id)
+            if user:
+                for client_id in mapping.client_ids:
+                    client_id_to_name[client_id] = mapping.client_name
+                    client_id_to_user[client_id] = user.username
+        
+        # 处理允许和拒绝列表，添加客户端名称和用户信息
+        allowed_clients = []
+        for client_id in access_list.get('allowed_clients', []):
+            client_info = {
+                'id': client_id,
+                'name': client_id_to_name.get(client_id, '未知客户端'),
+                'user': client_id_to_user.get(client_id, '未知用户')
+            }
+            allowed_clients.append(client_info)
+            
+        disallowed_clients = []
+        for client_id in access_list.get('disallowed_clients', []):
+            client_info = {
+                'id': client_id,
+                'name': client_id_to_name.get(client_id, '未知客户端'),
+                'user': client_id_to_user.get(client_id, '未知用户')
+            }
+            disallowed_clients.append(client_info)
+        
+        # 获取所有用户的客户端，用于添加到列表
+        all_clients = []
+        for mapping in client_mappings:
+            user = User.query.get(mapping.user_id)
+            if user:
+                for client_id in mapping.client_ids:
+                    # 检查是否已在允许或拒绝列表中
+                    if client_id not in [c['id'] for c in allowed_clients] and \
+                       client_id not in [c['id'] for c in disallowed_clients]:
+                        client_info = {
+                            'id': client_id,
+                            'name': mapping.client_name,
+                            'user': user.username
+                        }
+                        all_clients.append(client_info)
+        
+        return render_template(
+            'admin/access_control.html',
+            allowed_clients=allowed_clients,
+            disallowed_clients=disallowed_clients,
+            all_clients=all_clients,
+            blocked_hosts=access_list.get('blocked_hosts', [])
+        )
+    except Exception as e:
+        flash(f'获取访问控制列表失败: {str(e)}', 'error')
+        return render_template(
+            'admin/access_control.html',
+            allowed_clients=[],
+            disallowed_clients=[],
+            all_clients=[],
+            blocked_hosts=[]
+        )
+
+@admin.route('/access-control/update', methods=['POST'])
+@login_required
+@admin_required
+def update_access_control():
+    """更新访问控制列表
+    
+    处理访问控制列表的更新请求，包括添加或删除允许/拒绝的客户端
+    """
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据不能为空'}), 400
+        
+    action = data.get('action')
+    client_id = data.get('client_id')
+    list_type = data.get('list_type')  # 'allowed' 或 'disallowed'
+    
+    if not action or not client_id or not list_type:
+        return jsonify({'error': '缺少必要参数'}), 400
+        
+    if list_type not in ['allowed', 'disallowed']:
+        return jsonify({'error': '无效的列表类型'}), 400
+        
+    if action not in ['add', 'remove']:
+        return jsonify({'error': '无效的操作类型'}), 400
+    
+    try:
+        # 获取当前的访问控制列表
+        adguard = AdGuardService()
+        access_list = adguard.get_access_list()
+        
+        allowed_clients = access_list.get('allowed_clients', [])
+        disallowed_clients = access_list.get('disallowed_clients', [])
+        blocked_hosts = access_list.get('blocked_hosts', [])
+        
+        # 根据操作类型和列表类型更新列表
+        if action == 'add':
+            if list_type == 'allowed':
+                # 添加到允许列表前，确保不在拒绝列表中
+                if client_id in disallowed_clients:
+                    disallowed_clients.remove(client_id)
+                # 添加到允许列表（如果不存在）
+                if client_id not in allowed_clients:
+                    allowed_clients.append(client_id)
+            else:  # disallowed
+                # 添加到拒绝列表前，确保不在允许列表中
+                if client_id in allowed_clients:
+                    allowed_clients.remove(client_id)
+                # 添加到拒绝列表（如果不存在）
+                if client_id not in disallowed_clients:
+                    disallowed_clients.append(client_id)
+        else:  # remove
+            if list_type == 'allowed' and client_id in allowed_clients:
+                allowed_clients.remove(client_id)
+            elif list_type == 'disallowed' and client_id in disallowed_clients:
+                disallowed_clients.remove(client_id)
+        
+        # 更新访问控制列表
+        result = adguard.set_access_list(
+            allowed_clients=allowed_clients,
+            disallowed_clients=disallowed_clients,
+            blocked_hosts=blocked_hosts
+        )
+        
+        # 记录操作日志
+        action_text = '添加' if action == 'add' else '移除'
+        list_text = '允许列表' if list_type == 'allowed' else '拒绝列表'
+        
+        # 获取客户端名称和用户信息
+        client_mapping = ClientMapping.query.filter(
+            ClientMapping.client_ids.contains(client_id)
+        ).first()
+        
+        client_name = '未知客户端'
+        user_info = '未知用户'
+        
+        if client_mapping:
+            client_name = client_mapping.client_name
+            user = User.query.get(client_mapping.user_id)
+            if user:
+                user_info = user.username
+        
+        details = f'{action_text}客户端到{list_text}：{client_id}（{client_name}，用户：{user_info}）'
+        
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type=f'{action}_{list_type}_client',
+            target_type='access_control',
+            target_id='1',
+            details=details
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'成功{action_text}客户端到{list_text}'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'更新访问控制列表失败：{str(e)}'}), 500
 
 @admin.route('/domain-mappings/<int:mapping_id>/refresh', methods=['POST'])
 @login_required
