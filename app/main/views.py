@@ -87,6 +87,24 @@ def guide():
     """
     return render_template('main/guide.html')
 
+@main.route('/settings/change-password')
+@login_required
+def change_password_page():
+    """修改密码页面
+    
+    显示修改密码的表单页面
+    """
+    return render_template('auth/change_password.html')
+
+@main.route('/settings/change-email')
+@login_required
+def change_email_page():
+    """修改邮箱页面
+    
+    显示修改邮箱的表单页面
+    """
+    return render_template('auth/change_email.html')
+
 @main.route('/api/stats')
 @login_required
 def api_stats():

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改邮箱 - AdGuardHome 管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .page-header h1 {
+            color: #2d3748;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .page-header p {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .verification-group {
+            position: relative;
+        }
+        
+        .verification-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .verification-input input {
+            flex: 1;
+        }
+        
+        .send-code-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .send-code-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .send-code-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #5a67d8;
+            transform: translateX(-2px);
+        }
+        
+        .form-text {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .current-email {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .warning-box {
+            background: #fef5e7;
+            border: 1px solid #f6ad55;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #744210;
+        }
+        
+        .warning-box .warning-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>修改邮箱</h1>
+            <p>为了您的账户安全，修改邮箱需要当前邮箱验证</p>
+        </div>
+        
+        <div class="current-email">
+            <strong>当前邮箱：</strong>{{ current_user.email }}
+        </div>
+        
+        <div class="warning-box">
+            <div class="warning-title">重要提示</div>
+            <div>修改邮箱后，您将使用新邮箱进行登录和接收通知。请确保新邮箱地址正确且可以正常接收邮件。</div>
+        </div>
+
+        <!-- 消息提示 -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="new_email">新邮箱地址</label>
+                <input type="email" id="new_email" name="new_email" required>
+                <div class="form-text">请输入有效的邮箱地址</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">当前密码</label>
+                <input type="password" id="password" name="password" required>
+                <div class="form-text">请输入您的当前密码以确认身份</div>
+            </div>
+            
+            <div class="form-group verification-group">
+                <label for="verification_code">邮箱验证码</label>
+                <div class="verification-input">
+                    <input type="text" id="verification_code" name="verification_code" placeholder="请输入6位验证码" maxlength="6" pattern="\d{6}" required>
+                    <button type="button" class="send-code-btn" onclick="sendVerificationCode()">发送验证码</button>
+                </div>
+                <div class="form-text">验证码将发送到您的当前邮箱：{{ current_user.email }}</div>
+            </div>
+            
+            <button type="submit" class="submit-btn">修改邮箱</button>
+        </form>
+        
+        <a href="{{ url_for('main.index') }}" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            返回首页
+        </a>
+    </div>
+
+    <script>
+        let countdown = 0;
+        
+        /**
+         * 发送验证码
+         */
+        function sendVerificationCode() {
+            const button = document.querySelector('.send-code-btn');
+            
+            if (countdown > 0) {
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = '发送中...';
+            
+            fetch('/auth/send-verification-code-for-change', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'email'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('验证码已发送到您的当前邮箱', 'success');
+                    startCountdown();
+                } else {
+                    showMessage(data.message || '发送验证码失败', 'error');
+                    button.disabled = false;
+                    button.textContent = '发送验证码';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('发送验证码失败，请稍后重试', 'error');
+                button.disabled = false;
+                button.textContent = '发送验证码';
+            });
+        }
+        
+        /**
+         * 开始倒计时
+         */
+        function startCountdown() {
+            countdown = 60;
+            const button = document.querySelector('.send-code-btn');
+            
+            const timer = setInterval(() => {
+                button.textContent = `${countdown}秒后重发`;
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(timer);
+                    button.disabled = false;
+                    button.textContent = '发送验证码';
+                }
+            }, 1000);
+        }
+        
+        /**
+         * 显示消息
+         */
+        function showMessage(message, type) {
+            // 移除现有消息
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // 创建新消息
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+            alertDiv.textContent = message;
+            
+            // 插入到表单前
+            const form = document.querySelector('form');
+            form.parentNode.insertBefore(alertDiv, form);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+        
+        // 邮箱格式验证
+        document.getElementById('new_email').addEventListener('input', function() {
+            const email = this.value;
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            
+            if (email && !emailPattern.test(email)) {
+                this.setCustomValidity('请输入有效的邮箱地址');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>

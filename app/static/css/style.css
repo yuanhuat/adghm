@@ -346,6 +346,63 @@ tr:hover {
     text-decoration: underline;
 }
 
+/* 下拉菜单样式 */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-dropdown-toggle {
+    color: #007bff;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    font-weight: 600;
+    margin-left: 15px;
+}
+
+.nav-dropdown-toggle:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    text-decoration: underline;
+}
+
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    min-width: 150px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1000;
+    margin-top: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+    display: block;
+}
+
+.nav-dropdown-menu a {
+    display: block;
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    border-radius: 0;
+    margin-left: 0;
+    font-weight: normal;
+}
+
+.nav-dropdown-menu a:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+
 .dashboard {
     display: flex;
     flex-direction: column;

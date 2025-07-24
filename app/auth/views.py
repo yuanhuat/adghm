@@ -385,6 +385,239 @@ def login():
     
     return render_template('auth/login.html')
 
+@auth.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """忘记密码视图
+    
+    处理忘记密码请求，发送重置密码的验证码到用户邮箱。
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        
+        if not email:
+            flash('请输入邮箱地址', 'error')
+            return render_template('auth/forgot_password.html')
+            
+        # 验证邮箱格式
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash('邮箱格式不正确', 'error')
+            return render_template('auth/forgot_password.html')
+            
+        # 检查邮箱是否已注册
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('该邮箱未注册', 'error')
+            return render_template('auth/forgot_password.html')
+            
+        # 发送重置密码验证码
+        success, code, error_msg = EmailService.send_verification_code(email, 'reset_password')
+        
+        if success:
+            flash('重置密码验证码已发送到您的邮箱，请查收', 'success')
+            return redirect(url_for('auth.reset_password', email=email))
+        else:
+            flash(f'验证码发送失败：{error_msg}', 'error')
+            return render_template('auth/forgot_password.html')
+            
+    return render_template('auth/forgot_password.html')
+
+@auth.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    """重置密码视图
+    
+    处理重置密码请求，验证验证码并更新用户密码。
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    email = request.args.get('email') or request.form.get('email')
+    if not email:
+        flash('缺少邮箱参数', 'error')
+        return redirect(url_for('auth.forgot_password'))
+        
+    if request.method == 'POST':
+        verification_code = request.form.get('verification_code')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not verification_code or not new_password or not confirm_password:
+            flash('请填写所有字段', 'error')
+            return render_template('auth/reset_password.html', email=email)
+            
+        if new_password != confirm_password:
+            flash('两次输入的密码不一致', 'error')
+            return render_template('auth/reset_password.html', email=email)
+            
+        # 验证密码长度
+        if len(new_password) < 6:
+            flash('密码长度至少为6位', 'error')
+            return render_template('auth/reset_password.html', email=email)
+            
+        # 验证验证码
+        is_valid, error_msg = EmailService.verify_email_code(email, verification_code, 'reset_password')
+        if not is_valid:
+            flash(error_msg, 'error')
+            return render_template('auth/reset_password.html', email=email)
+            
+        # 更新用户密码
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('用户不存在', 'error')
+            return redirect(url_for('auth.forgot_password'))
+            
+        user.set_password(new_password)
+        db.session.commit()
+        
+        flash('密码重置成功，请使用新密码登录', 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/reset_password.html', email=email)
+
+@auth.route('/send-verification-code-for-change', methods=['POST'])
+@login_required
+def send_verification_code_for_change():
+    """发送更改信息验证码API
+    
+    为更改邮箱或密码发送验证码到当前用户邮箱。
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': '请求数据格式错误'}), 400
+            
+        change_type = data.get('type', '').strip()  # 'email' 或 'password'
+        if change_type not in ['email', 'password']:
+            return jsonify({'success': False, 'message': '无效的更改类型'}), 400
+            
+        # 发送验证码到当前用户邮箱
+        success, code, error_msg = EmailService.send_verification_code(
+            current_user.email, 
+            f'change_{change_type}'
+        )
+        
+        if success:
+            return jsonify({
+                'success': True, 
+                'message': '验证码已发送到您的邮箱，请查收'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'验证码发送失败：{error_msg}'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False, 
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
+@auth.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """更改密码视图
+    
+    处理用户更改密码请求，需要邮箱验证码验证。
+    """
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        verification_code = request.form.get('verification_code')
+        
+        if not current_password or not new_password or not confirm_password or not verification_code:
+            flash('请填写所有字段', 'error')
+            return render_template('auth/change_password.html')
+            
+        # 验证当前密码
+        if not current_user.check_password(current_password):
+            flash('当前密码错误', 'error')
+            return render_template('auth/change_password.html')
+            
+        if new_password != confirm_password:
+            flash('两次输入的新密码不一致', 'error')
+            return render_template('auth/change_password.html')
+            
+        # 验证密码长度
+        if len(new_password) < 6:
+            flash('密码长度至少为6位', 'error')
+            return render_template('auth/change_password.html')
+            
+        # 验证验证码
+        is_valid, error_msg = EmailService.verify_email_code(
+            current_user.email, 
+            verification_code, 
+            'change_password'
+        )
+        if not is_valid:
+            flash(error_msg, 'error')
+            return render_template('auth/change_password.html')
+            
+        # 更新密码
+        current_user.set_password(new_password)
+        db.session.commit()
+        
+        flash('密码修改成功', 'success')
+        return redirect(url_for('main.index'))
+        
+    return render_template('auth/change_password.html')
+
+@auth.route('/change-email', methods=['GET', 'POST'])
+@login_required
+def change_email():
+    """更改邮箱视图
+    
+    处理用户更改邮箱请求，需要当前邮箱验证码验证。
+    """
+    if request.method == 'POST':
+        new_email = request.form.get('new_email')
+        password = request.form.get('password')
+        verification_code = request.form.get('verification_code')
+        
+        if not new_email or not password or not verification_code:
+            flash('请填写所有字段', 'error')
+            return render_template('auth/change_email.html')
+            
+        # 验证邮箱格式
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, new_email):
+            flash('新邮箱格式不正确', 'error')
+            return render_template('auth/change_email.html')
+            
+        # 验证密码
+        if not current_user.check_password(password):
+            flash('密码错误', 'error')
+            return render_template('auth/change_email.html')
+            
+        # 检查新邮箱是否已被使用
+        if User.query.filter_by(email=new_email).first():
+            flash('该邮箱已被其他用户使用', 'error')
+            return render_template('auth/change_email.html')
+            
+        # 验证验证码（使用当前邮箱）
+        is_valid, error_msg = EmailService.verify_email_code(
+            current_user.email, 
+            verification_code, 
+            'change_email'
+        )
+        if not is_valid:
+            flash(error_msg, 'error')
+            return render_template('auth/change_email.html')
+            
+        # 更新邮箱
+        current_user.email = new_email
+        current_user.email_verified = True
+        db.session.commit()
+        
+        flash('邮箱修改成功', 'success')
+        return redirect(url_for('main.index'))
+        
+    return render_template('auth/change_email.html')
+
 @auth.route('/logout')
 @login_required
 def logout():

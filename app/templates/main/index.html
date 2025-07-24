@@ -13,6 +13,13 @@
             <nav class="main-nav">
                 <a href="{{ url_for('main.clients') }}">客户端管理</a>
                 <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-dropdown-toggle">账户设置 ▼</a>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                    </div>
+                </div>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('admin.index') }}">管理员后台</a>
                 {% endif %}
