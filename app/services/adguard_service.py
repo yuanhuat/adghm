@@ -576,51 +576,7 @@ class AdGuardService:
              print(f"连接AdGuardHome服务器时发生异常: {str(e)}")
              return False
              
-    def get_access_list(self) -> Dict:
-        """获取AdGuardHome访问控制列表
-        
-        获取当前的访问控制列表，包括允许的客户端和拒绝的客户端
-        
-        Returns:
-            Dict: 包含allowed_clients和disallowed_clients的字典
-        """
-        try:
-            return self._make_request('GET', '/access/list')
-        except Exception as e:
-            print(f"获取访问控制列表失败: {str(e)}")
-            return {"allowed_clients": [], "disallowed_clients": [], "blocked_hosts": []}
     
-    def set_access_list(self, allowed_clients: List[str] = None, disallowed_clients: List[str] = None, blocked_hosts: List[str] = None) -> Dict:
-        """设置AdGuardHome访问控制列表
-        
-        更新访问控制列表，包括允许的客户端和拒绝的客户端
-        
-        Args:
-            allowed_clients: 允许的客户端列表（IP地址、CIDR或客户端ID）
-            disallowed_clients: 拒绝的客户端列表（IP地址、CIDR或客户端ID）
-            blocked_hosts: 阻止的主机列表
-            
-        Returns:
-            Dict: API响应数据
-        """
-        data = {}
-        if allowed_clients is not None:
-            data["allowed_clients"] = allowed_clients
-        if disallowed_clients is not None:
-            data["disallowed_clients"] = disallowed_clients
-        if blocked_hosts is not None:
-            data["blocked_hosts"] = blocked_hosts
-            
-        # 如果没有提供任何参数，先获取当前配置
-        if not data:
-            current = self.get_access_list()
-            data = {
-                "allowed_clients": current.get("allowed_clients", []),
-                "disallowed_clients": current.get("disallowed_clients", []),
-                "blocked_hosts": current.get("blocked_hosts", [])
-            }
-            
-        return self._make_request('POST', '/access/set', json=data)
     
     def get_all_clients(self) -> List[Dict]:
         """获取所有已配置的AdGuardHome客户端

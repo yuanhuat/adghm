@@ -11,11 +11,12 @@ from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
-from app.services.adguard_service import AdGuardService
+
 from app.services.email_service import EmailService
 
 from app.services.query_log_service import QueryLogService
 from app.services.ai_analysis_service import AIAnalysisService
+from app.services.adguard_service import AdGuardService
 from . import admin
 from functools import wraps
 import os
@@ -314,60 +315,7 @@ def close_feedback(feedback_id):
 
 
 
-@admin.route('/access-control')
-@login_required
-@admin_required
-def access_control():
-    """访问控制页面"""
-    try:
-        adguard = AdGuardService()
-        access_list = adguard.get_access_list()
-        return render_template('admin/access_control.html', access_list=access_list)
-    except Exception as e:
-        flash(f'获取访问控制列表失败：{str(e)}', 'error')
-        return render_template('admin/access_control.html', access_list=None)
 
-@admin.route('/update-access-control', methods=['POST'])
-@login_required
-@admin_required
-def update_access_control():
-    """更新访问控制列表"""
-    data = request.get_json()
-    action = data.get('action')
-    client_id = data.get('clientId')
-    list_type = data.get('listType')
-
-    try:
-        adguard = AdGuardService()
-        current_list = adguard.get_access_list()
-
-        if list_type == 'allowed':
-            target_list = current_list.get('allowed_clients', [])
-        elif list_type == 'disallowed':
-            target_list = current_list.get('disallowed_clients', [])
-        else:
-            return jsonify({'error': '无效的列表类型'}), 400
-
-        if action == 'add':
-            if client_id not in target_list:
-                target_list.append(client_id)
-        elif action == 'remove':
-            if client_id in target_list:
-                target_list.remove(client_id)
-
-        if list_type == 'allowed':
-            current_list['allowed_clients'] = target_list
-        else:
-            current_list['disallowed_clients'] = target_list
-
-        adguard.set_access_list(
-            allowed_clients=current_list.get('allowed_clients', []),
-            disallowed_clients=current_list.get('disallowed_clients', []),
-            blocked_hosts=current_list.get('blocked_hosts', [])
-        )
-        return jsonify({'message': '更新成功'})
-    except Exception as e:
-        return jsonify({'error': f'更新失败：{str(e)}'}), 500
 
 @admin.route('/adguard-config')
 @login_required
