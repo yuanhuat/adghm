@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
@@ -19,7 +18,6 @@ from app.services.ai_analysis_service import AIAnalysisService
 from app.services.adguard_service import AdGuardService
 from . import admin
 from functools import wraps
-import os
 
 def admin_required(f):
     """管理员权限装饰器
@@ -76,6 +74,33 @@ def delete_user(user_id):
                 adguard.delete_client(mapping.client_name)
             except Exception as e:
                 client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
+        
+        # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+        try:
+            # 获取当前的访问控制列表
+            access_list = adguard._make_request('GET', '/access/list')
+            allowed_clients = access_list.get('allowed_clients', [])
+            
+            # 移除用户的所有客户端ID
+            clients_to_remove = []
+            for mapping in user.client_mappings:
+                for client_id in mapping.client_ids:
+                    if client_id in allowed_clients:
+                        allowed_clients.remove(client_id)
+                        clients_to_remove.append(client_id)
+            
+            # 如果有客户端ID被移除，更新访问控制列表
+            if clients_to_remove:
+                access_data = {
+                    'allowed_clients': allowed_clients,
+                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                }
+                adguard._make_request('POST', '/access/set', json=access_data)
+                print(f"已从允许列表中移除客户端ID: {clients_to_remove}")
+        except Exception as e:
+            client_delete_errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
+            print(f"从允许列表移除客户端ID失败: {str(e)}")
         
         # 注意：域名映射功能已移除
         # 不再需要删除域名映射记录

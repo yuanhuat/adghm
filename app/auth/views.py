@@ -78,11 +78,38 @@ def register():
         return redirect(url_for('main.index'))
         
     if request.method == 'POST':
-        username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         verification_code = request.form.get('verification_code')
+        client_name = request.form.get('client_name', '').strip()
+        
+        # 自动生成用户名（6-12位数字）
+        import random
+        import time
+        
+        def generate_username():
+            """生成唯一的6-12位数字用户名"""
+            max_attempts = 100
+            for _ in range(max_attempts):
+                # 生成8位数字用户名（时间戳后6位 + 2位随机数）
+                timestamp_suffix = str(int(time.time()))[-6:]
+                random_suffix = str(random.randint(10, 99))
+                username = timestamp_suffix + random_suffix
+                
+                # 检查用户名是否已存在
+                if not User.query.filter_by(username=username).first():
+                    return username
+            
+            # 如果100次尝试都失败，使用完全随机的方式
+            for _ in range(max_attempts):
+                username = str(random.randint(100000, 999999999999))
+                if not User.query.filter_by(username=username).first():
+                    return username
+            
+            raise Exception('无法生成唯一用户名，请稍后重试')
+        
+        username = generate_username()
         
         # 检查是否为第一个用户
         is_first_user = User.query.count() == 0
@@ -90,19 +117,31 @@ def register():
         # 表单验证
         if is_first_user:
             # 第一个用户不需要验证码
-            if not username or not email or not password or not confirm_password:
+            if not email or not password or not confirm_password:
                 flash('请填写所有必填字段', 'error')
                 return render_template('auth/register.html')
         else:
-            # 非第一个用户需要验证码
-            if not username or not email or not password or not confirm_password or not verification_code:
+            # 非第一个用户需要验证码和客户端名称
+            if not email or not password or not confirm_password or not verification_code:
                 flash('请填写所有必填字段', 'error')
                 return render_template('auth/register.html')
             
-        # 验证用户名是否为6-12位数字
-        if not re.match(r'^\d{6,12}$', username):
-            flash('用户名必须是6-12位数字', 'error')
-            return render_template('auth/register.html')
+            # 验证客户端名称
+            if not client_name:
+                flash('请填写客户端名称', 'error')
+                return render_template('auth/register.html')
+            
+            # 验证客户端名称格式（只允许字母、数字、中文、连字符和下划线）
+            if not re.match(r'^[a-zA-Z0-9\u4e00-\u9fa5_-]+$', client_name):
+                flash('客户端名称只能包含字母、数字、中文、连字符和下划线', 'error')
+                return render_template('auth/register.html')
+            
+            # 验证客户端名称长度
+            if len(client_name) < 2 or len(client_name) > 20:
+                flash('客户端名称长度必须在2-20个字符之间', 'error')
+                return render_template('auth/register.html')
+            
+        # 用户名已自动生成，无需验证
         
         # 验证邮箱格式
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -114,9 +153,7 @@ def register():
             flash('两次输入的密码不一致', 'error')
             return render_template('auth/register.html')
             
-        if User.query.filter_by(username=username).first():
-            flash('用户名已存在', 'error')
-            return render_template('auth/register.html')
+        # 用户名唯一性已在生成时确保
         
         if User.query.filter_by(email=email).first():
             flash('邮箱已被注册', 'error')
@@ -207,9 +244,10 @@ def register():
                             except Exception as e:
                                 print(f"解析设备平台信息失败: {str(e)}")
                         
-                        client_name = f"user_{username}-{device_platform}"
+                        # 使用用户输入的客户端名称
+                        client_display_name = client_name
                         client_response = adguard.create_client(
-                            name=client_name,
+                            name=client_display_name,
                             ids=client_ids,  # 使用设备信息作为客户端ID
                             use_global_settings=False,  # 默认不使用全局设置，让用户可以自定义
                             filtering_enabled=True,
@@ -254,7 +292,7 @@ def register():
                         # 创建客户端映射
                         client_mapping = ClientMapping(
                             user_id=user.id,
-                            client_name=client_name,
+                            client_name=client_display_name,
                             client_ids=client_ids  # 使用设备信息作为客户端ID
                         )
                         db.session.add(client_mapping)
@@ -316,23 +354,24 @@ def login():
         return redirect(url_for('main.index'))
         
     if request.method == 'POST':
-        username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
         remember = request.form.get('remember', False)
         
-        if not username or not password:
-            flash('请填写用户名和密码', 'error')
+        if not email or not password:
+            flash('请填写邮箱和密码', 'error')
             return render_template('auth/login.html')
             
-        # 验证用户名是否为6-12位数字
+        # 验证邮箱格式
         import re
-        if not re.match(r'^\d{6,12}$', username):
-            flash('用户名必须是6-12位数字', 'error')
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            flash('邮箱格式不正确', 'error')
             return render_template('auth/login.html')
         
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
         if user is None or not user.check_password(password):
-            flash('用户名或密码错误', 'error')
+            flash('邮箱或密码错误', 'error')
             return render_template('auth/login.html')
         
         login_user(user, remember=remember)

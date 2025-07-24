@@ -1,9 +1,5 @@
-from datetime import datetime, timedelta
 from app import db
-
-def beijing_time():
-    """返回北京时间（UTC+8）"""
-    return datetime.utcnow() + timedelta(hours=8)
+from app.utils.timezone import beijing_time
 
 class OperationLog(db.Model):
     """操作日志模型"""

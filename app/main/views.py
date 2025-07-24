@@ -28,7 +28,6 @@ def index():
     user_request_count = 0
     total_dns_queries = 0
     try:
-        from app.services.adguard_service import AdGuardService
         adguard_service = AdGuardService()
         
         # 获取统计数据
@@ -104,7 +103,6 @@ def api_stats():
     total_clients = 0
     
     try:
-        from app.services.adguard_service import AdGuardService
         adguard_service = AdGuardService()
         
         # 获取统计数据
@@ -185,7 +183,6 @@ def api_client_ranking():
     client_ranking = []
     
     try:
-        from app.services.adguard_service import AdGuardService
         import ipaddress
         adguard_service = AdGuardService()
         

@@ -316,7 +316,6 @@ class QueryLogService:
             统计信息字典
         """
         import ipaddress
-        from app.services.adguard_service import AdGuardService
 
         # 获取客户端映射
         adguard_service = AdGuardService()
