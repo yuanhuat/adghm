@@ -315,6 +315,28 @@ class QueryLogService:
         Returns:
             统计信息字典
         """
+        import ipaddress
+        from app.services.adguard_service import AdGuardService
+
+        # 获取客户端映射
+        adguard_service = AdGuardService()
+        clients = adguard_service.get_all_clients()
+        client_ip_map = {}
+        client_cidr_map = {}
+        for client in clients:
+            name = client.get('name')
+            if not name or not client.get('ids'):
+                continue
+            for an_id in client['ids']:
+                try:
+                    net = ipaddress.ip_network(an_id, strict=False)
+                    if '/' in an_id:
+                        client_cidr_map[net] = name
+                    else:
+                        client_ip_map[an_id] = name
+                except ValueError:
+                    client_ip_map[an_id] = name
+
         stats = {
             'total_queries': len(logs),
             'blocked_queries': 0,
@@ -328,48 +350,52 @@ class QueryLogService:
         }
 
         for log in logs:
-            # 检查日志是否被阻止
             is_blocked = 'reason' in log and log['reason'] != "NotFiltered"
-
             if is_blocked:
                 stats['blocked_queries'] += 1
             else:
                 stats['allowed_queries'] += 1
 
-            # 提取并统计域名
             domain = log.get('question', {}).get('name', '')
             if domain:
                 stats['top_domains'][domain] = stats['top_domains'].get(domain, 0) + 1
                 stats['unique_domains'].add(domain)
 
-            # 提取并统计客户端
-            client_info = log.get('client_info', {})
-            client_name = client_info.get('name') or client_info.get('ip')
+            # 解析客户端名称
+            client_ip_str = log.get('client')
+            client_name = client_ip_str
+            if client_ip_str:
+                if client_ip_str in client_ip_map:
+                    client_name = client_ip_map[client_ip_str]
+                else:
+                    try:
+                        client_addr = ipaddress.ip_address(client_ip_str)
+                        for network, name in client_cidr_map.items():
+                            if client_addr in network:
+                                client_name = name
+                                break
+                    except ValueError:
+                        pass
+            
             if client_name:
                 stats['top_clients'][client_name] = stats['top_clients'].get(client_name, 0) + 1
                 stats['unique_clients'].add(client_name)
 
-            # 统计查询类型
             query_type = log.get('question', {}).get('type', '')
             if query_type:
                 stats['query_types'][query_type] = stats['query_types'].get(query_type, 0) + 1
 
-            # 统计阻止原因
             if is_blocked:
                 reason = log.get('reason', 'Unknown')
                 stats['block_reasons'][reason] = stats['block_reasons'].get(reason, 0) + 1
 
-        # 添加独立计数
         stats['unique_domains_count'] = len(stats['unique_domains'])
         stats['unique_clients_count'] = len(stats['unique_clients'])
         del stats['unique_domains']
         del stats['unique_clients']
         
-        # 排序热门项目
-        stats['top_domains'] = dict(sorted(stats['top_domains'].items(), 
-                                         key=lambda x: x[1], reverse=True)[:10])
-        stats['top_clients'] = dict(sorted(stats['top_clients'].items(), 
-                                         key=lambda x: x[1], reverse=True)[:10])
+        stats['top_domains'] = dict(sorted(stats['top_domains'].items(), key=lambda x: x[1], reverse=True)[:10])
+        stats['top_clients'] = dict(sorted(stats['top_clients'].items(), key=lambda x: x[1], reverse=True)[:10])
         
         return stats
     

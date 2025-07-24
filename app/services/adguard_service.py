@@ -622,6 +622,19 @@ class AdGuardService:
             
         return self._make_request('POST', '/access/set', json=data)
     
+    def get_all_clients(self) -> List[Dict]:
+        """获取所有已配置的AdGuardHome客户端
+
+        Returns:
+            List[Dict]: 包含所有客户端信息的列表
+        """
+        try:
+            response = self._make_request('GET', '/clients')
+            return response.get('clients', [])
+        except Exception as e:
+            print(f"获取所有客户端失败: {str(e)}")
+            return []
+
     def get_stats(self) -> Dict:
         """获取AdGuardHome统计数据
         

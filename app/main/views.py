@@ -186,30 +186,55 @@ def api_client_ranking():
     
     try:
         from app.services.adguard_service import AdGuardService
+        import ipaddress
         adguard_service = AdGuardService()
         
-        # 获取统计数据
+        # 获取统计数据和所有客户端信息
         stats = adguard_service.get_stats()
-        
+        all_clients = adguard_service.get_all_clients()
+
+        # 构建客户端IP到名称的映射
+        client_map = {}
+        client_cidrs = {}
+        if all_clients:
+            for client in all_clients:
+                for cidr in client.get('ids', []):
+                    try:
+                        # 区分普通IP和CIDR
+                        if '/' in cidr:
+                            client_cidrs[ipaddress.ip_network(cidr, strict=False)] = client.get('name')
+                        else:
+                            client_map[cidr] = client.get('name')
+                    except ValueError:
+                        # 处理无效的CIDR或IP
+                        client_map[cidr] = client.get('name')
+
         if stats and 'top_clients' in stats:
             # 处理top_clients数据
             for client_stat in stats['top_clients']:
-                # top_clients格式: {"client_name": request_count}
-                for client_name, request_count in client_stat.items():
-                    # 查找客户端对应的用户信息
-                    client_mapping = ClientMapping.query.filter_by(client_name=client_name).first()
+                for client_ip, request_count in client_stat.items():
+                    # 默认客户端名称为IP
+                    client_name_from_map = client_ip
                     
-                    # 如果通过客户端名称没找到，尝试通过客户端ID查找
-                    if not client_mapping:
-                        # 查找包含此客户端ID的映射
-                        all_mappings = ClientMapping.query.all()
-                        for mapping in all_mappings:
-                            if client_name in mapping.client_ids:
-                                client_mapping = mapping
-                                break
+                    # 首先在普通IP映射中查找
+                    if client_ip in client_map:
+                        client_name_from_map = client_map[client_ip]
+                    else:
+                        # 如果不在普通IP映射中，则检查CIDR范围
+                        try:
+                            ip = ipaddress.ip_address(client_ip)
+                            for network, name in client_cidrs.items():
+                                if ip in network:
+                                    client_name_from_map = name
+                                    break
+                        except ValueError:
+                            pass  # 不是有效的IP地址，保持原样
+
+                    # 查找客户端对应的用户信息
+                    client_mapping = ClientMapping.query.filter_by(client_name=client_name_from_map).first()
                     
                     client_info = {
-                        'client_name': client_name,
+                        'client_name': client_name_from_map,
                         'request_count': request_count,
                         'user_name': client_mapping.user.username if client_mapping else '未知用户',
                         'is_current_user': client_mapping.user_id == current_user.id if client_mapping else False
