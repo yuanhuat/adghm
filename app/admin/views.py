@@ -7,7 +7,6 @@ from app.models.user import User
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 
-
 from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
@@ -77,42 +76,20 @@ def delete_user(user_id):
             except Exception as e:
                 client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
         
-        # 删除所有关联的域名映射记录
-        domain_service = DomainService()
-        domain_mappings = DomainMapping.query.filter_by(user_id=user.id).all()
-        for domain_mapping in domain_mappings:
-            try:
-                # 记录删除的域名信息
-                details = f'删除用户域名映射：{domain_mapping.full_domain}'
-                if domain_mapping.ipv6_record_id:
-                    details += f'（IPv4: {domain_mapping.ip_address}, IPv6: {domain_mapping.ipv6_address}）'
-                else:
-                    details += f'（IPv4: {domain_mapping.ip_address}）'
-                    
-                # 记录操作日志
-                log = OperationLog(
-                    user_id=current_user.id,
-                    operation_type='delete',
-                    target_type='domain_mapping',
-                    target_id=str(domain_mapping.id),
-                    details=details
-                )
-                db.session.add(log)
-                
-                # 尝试删除阿里云IPv4域名解析记录
-                domain_service.delete_domain_record(domain_mapping.record_id)
-                
-                # 尝试删除阿里云IPv6域名解析记录（如果存在）
-                if domain_mapping.ipv6_record_id:
-                    domain_service.delete_domain_record(domain_mapping.ipv6_record_id)
-            except Exception as e:
-                logging.error(f"删除域名解析记录失败：{str(e)}")
-            # 删除数据库中的域名映射记录
-            db.session.delete(domain_mapping)
+        # 注意：域名映射功能已移除
+        # 不再需要删除域名映射记录
             
         # 删除所有关联的客户端映射记录
         for mapping in user.client_mappings:
             db.session.delete(mapping)
+        
+        # 处理用户的反馈记录
+        from app.models.feedback import Feedback
+        # 查找用户的所有反馈
+        feedbacks = Feedback.query.filter_by(user_id=user_id).all()
+        for feedback in feedbacks:
+            # 将反馈的用户ID设为NULL
+            db.session.delete(feedback)
             
         # 删除用户记录
         db.session.delete(user)

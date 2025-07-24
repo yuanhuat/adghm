@@ -21,3 +21,13 @@ class ClientMapping(db.Model):
     def client_ids(self, value):
         """设置客户端ID列表"""
         self._client_ids = json.dumps(value)
+        
+    def to_dict(self):
+        """将对象转换为字典"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'client_name': self.client_name,
+            'client_ids': self.client_ids,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
+        }

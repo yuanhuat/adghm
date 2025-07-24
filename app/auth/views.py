@@ -259,83 +259,15 @@ def register():
                         )
                         db.session.add(client_mapping)
                         
-                        # 尝试创建阿里云域名解析
-                        try:
-                            # 获取域名配置
-                            domain_config = DomainConfig.get_config()
-                            is_valid, error_msg = domain_config.validate()
-                            
-                            if is_valid:
-                                # 创建域名服务实例
-                                domain_service = DomainService()
-                                
-                                # 获取IP地址
-                                ip_address = domain_service.get_ip_address()
-                                if ip_address:
-                                    # 使用客户端ID作为子域名前缀
-                                    subdomain = client_ids[0]
-                                    
-                                    # 创建或更新域名解析记录
-                                    success, record_id, full_domain = domain_service.create_or_update_subdomain(
-                                        subdomain=subdomain,
-                                        ip_address=ip_address
-                                    )
-                                    
-                                    if success and record_id:
-                                        # 创建域名映射记录
-                                        domain_mapping = DomainMapping(
-                                            user_id=user.id,
-                                            subdomain=subdomain,
-                                            full_domain=full_domain,
-                                            record_id=record_id,
-                                            ip_address=ip_address
-                                        )
-                                        db.session.add(domain_mapping)
-                                        
-                                        # 记录操作日志
-                                        domain_service.log_operation(
-                                            user_id=user.id,
-                                            operation_type='create',
-                                            target_id=record_id,
-                                            details=f'创建子域名: {subdomain}, IP: {ip_address}'
-                                        )
-                                        
-                                        # 提交所有更改
-                                        db.session.commit()
-                                        
-                                        # 自动登录
-                                        login_user(user)
-                                        flash(f'注册成功！已为您创建域名 {full_domain}', 'success')
-                                        return redirect(url_for('main.index'))
-                                    else:
-                                        # 域名解析创建失败，但AdGuardHome客户端创建成功
-                                        db.session.commit()  # 提交AdGuardHome客户端创建
-                                        login_user(user)
-                                        flash('注册成功！但域名解析创建失败，请联系管理员。', 'warning')
-                                        return redirect(url_for('main.index'))
-                                else:
-                                    # 无法获取IP地址
-                                    db.session.commit()  # 提交AdGuardHome客户端创建
-                                    login_user(user)
-                                    flash('注册成功！但无法获取您的IP地址，域名解析创建失败。', 'warning')
-                                    return redirect(url_for('main.index'))
-                            else:
-                                # 域名配置无效
-                                db.session.commit()  # 提交AdGuardHome客户端创建
-                                login_user(user)
-                                flash(f'注册成功！但域名配置无效：{error_msg}，请联系管理员。', 'warning')
-                                return redirect(url_for('main.index'))
-                                
-                        except Exception as e:
-                            # 域名解析创建过程中出错，但AdGuardHome客户端创建成功
-                            db.session.commit()  # 提交AdGuardHome客户端创建
-                            login_user(user)
-                            error_msg = str(e)
-                            flash(f'注册成功！但域名解析创建失败：{error_msg}', 'warning')
-                            print(f"创建域名解析失败：{error_msg}")
-                            return redirect(url_for('main.index'))
+                        # 注意：域名解析功能已移除
                         
-                        # 如果没有进入任何条件分支，确保提交并登录
+                        # 提交所有更改
+                        db.session.commit()
+                        
+                        # 自动登录
+                        login_user(user)
+                        flash('注册成功！', 'success')
+                        return redirect(url_for('main.index'))
                         db.session.commit()
                         login_user(user)
                         flash('注册成功！', 'success')
