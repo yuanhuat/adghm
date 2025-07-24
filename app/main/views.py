@@ -709,3 +709,248 @@ def api_dns_config():
         return jsonify({
             'error': f'获取DNS配置失败: {str(e)}'
         }), 500
+
+
+@main.route('/api/apple/doh.mobileconfig')
+@login_required
+def apple_doh_mobileconfig():
+    """生成DNS-over-HTTPS的苹果配置文件
+    
+    为当前用户生成DoH的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
+    
+    Returns:
+        .mobileconfig文件下载
+    """
+    try:
+        # 获取DNS配置
+        config = DnsConfig.get_config()
+        
+        if not config or not config.doh_enabled or not config.doh_server:
+            return jsonify({
+                'error': 'DNS-over-HTTPS配置未启用或未设置'
+            }), 400
+        
+        # 获取用户的客户端ID
+        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
+        client_id = None
+        
+        if client_mapping and client_mapping.client_ids:
+            client_id = client_mapping.client_ids[0]
+        
+        if not client_id:
+            return jsonify({
+                'error': '用户没有关联的客户端ID'
+            }), 400
+        
+        # 构建DoH服务器地址
+        doh_server = f"{client_id}.{config.doh_server}"
+        doh_port = config.doh_port or 443
+        doh_path = config.doh_path or '/dns-query'
+        
+        # 构建DoH URL
+        if doh_port == 443:
+            doh_url = f"https://{doh_server}{doh_path}"
+        else:
+            doh_url = f"https://{doh_server}:{doh_port}{doh_path}"
+        
+        # 生成.mobileconfig文件内容
+        import uuid
+        from datetime import datetime
+        
+        payload_uuid = str(uuid.uuid4()).upper()
+        profile_uuid = str(uuid.uuid4()).upper()
+        
+        mobileconfig_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>DNSSettings</key>
+            <dict>
+                <key>DNSProtocol</key>
+                <string>HTTPS</string>
+                <key>ServerURL</key>
+                <string>{doh_url}</string>
+            </dict>
+            <key>PayloadDescription</key>
+            <string>Configures device to use AdGuard Home DNS-over-HTTPS</string>
+            <key>PayloadDisplayName</key>
+            <string>AdGuard Home DoH</string>
+            <key>PayloadIdentifier</key>
+            <string>com.adguardhome.doh.{client_id}</string>
+            <key>PayloadType</key>
+            <string>com.apple.dnsSettings.managed</string>
+            <key>PayloadUUID</key>
+            <string>{payload_uuid}</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>AdGuard Home DNS-over-HTTPS configuration for {current_user.username}</string>
+    <key>PayloadDisplayName</key>
+    <string>AdGuard Home DoH - {current_user.username}</string>
+    <key>PayloadIdentifier</key>
+    <string>com.adguardhome.profile.doh.{client_id}</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>{profile_uuid}</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>'''
+        
+        # 创建响应
+        from flask import Response
+        response = Response(
+            mobileconfig_content,
+            mimetype='application/x-apple-aspen-config',
+            headers={
+                'Content-Disposition': f'attachment; filename="AdGuardHome-DoH-{client_id}.mobileconfig"'
+            }
+        )
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='download_apple_config',
+            target_type='mobileconfig',
+            target_id=f'doh-{client_id}',
+            details=f'下载DoH配置文件: {doh_url}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return response
+        
+    except Exception as e:
+        logging.error(f"生成DoH配置文件失败: {str(e)}")
+        return jsonify({
+            'error': f'生成DoH配置文件失败: {str(e)}'
+        }), 500
+
+
+@main.route('/api/apple/dot.mobileconfig')
+@login_required
+def apple_dot_mobileconfig():
+    """生成DNS-over-TLS的苹果配置文件
+    
+    为当前用户生成DoT的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
+    
+    Returns:
+        .mobileconfig文件下载
+    """
+    try:
+        # 获取DNS配置
+        config = DnsConfig.get_config()
+        
+        if not config or not config.dot_enabled or not config.dot_server:
+            return jsonify({
+                'error': 'DNS-over-TLS配置未启用或未设置'
+            }), 400
+        
+        # 获取用户的客户端ID
+        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
+        client_id = None
+        
+        if client_mapping and client_mapping.client_ids:
+            client_id = client_mapping.client_ids[0]
+        
+        if not client_id:
+            return jsonify({
+                'error': '用户没有关联的客户端ID'
+            }), 400
+        
+        # 构建DoT服务器地址
+        dot_server = f"{client_id}.{config.dot_server}"
+        dot_port = config.dot_port or 853
+        
+        # 生成.mobileconfig文件内容
+        import uuid
+        from datetime import datetime
+        
+        payload_uuid = str(uuid.uuid4()).upper()
+        profile_uuid = str(uuid.uuid4()).upper()
+        
+        mobileconfig_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>DNSSettings</key>
+            <dict>
+                <key>DNSProtocol</key>
+                <string>TLS</string>
+                <key>ServerName</key>
+                <string>{dot_server}</string>
+                <key>ServerAddresses</key>
+                <array>
+                    <string>{dot_server}</string>
+                </array>
+            </dict>
+            <key>PayloadDescription</key>
+            <string>Configures device to use AdGuard Home DNS-over-TLS</string>
+            <key>PayloadDisplayName</key>
+            <string>AdGuard Home DoT</string>
+            <key>PayloadIdentifier</key>
+            <string>com.adguardhome.dot.{client_id}</string>
+            <key>PayloadType</key>
+            <string>com.apple.dnsSettings.managed</string>
+            <key>PayloadUUID</key>
+            <string>{payload_uuid}</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>AdGuard Home DNS-over-TLS configuration for {current_user.username}</string>
+    <key>PayloadDisplayName</key>
+    <string>AdGuard Home DoT - {current_user.username}</string>
+    <key>PayloadIdentifier</key>
+    <string>com.adguardhome.profile.dot.{client_id}</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>{profile_uuid}</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>'''
+        
+        # 创建响应
+        from flask import Response
+        response = Response(
+            mobileconfig_content,
+            mimetype='application/x-apple-aspen-config',
+            headers={
+                'Content-Disposition': f'attachment; filename="AdGuardHome-DoT-{client_id}.mobileconfig"'
+            }
+        )
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='download_apple_config',
+            target_type='mobileconfig',
+            target_id=f'dot-{client_id}',
+            details=f'下载DoT配置文件: {dot_server}:{dot_port}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return response
+        
+    except Exception as e:
+        logging.error(f"生成DoT配置文件失败: {str(e)}")
+        return jsonify({
+            'error': f'生成DoT配置文件失败: {str(e)}'
+        }), 500

@@ -70,6 +70,13 @@
                 <p>加载中...</p>
             </div>
         </div>
+        <div class="dashboard-card">
+            <h2><i class="fas fa-mobile-alt" style="color: #007bff;"></i> 苹果设备配置</h2>
+            <p class="config-description">为您的iPhone、iPad或Mac设备快速配置DNS设置</p>
+            <div class="apple-config-content" id="apple-config-content">
+                <p>加载中...</p>
+            </div>
+        </div>
     </div>
     <div class="dashboard-row">
         <div class="dashboard-card large-card">
@@ -104,6 +111,87 @@
 
         </main>
     </div>
+
+<style>
+/* 苹果配置文件样式 */
+.apple-config-items {
+    margin-bottom: 20px;
+}
+
+.apple-config-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.apple-config-item h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.apple-config-item p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.btn-download {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-download:hover {
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.apple-config-note {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.apple-config-note p {
+    margin: 0 0 10px 0;
+    color: #856404;
+    font-weight: bold;
+}
+
+.apple-config-note ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #856404;
+}
+
+.apple-config-note li {
+    margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+    .apple-config-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .btn-download {
+        align-self: stretch;
+        text-align: center;
+    }
+}
+</style>
 
 <script>
 // 动态更新统计数据
@@ -307,6 +395,9 @@ function updateDnsConfig() {
             
             contentElement.innerHTML = html;
         }
+        
+        // 同时更新苹果配置文件
+        updateAppleConfig(data);
     })
     .catch(error => {
         console.error('DNS config API error:', error);
@@ -315,6 +406,69 @@ function updateDnsConfig() {
             contentElement.innerHTML = '<p class="error-message">加载DNS配置信息失败</p>';
         }
     });
+}
+
+// 更新苹果配置文件
+function updateAppleConfig(dnsData) {
+    const appleContentElement = document.getElementById('apple-config-content');
+    if (!appleContentElement) return;
+    
+    let html = '';
+    let hasConfig = false;
+    
+    // 检查是否有可用的DNS配置
+    const hasDoH = dnsData.doh_enabled && dnsData.doh_server;
+    const hasDoT = dnsData.dot_enabled && dnsData.dot_server;
+    
+    if (hasDoH || hasDoT) {
+        hasConfig = true;
+        html += '<div class="apple-config-items">';
+        
+        if (hasDoH) {
+            html += `
+                <div class="apple-config-item">
+                    <div class="config-info">
+                        <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
+                        <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                    </div>
+                    <a href="/api/apple/doh.mobileconfig" class="btn btn-primary btn-download" download>
+                        <i class="fas fa-download"></i> 下载配置文件
+                    </a>
+                </div>
+            `;
+        }
+        
+        if (hasDoT) {
+            html += `
+                <div class="apple-config-item">
+                    <div class="config-info">
+                        <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
+                        <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                    </div>
+                    <a href="/api/apple/dot.mobileconfig" class="btn btn-primary btn-download" download>
+                        <i class="fas fa-download"></i> 下载配置文件
+                    </a>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        html += '<div class="apple-config-note">';
+        html += '<p><i class="fas fa-info-circle"></i> <strong>使用说明：</strong></p>';
+        html += '<ol>';
+        html += '<li>点击下载按钮获取配置文件</li>';
+        html += '<li>在设备上打开下载的.mobileconfig文件</li>';
+        html += '<li>按照系统提示安装配置文件</li>';
+        html += '<li>安装完成后，您的设备将自动使用AdGuard Home的DNS服务</li>';
+        html += '</ol>';
+        html += '</div>';
+    }
+    
+    if (!hasConfig) {
+        html = '<p class="no-config">暂无可用的DNS配置，请联系管理员设置</p>';
+    }
+    
+    appleContentElement.innerHTML = html;
 }
 
 // 提交留言表单
