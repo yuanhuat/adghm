@@ -505,7 +505,7 @@
     <!-- 高级搜索面板 -->
     <div class="search-panel">
         <h5><i class="fas fa-filter"></i> 高级搜索</h5>
-        <form id="searchForm">
+        <form id="searchForm" onsubmit="event.preventDefault(); performSearch();">
             <div class="row">
                 <div class="col-md-3">
                     <div class="filter-group">
@@ -896,35 +896,31 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+        $(document).ready(function() {
+            // 初始化日期时间选择器
+            const now = new Date();
+            const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+            const formatDateTimeLocal = (date) => {
+                const pad = (num) => num.toString().padStart(2, '0');
+                const year = date.getFullYear();
+                const month = pad(date.getMonth() + 1);
+                const day = pad(date.getDate());
+                const hours = pad(date.getHours());
+                const minutes = pad(date.getMinutes());
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+
+            $('#start-time').val(formatDateTimeLocal(oneHourAgo));
+            $('#end-time').val(formatDateTimeLocal(now));
+            performSearch();
+        });
 let currentLogs = [];
 let currentOlderThan = null;
 let hasMoreLogs = false;
 let currentFilters = {};
 
-// 页面加载完成后初始化
-$(document).ready(function() {
-    // 设置默认时间范围（最近1小时）
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    
-    $('#endTimeFilter').val(formatDateTimeLocal(now));
-    $('#startTimeFilter').val(formatDateTimeLocal(oneHourAgo));
-    
-    // 初始加载
-    performSearch();
-    
-    // 分析模式切换
-    $('#analysisMode').change(function() {
-        const mode = $(this).val();
-        $('#singleAnalysisPanel, #batchAnalysisPanel, #autoAnalysisPanel').hide();
-        $('#' + mode + 'AnalysisPanel').show();
-    });
-    
-    // 模态框关闭时重置状态
-    $('#aiAnalysisModal').on('hidden.bs.modal', function () {
-        resetAIAnalysisModal();
-    });
-});
+
 
 // 格式化日期时间为本地格式
 function formatDateTimeLocal(date) {
@@ -944,7 +940,7 @@ function performSearch() {
         domain: $('#domainFilter').val(),
         client: $('#clientFilter').val(),
         query_type: $('#queryTypeFilter').val(),
-        blocked: $('#blockedFilter').val() ? $('#blockedFilter').val() === 'true' : null,
+        status: $('#blockedFilter').val(),
         start_time: $('#startTimeFilter').val() ? new Date($('#startTimeFilter').val()).toISOString() : null,
         end_time: $('#endTimeFilter').val() ? new Date($('#endTimeFilter').val()).toISOString() : null,
         reason: $('#reasonFilter').val()
@@ -1087,8 +1083,8 @@ function updateStats(stats) {
             ((stats.blocked_queries / stats.total_queries) * 100).toFixed(1) : 0;
         $('#blockRate').text(blockRate + '%');
         
-        $('#uniqueDomains').text(Object.keys(stats.top_domains || {}).length);
-        $('#uniqueClients').text(Object.keys(stats.top_clients || {}).length);
+        $('#uniqueDomains').text(stats.unique_domains_count || 0);
+        $('#uniqueClients').text(stats.unique_clients_count || 0);
         
         $('#statsContainer').show();
     }

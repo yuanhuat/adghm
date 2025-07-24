@@ -44,32 +44,24 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.users') }}">用户管理</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.global_blocked_services_page') }}">全局阻止服务</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.access_control') }}">访问控制</a>
+                    </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="configDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            AdGuardHome配置
+                        <a class="nav-link dropdown-toggle" href="#" id="systemConfigDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            系统管理
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="configDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">基础配置</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="systemConfigDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.email_config') }}">邮件配置</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('admin.ai_analysis_config') }}">AI分析配置</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.feedbacks') }}">反馈管理</a></li>
+                            
+                            <li><a class="dropdown-item" href="{{ url_for('admin.operation_logs') }}">操作日志</a></li>
                         </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.domain_config') }}">域名解析配置</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.email_config') }}">邮箱配置</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.domain_mappings') }}">域名映射管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.access_control') }}">访问控制列表</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.blocked_services') }}">全局阻止服务</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.operation_logs') }}">操作日志</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="queryLogDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

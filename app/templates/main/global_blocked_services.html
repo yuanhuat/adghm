@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <h2>全局阻止服务管理</h2>
+    <p>在这里，您可以管理全局阻止的服务列表。</p>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">当前阻止的服务</h5>
+            <ul id="blocked-services-list" class="list-group mb-3">
+                <!-- 服务列表将通过JS动态加载 -->
+            </ul>
+
+            <h5 class="card-title">添加新服务</h5>
+            <div class="input-group mb-3">
+                <input type="text" id="new-service-input" class="form-control" placeholder="输入要阻止的服务ID (例如 'tiktok')">
+                <button class="btn btn-primary" type="button" id="add-service-btn">添加</button>
+            </div>
+
+            <button class="btn btn-success" id="save-changes-btn">保存更改</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 加载当前阻止的服务列表
+    function loadBlockedServices() {
+        $.get('{{ url_for("main.api_global_blocked_services") }}', function(data) {
+            if (data.success) {
+                $('#blocked-services-list').empty();
+                data.blocked_services.forEach(function(service) {
+                    $('#blocked-services-list').append(
+                        `<li class="list-group-item d-flex justify-content-between align-items-center">${service}<button class="btn btn-danger btn-sm remove-service-btn">移除</button></li>`
+                    );
+                });
+            }
+        });
+    }
+
+    loadBlockedServices();
+
+    // 添加服务
+    $('#add-service-btn').click(function() {
+        const newService = $('#new-service-input').val().trim();
+        if (newService) {
+            $('#blocked-services-list').append(
+                `<li class="list-group-item d-flex justify-content-between align-items-center">${newService}<button class="btn btn-danger btn-sm remove-service-btn">移除</button></li>`
+            );
+            $('#new-service-input').val('');
+        }
+    });
+
+    // 移除服务
+    $(document).on('click', '.remove-service-btn', function() {
+        $(this).parent().remove();
+    });
+
+    // 保存更改
+    $('#save-changes-btn').click(function() {
+        const blockedServices = [];
+        $('#blocked-services-list .list-group-item').each(function() {
+            blockedServices.push($(this).text().replace('移除', '').trim());
+        });
+
+        $.ajax({
+            url: '{{ url_for("main.api_global_blocked_services") }}',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({ ids: blockedServices }),
+            success: function(response) {
+                if (response.success) {
+                    alert('设置已成功保存！');
+                } else {
+                    alert('保存失败：' + response.error);
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

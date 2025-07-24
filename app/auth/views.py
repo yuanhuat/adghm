@@ -4,10 +4,10 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
-from app.models.domain_config import DomainConfig
-from app.models.domain_mapping import DomainMapping
+
+
 from app.services.adguard_service import AdGuardService
-from app.services.domain_service import DomainService
+
 from app.services.email_service import EmailService
 import re
 

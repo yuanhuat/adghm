@@ -60,21 +60,7 @@
                     </div>
                 </div>
                 
-                <div class="dashboard-card">
-                    <h2>我的DNS</h2>
-                    <div class="info-list" id="domain-info">
-                        {% if domain_mapping %}
-                        <p><strong>二级域名：</strong>{{ domain_mapping.full_domain }}</p>
-                        <p><strong>DoT (DNS-over-TLS)：</strong>tls://{{ domain_mapping.full_domain }}</p>
-                        <p><strong>DoH (DNS-over-HTTPS)：</strong>https://{{ domain_mapping.full_domain }}</p>
-                        <p><strong>H3 (DNS-over-H3)：</strong>h3://{{ domain_mapping.full_domain }}</p>
-                        <p><strong>DoQ (DNS-over-QUIC)：</strong>quic://{{ domain_mapping.full_domain }}</p>
-                        <p><strong>创建时间：</strong>{{ domain_mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                        {% else %}
-                        <p>您还没有域名映射记录</p>
-                        {% endif %}
-                    </div>
-                </div>
+
                 
                 <div class="dashboard-card">
                     <h2>客户端排行榜</h2>

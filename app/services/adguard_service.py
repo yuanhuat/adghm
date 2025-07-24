@@ -169,6 +169,128 @@ class AdGuardService:
         if response_status:
             params['response_status'] = response_status
         return self._make_request('GET', '/querylog', params=params)
+
+    def get_query_log_advanced(self, filters: Dict, limit: int = 50, older_than: Optional[str] = None) -> Dict:
+        """高级搜索查询日志
+
+        Args:
+            filters: 包含所有过滤条件的字典
+            limit: 返回的日志条目数
+            older_than: 用于分页
+
+        Returns:
+            处理后的日志数据和统计信息
+        """
+        # 构建基础参数
+        params = {
+            'limit': limit,
+            'older_than': older_than if older_than else '',
+            'response_status': 'all' # 默认获取所有状态
+        }
+
+        # 处理搜索词（域名或客户端）
+        search_terms = []
+        if filters.get('domain'):
+            search_terms.append(filters['domain'])
+        if filters.get('client'):
+            search_terms.append(filters['client'])
+        if search_terms:
+            params['search'] = ' '.join(search_terms)
+
+        # 直接调用 /querylog 端点
+        raw_logs = self._make_request('GET', '/querylog', params=params)
+        
+        # 在Python端进行过滤
+        filtered_data = self._filter_logs(raw_logs.get('data', []), filters)
+
+        # 计算统计信息
+        stats = self._calculate_stats(filtered_data)
+
+        # 获取下一页的 oldest 时间戳
+        oldest_timestamp = None
+        if filtered_data:
+            oldest_timestamp = filtered_data[-1]['time']
+
+        return {
+            'data': filtered_data,
+            'stats': stats,
+            'oldest': oldest_timestamp,
+            'has_more': len(raw_logs.get('data', [])) == limit
+        }
+
+    def _filter_logs(self, logs: List[Dict], filters: Dict) -> List[Dict]:
+        """在Python端根据提供的过滤器过滤日志
+        
+        Args:
+            logs: 从AdGuardHome获取的原始日志列表
+            filters: 包含所有过滤条件的字典
+
+        Returns:
+            过滤后的日志列表
+        """
+        if not filters:
+            return logs
+
+        from dateutil import parser
+
+        filtered_logs = []
+        for log in logs:
+            match = True
+            
+            # 时间范围过滤
+            log_time = parser.isoparse(log['time'])
+            if filters.get('start_time'):
+                start_time = parser.isoparse(filters['start_time'])
+                if log_time < start_time:
+                    match = False
+            if filters.get('end_time'):
+                end_time = parser.isoparse(filters['end_time'])
+                if log_time > end_time:
+                    match = False
+
+            # 查询类型过滤
+            if filters.get('query_type') and log['question']['type'] != filters['query_type']:
+                match = False
+            
+            # 阻止状态过滤
+            if filters.get('blocked') is not None:
+                is_blocked = 'reason' in log and log['reason'] != 'NotFilteredWhiteList'
+                if is_blocked != filters['blocked']:
+                    match = False
+            
+            # 阻止原因过滤
+            if filters.get('reason') and (not log.get('reason') or filters['reason'].lower() not in log['reason'].lower()):
+                match = False
+
+            if match:
+                filtered_logs.append(log)
+        
+        return filtered_logs
+
+    def _calculate_stats(self, logs: List[Dict]) -> Dict:
+        """计算过滤后日志的统计信息"""
+        total_queries = len(logs)
+        blocked_queries = sum(1 for log in logs if 'reason' in log and log['reason'] != 'NotFilteredWhiteList')
+        allowed_queries = total_queries - blocked_queries
+        block_rate = (blocked_queries / total_queries * 100) if total_queries > 0 else 0
+        unique_domains = len(set(log['question']['name'] for log in logs))
+        unique_clients = len(set(log['client'] for log in logs))
+
+        # 新增：计算top域名和客户端
+        from collections import Counter
+        top_domains = dict(Counter(log['question']['name'] for log in logs).most_common(10))
+        top_clients = dict(Counter(log['client'] for log in logs).most_common(10))
+
+        return {
+            'total_queries': total_queries,
+            'blocked_queries': blocked_queries,
+            'allowed_queries': allowed_queries,
+            'block_rate': round(block_rate, 2),
+            'unique_domains': unique_domains,
+            'unique_clients': unique_clients,
+            'top_domains': top_domains,
+            'top_clients': top_clients
+        }
     
     def create_client(
         self,

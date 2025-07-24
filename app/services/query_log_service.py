@@ -308,10 +308,10 @@ class QueryLogService:
     
     def _calculate_search_stats(self, logs: List[Dict]) -> Dict:
         """计算搜索统计信息
-        
+
         Args:
             logs: 日志列表
-            
+
         Returns:
             统计信息字典
         """
@@ -319,39 +319,51 @@ class QueryLogService:
             'total_queries': len(logs),
             'blocked_queries': 0,
             'allowed_queries': 0,
+            'unique_domains': set(),
+            'unique_clients': set(),
             'top_domains': {},
             'top_clients': {},
             'query_types': {},
             'block_reasons': {}
         }
-        
+
         for log in logs:
-            # 统计阻止/允许查询
-            is_blocked = log.get('Result', {}).get('IsFiltered', False)
+            # 检查日志是否被阻止
+            is_blocked = 'reason' in log and log['reason'] != "NotFiltered"
+
             if is_blocked:
                 stats['blocked_queries'] += 1
             else:
                 stats['allowed_queries'] += 1
-            
-            # 统计热门域名
-            domain = log.get('QH', '')
+
+            # 提取并统计域名
+            domain = log.get('question', {}).get('name', '')
             if domain:
                 stats['top_domains'][domain] = stats['top_domains'].get(domain, 0) + 1
-            
-            # 统计热门客户端
-            client = log.get('IP', '')
-            if client:
-                stats['top_clients'][client] = stats['top_clients'].get(client, 0) + 1
-            
+                stats['unique_domains'].add(domain)
+
+            # 提取并统计客户端
+            client_info = log.get('client_info', {})
+            client_name = client_info.get('name') or client_info.get('ip')
+            if client_name:
+                stats['top_clients'][client_name] = stats['top_clients'].get(client_name, 0) + 1
+                stats['unique_clients'].add(client_name)
+
             # 统计查询类型
-            query_type = log.get('QT', '')
+            query_type = log.get('question', {}).get('type', '')
             if query_type:
                 stats['query_types'][query_type] = stats['query_types'].get(query_type, 0) + 1
-            
+
             # 统计阻止原因
             if is_blocked:
-                reason = log.get('Result', {}).get('Reason', 'Unknown')
+                reason = log.get('reason', 'Unknown')
                 stats['block_reasons'][reason] = stats['block_reasons'].get(reason, 0) + 1
+
+        # 添加独立计数
+        stats['unique_domains_count'] = len(stats['unique_domains'])
+        stats['unique_clients_count'] = len(stats['unique_clients'])
+        del stats['unique_domains']
+        del stats['unique_clients']
         
         # 排序热门项目
         stats['top_domains'] = dict(sorted(stats['top_domains'].items(), 

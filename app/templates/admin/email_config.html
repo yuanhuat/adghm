@@ -9,7 +9,7 @@
                     <h4 class="mb-0">邮箱配置管理</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin.update_email_config') }}">
+                    <form method="POST" action="{{ url_for('admin.email_config') }}">
                         <div class="mb-3">
                             <label for="mail_server" class="form-label">邮件服务器地址 <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="mail_server" name="mail_server" 

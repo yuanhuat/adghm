@@ -26,3 +26,6 @@ class Config:
     
     # 验证码配置
     VERIFICATION_CODE_EXPIRE_MINUTES = int(os.environ.get('VERIFICATION_CODE_EXPIRE_MINUTES') or 10)
+
+    # 分页配置
+    ITEMS_PER_PAGE = int(os.environ.get('ITEMS_PER_PAGE') or 20)
