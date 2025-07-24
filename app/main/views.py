@@ -6,6 +6,7 @@ from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 
 from app.models.feedback import Feedback
+from app.models.dns_config import DnsConfig
 from app.services.adguard_service import AdGuardService
 
 from app.admin.views import admin_required
@@ -615,3 +616,96 @@ def api_feedback():
                 'success': False,
                 'error': f'创建留言失败: {str(e)}'
             }), 500
+
+
+@main.route('/api/dns-config')
+@login_required
+def api_dns_config():
+    """获取DNS配置信息的API接口
+    
+    返回JSON格式的DNS配置数据，用于在用户主页显示DNS-over-QUIC和DNS-over-TLS配置
+    服务器地址格式为：客户端ID.管理员设置的域名
+    
+    Returns:
+        JSON: 包含DNS配置信息的数据
+    """
+    try:
+        # 获取DNS配置
+        config = DnsConfig.get_config()
+        
+        if not config:
+            # 如果没有配置，返回默认值
+            return jsonify({
+                'display_title': 'DNS配置信息',
+                'display_description': '',
+                'doq_enabled': False,
+                'doq_server': '',
+                'doq_port': 853,
+                'doq_description': '',
+                'dot_enabled': False,
+                'dot_server': '',
+                'dot_port': 853,
+                'dot_description': '',
+                'doh_enabled': False,
+                'doh_server': '',
+                'doh_port': 443,
+                'doh_path': '/dns-query',
+                'doh_description': ''
+            })
+        
+        # 获取用户的客户端映射，使用第一个客户端ID
+        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
+        client_id = None
+        
+        if client_mapping and client_mapping.client_ids:
+            # 使用第一个客户端ID
+            client_id = client_mapping.client_ids[0] if client_mapping.client_ids else None
+        
+        # 构建用户专属的服务器地址：客户端ID.域名
+        user_doq_server = ''
+        user_dot_server = ''
+        user_doh_server = ''
+        
+        if client_id:
+            if config.doq_enabled and config.doq_server:
+                user_doq_server = f"{client_id}.{config.doq_server}"
+            
+            if config.dot_enabled and config.dot_server:
+                user_dot_server = f"{client_id}.{config.dot_server}"
+            
+            if config.doh_enabled and config.doh_server:
+                user_doh_server = f"{client_id}.{config.doh_server}"
+        else:
+            # 如果没有客户端ID，使用原始服务器地址
+            if config.doq_enabled and config.doq_server:
+                user_doq_server = config.doq_server
+            
+            if config.dot_enabled and config.dot_server:
+                user_dot_server = config.dot_server
+            
+            if config.doh_enabled and config.doh_server:
+                user_doh_server = config.doh_server
+        
+        return jsonify({
+            'display_title': config.display_title or 'DNS配置信息',
+            'display_description': config.display_description or '',
+            'doq_enabled': config.doq_enabled,
+            'doq_server': user_doq_server,
+            'doq_port': config.doq_port,
+            'doq_description': config.doq_description or '',
+            'dot_enabled': config.dot_enabled,
+            'dot_server': user_dot_server,
+            'dot_port': config.dot_port,
+            'dot_description': config.dot_description or '',
+            'doh_enabled': config.doh_enabled,
+            'doh_server': user_doh_server,
+            'doh_port': config.doh_port,
+            'doh_path': config.doh_path or '/dns-query',
+            'doh_description': config.doh_description or ''
+        })
+        
+    except Exception as e:
+        logging.error(f"获取DNS配置失败: {str(e)}")
+        return jsonify({
+            'error': f'获取DNS配置失败: {str(e)}'
+        }), 500

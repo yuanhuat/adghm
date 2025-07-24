@@ -1,0 +1,311 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">DNS配置管理</h4>
+                    <small class="text-muted">配置DNS-over-QUIC、DNS-over-TLS和DNS-over-HTTPS信息，用户可在主页查看</small>
+                </div>
+                <div class="card-body">
+                    <form id="dns-config-form">
+                        <!-- 显示配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">显示配置</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="display_title">板块标题</label>
+                                    <input type="text" class="form-control" id="display_title" name="display_title" 
+                                           value="{{ config.display_title }}" required maxlength="100">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="display_description">板块描述</label>
+                                    <textarea class="form-control" id="display_description" name="display_description" 
+                                              rows="3" maxlength="500">{{ config.display_description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DNS-over-QUIC配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">DNS-over-QUIC (DoQ) 配置</h5>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="doq_enabled" name="doq_enabled" 
+                                           {% if config.doq_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="doq_enabled">
+                                        启用DNS-over-QUIC
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="doq_server">服务器地址</label>
+                                    <input type="text" class="form-control" id="doq_server" name="doq_server" 
+                                           value="{{ config.doq_server }}" placeholder="例如：dns.example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="doq_port">端口</label>
+                                    <input type="number" class="form-control" id="doq_port" name="doq_port" 
+                                           value="{{ config.doq_port }}" min="1" max="65535">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="doq_description">描述信息</label>
+                                    <textarea class="form-control" id="doq_description" name="doq_description" 
+                                              rows="2" maxlength="300">{{ config.doq_description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DNS-over-TLS配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">DNS-over-TLS (DoT) 配置</h5>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="dot_enabled" name="dot_enabled" 
+                                           {% if config.dot_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="dot_enabled">
+                                        启用DNS-over-TLS
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="dot_server">服务器地址</label>
+                                    <input type="text" class="form-control" id="dot_server" name="dot_server" 
+                                           value="{{ config.dot_server }}" placeholder="例如：dns.example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="dot_port">端口</label>
+                                    <input type="number" class="form-control" id="dot_port" name="dot_port" 
+                                           value="{{ config.dot_port }}" min="1" max="65535">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="dot_description">描述信息</label>
+                                    <textarea class="form-control" id="dot_description" name="dot_description" 
+                                              rows="2" maxlength="300">{{ config.dot_description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DNS-over-HTTPS配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">DNS-over-HTTPS (DoH) 配置</h5>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="doh_enabled" name="doh_enabled" 
+                                           {% if config.doh_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="doh_enabled">
+                                        启用DNS-over-HTTPS
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="doh_server">服务器地址</label>
+                                    <input type="text" class="form-control" id="doh_server" name="doh_server" 
+                                           value="{{ config.doh_server }}" placeholder="例如：dns.example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="doh_port">端口</label>
+                                    <input type="number" class="form-control" id="doh_port" name="doh_port" 
+                                           value="{{ config.doh_port }}" min="1" max="65535">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="doh_path">路径</label>
+                                    <input type="text" class="form-control" id="doh_path" name="doh_path" 
+                                           value="{{ config.doh_path }}" placeholder="例如：/dns-query">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="doh_description">描述信息</label>
+                                    <textarea class="form-control" id="doh_description" name="doh_description" 
+                                              rows="2" maxlength="300">{{ config.doh_description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 预览区域 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">预览效果</h5>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div id="preview-content">
+                                            <!-- 预览内容将通过JavaScript动态生成 -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary me-2">保存配置</button>
+                            <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// DNS配置管理JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('dns-config-form');
+    const previewContent = document.getElementById('preview-content');
+    
+    // 更新预览
+    function updatePreview() {
+        const displayTitle = document.getElementById('display_title').value || 'DNS配置信息';
+        const displayDescription = document.getElementById('display_description').value;
+        
+        const doqEnabled = document.getElementById('doq_enabled').checked;
+        const doqServer = document.getElementById('doq_server').value;
+        const doqPort = document.getElementById('doq_port').value;
+        const doqDescription = document.getElementById('doq_description').value;
+        
+        const dotEnabled = document.getElementById('dot_enabled').checked;
+        const dotServer = document.getElementById('dot_server').value;
+        const dotPort = document.getElementById('dot_port').value;
+        const dotDescription = document.getElementById('dot_description').value;
+        
+        const dohEnabled = document.getElementById('doh_enabled').checked;
+        const dohServer = document.getElementById('doh_server').value;
+        const dohPort = document.getElementById('doh_port').value;
+        const dohPath = document.getElementById('doh_path').value;
+        const dohDescription = document.getElementById('doh_description').value;
+        
+        let html = `<h3>${displayTitle}</h3>`;
+        if (displayDescription) {
+            html += `<p class="text-muted">${displayDescription}</p>`;
+        }
+        
+        if (doqEnabled && doqServer) {
+            html += `
+                <div class="mb-3">
+                    <h5><i class="fas fa-bolt text-primary"></i> DNS-over-QUIC (DoQ)</h5>
+                    <p><strong>服务器：</strong> <code>quic://${doqServer}:${doqPort}</code></p>
+                    ${doqDescription ? `<p class="text-muted small">${doqDescription}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        if (dotEnabled && dotServer) {
+            html += `
+                <div class="mb-3">
+                    <h5><i class="fas fa-shield-alt text-success"></i> DNS-over-TLS (DoT)</h5>
+                    <p><strong>服务器：</strong> <code>tls://${dotServer}:${dotPort}</code></p>
+                    ${dotDescription ? `<p class="text-muted small">${dotDescription}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        if (dohEnabled && dohServer) {
+            const dohUrl = `https://${dohServer}${dohPort && dohPort != 443 ? ':' + dohPort : ''}${dohPath || '/dns-query'}`;
+            html += `
+                <div class="mb-3">
+                    <h5><i class="fas fa-globe text-info"></i> DNS-over-HTTPS (DoH)</h5>
+                    <p><strong>服务器：</strong> <code>${dohUrl}</code></p>
+                    ${dohDescription ? `<p class="text-muted small">${dohDescription}</p>` : ''}
+                </div>
+            `;
+        }
+        
+        if (!doqEnabled && !dotEnabled && !dohEnabled) {
+            html += '<p class="text-muted">暂无可用的DNS配置</p>';
+        }
+        
+        previewContent.innerHTML = html;
+    }
+    
+    // 监听表单变化
+    form.addEventListener('input', updatePreview);
+    form.addEventListener('change', updatePreview);
+    
+    // 初始化预览
+    updatePreview();
+    
+    // 表单提交
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const data = {
+            display_title: formData.get('display_title'),
+            display_description: formData.get('display_description'),
+            doq_enabled: document.getElementById('doq_enabled').checked,
+            doq_server: formData.get('doq_server'),
+            doq_port: parseInt(formData.get('doq_port')) || 853,
+            doq_description: formData.get('doq_description'),
+            dot_enabled: document.getElementById('dot_enabled').checked,
+            dot_server: formData.get('dot_server'),
+            dot_port: parseInt(formData.get('dot_port')) || 853,
+            dot_description: formData.get('dot_description'),
+            doh_enabled: document.getElementById('doh_enabled').checked,
+            doh_server: formData.get('doh_server'),
+            doh_port: parseInt(formData.get('doh_port')) || 443,
+            doh_path: formData.get('doh_path'),
+            doh_description: formData.get('doh_description')
+        };
+        
+        // 显示加载状态
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = '保存中...';
+        submitBtn.disabled = true;
+        
+        fetch('/admin/api/dns-config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('DNS配置保存成功！');
+                updatePreview();
+            } else {
+                alert('保存失败：' + (data.error || '未知错误'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('保存失败，请稍后重试');
+        })
+        .finally(() => {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

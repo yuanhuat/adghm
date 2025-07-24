@@ -996,3 +996,119 @@ tr:hover {
         font-size: 11px;
     }
 }
+
+/* DNS配置板块样式 */
+.dns-config-content {
+    padding: 0;
+}
+
+.dns-description {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.dns-config-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s ease;
+}
+
+.dns-config-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dns-config-item:last-child {
+    margin-bottom: 0;
+}
+
+.dns-config-item h4 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dns-config-item h4 i {
+    font-size: 18px;
+}
+
+.dns-server-info {
+    margin-left: 26px;
+}
+
+.dns-server-info p {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-size: 14px;
+}
+
+.dns-server-info p:last-child {
+    margin-bottom: 0;
+}
+
+.dns-server-info code {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dns-desc {
+    color: #6c757d !important;
+    font-size: 13px !important;
+    font-style: italic;
+}
+
+.no-config {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+}
+
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    font-style: italic;
+}
+
+/* 响应式设计 - DNS配置 */
+@media (max-width: 768px) {
+    .dns-config-item {
+        padding: 12px;
+    }
+    
+    .dns-config-item h4 {
+        font-size: 15px;
+    }
+    
+    .dns-server-info {
+        margin-left: 20px;
+    }
+    
+    .dns-server-info p {
+        font-size: 13px;
+    }
+    
+    .dns-server-info code {
+        font-size: 12px;
+        word-break: break-all;
+    }
+    
+    .dns-desc {
+        font-size: 12px !important;
+    }
+}

@@ -9,6 +9,7 @@ from app.models.operation_log import OperationLog
 from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
+from app.models.dns_config import DnsConfig
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -909,3 +910,107 @@ def get_ai_insights():
             'success': False,
             'error': str(e)
         }), 500
+
+
+@admin.route('/dns-config')
+@login_required
+@admin_required
+def dns_config():
+    """DNS配置管理页面"""
+    config = DnsConfig.get_config()
+    return render_template('admin/dns_config.html', config=config)
+
+
+@admin.route('/api/dns-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_dns_config():
+    """管理DNS配置API"""
+    if request.method == 'GET':
+        try:
+            config = DnsConfig.get_config()
+            return jsonify({
+                'success': True,
+                'config': config.to_dict()
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            config = DnsConfig.get_config()
+            
+            # 更新DNS-over-QUIC配置
+            if 'doq_enabled' in data:
+                config.doq_enabled = bool(data['doq_enabled'])
+            if 'doq_server' in data:
+                config.doq_server = data['doq_server'].strip()
+            if 'doq_port' in data:
+                config.doq_port = int(data['doq_port'])
+            if 'doq_description' in data:
+                config.doq_description = data['doq_description'].strip()
+            
+            # 更新DNS-over-TLS配置
+            if 'dot_enabled' in data:
+                config.dot_enabled = bool(data['dot_enabled'])
+            if 'dot_server' in data:
+                config.dot_server = data['dot_server'].strip()
+            if 'dot_port' in data:
+                config.dot_port = int(data['dot_port'])
+            if 'dot_description' in data:
+                config.dot_description = data['dot_description'].strip()
+            
+            # 更新DNS-over-HTTPS配置
+            if 'doh_enabled' in data:
+                config.doh_enabled = bool(data['doh_enabled'])
+            if 'doh_server' in data:
+                config.doh_server = data['doh_server'].strip()
+            if 'doh_port' in data:
+                config.doh_port = int(data['doh_port'])
+            if 'doh_path' in data:
+                config.doh_path = data['doh_path'].strip()
+            if 'doh_description' in data:
+                config.doh_description = data['doh_description'].strip()
+            
+            # 更新显示配置
+            if 'display_title' in data:
+                config.display_title = data['display_title'].strip()
+            if 'display_description' in data:
+                config.display_description = data['display_description'].strip()
+            
+            # 验证配置
+            is_valid, error_msg = config.validate()
+            if not is_valid:
+                return jsonify({
+                    'success': False,
+                    'error': error_msg
+                }), 400
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_dns_config',
+                target_type='config',
+                target_id='dns',
+                details='更新DNS配置信息'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'DNS配置已更新',
+                'config': config.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
