@@ -164,7 +164,7 @@ def api_stats():
         'total_clients': total_clients
     })
 
-@main.route('/api/client_ranking')
+@main.route('/api/client_list')
 @login_required
 def client_list():
     """获取当前用户的客户端列表"""
