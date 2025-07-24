@@ -120,9 +120,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="feedbackModalLabel">反馈详情</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="feedback-loading" class="text-center py-4">
@@ -170,6 +168,14 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        // 关闭按钮点击事件
+        $('[data-bs-dismiss="modal"]').on('click', function() {
+            const feedbackModal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+            if (feedbackModal) {
+                feedbackModal.hide();
+            }
+        });
+        
         // 查看反馈详情
         $('.view-feedback').on('click', function() {
             const feedbackId = $(this).data('id');
@@ -287,4 +293,4 @@
         });
     });
 </script>
-{% endblock %}
+{% endblock extra_js %}
