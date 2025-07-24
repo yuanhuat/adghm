@@ -379,20 +379,77 @@ body {
 }
 
 /* 响应式设计 */
-@media (max-width: 480px) {
+/* 平板设备 */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 15px;
+    }
+    
     .login-card {
-        padding: 30px 20px;
-        margin: 10px;
+        max-width: 100%;
+        padding: 35px 25px;
+        border-radius: 18px;
+    }
+    
+    .background-svg {
+        transform: scale(1.2);
+    }
+}
+
+/* 手机设备 */
+@media (max-width: 480px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .login-container {
+        padding: 10px;
+        min-height: 100vh;
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+    
+    .login-card {
+        padding: 25px 20px;
+        margin: 0;
         border-radius: 16px;
+        max-width: 100%;
+        width: 100%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .login-header {
+        margin-bottom: 25px;
     }
     
     .login-header h1 {
         font-size: 20px;
+        margin-bottom: 6px;
+    }
+    
+    .login-header p {
+        font-size: 13px;
+    }
+    
+    .logo {
+        margin-bottom: 15px;
+    }
+    
+    .logo svg {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .input-group {
+        margin-bottom: 16px;
     }
     
     .input-group input {
         padding: 14px 14px 14px 45px;
         font-size: 14px;
+        border-radius: 10px;
     }
     
     .input-group label {
@@ -402,11 +459,116 @@ body {
     
     .input-icon {
         left: 14px;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .input-icon svg {
+        width: 18px;
+        height: 18px;
     }
     
     .login-btn {
         padding: 14px 20px;
         font-size: 14px;
+        border-radius: 10px;
+        margin-top: 8px;
+    }
+    
+    .form-footer {
+        margin-top: 15px;
+        gap: 10px;
+    }
+    
+    .forgot-password-link,
+    .register-link {
+        font-size: 13px;
+    }
+    
+    .message {
+        padding: 10px 14px;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+    
+    /* 调整背景动画在移动端的显示 */
+    .floating-circle {
+        opacity: 0.6;
+    }
+    
+    .floating-shape {
+        opacity: 0.4;
+    }
+}
+
+/* 小屏手机设备 */
+@media (max-width: 360px) {
+    .login-container {
+        padding: 8px;
+    }
+    
+    .login-card {
+        padding: 20px 15px;
+    }
+    
+    .login-header h1 {
+        font-size: 18px;
+    }
+    
+    .input-group input {
+        padding: 12px 12px 12px 40px;
+        font-size: 14px;
+    }
+    
+    .input-group label {
+        left: 40px;
+        font-size: 13px;
+    }
+    
+    .input-icon {
+        left: 12px;
+        width: 16px;
+        height: 16px;
+    }
+    
+    .input-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .login-btn {
+        padding: 12px 18px;
+        font-size: 13px;
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 600px) and (orientation: landscape) {
+    .login-container {
+        padding: 10px;
+        align-items: center;
+    }
+    
+    .login-card {
+        padding: 20px;
+        max-width: 400px;
+    }
+    
+    .login-header {
+        margin-bottom: 20px;
+    }
+    
+    .logo {
+        margin-bottom: 10px;
+    }
+    
+    .logo svg {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .login-form {
+        gap: 15px;
     }
 }
 
