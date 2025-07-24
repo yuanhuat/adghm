@@ -7,18 +7,14 @@
 
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">当前阻止的服务</h5>
-            <ul id="blocked-services-list" class="list-group mb-3">
-                <!-- 服务列表将通过JS动态加载 -->
-            </ul>
-
-            <h5 class="card-title">添加新服务</h5>
-            <div class="input-group mb-3">
-                <input type="text" id="new-service-input" class="form-control" placeholder="输入要阻止的服务ID (例如 'tiktok')">
-                <button class="btn btn-primary" type="button" id="add-service-btn">添加</button>
+            <h5 class="card-title">选择要阻止的服务</h5>
+            <div class="mb-3">
+                <input type="text" id="service-search" class="form-control" placeholder="搜索服务...">
             </div>
-
-            <button class="btn btn-success" id="save-changes-btn">保存更改</button>
+            <div id="services-checkbox-list" class="list-group" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .25rem; padding: .5rem;">
+                <!-- Checkboxes will be dynamically loaded here -->
+            </div>
+            <button class="btn btn-success mt-3" id="save-changes-btn">保存更改</button>
         </div>
     </div>
 </div>
@@ -27,59 +23,103 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // 加载当前阻止的服务列表
-    function loadBlockedServices() {
-        $.get('{{ url_for("main.api_global_blocked_services") }}', function(data) {
-            if (data.success) {
-                $('#blocked-services-list').empty();
-                data.blocked_services.forEach(function(service) {
-                    $('#blocked-services-list').append(
-                        `<li class="list-group-item d-flex justify-content-between align-items-center">${service}<button class="btn btn-danger btn-sm remove-service-btn">移除</button></li>`
-                    );
-                });
+    const servicesList = $('#services-checkbox-list');
+    const saveButton = $('#save-changes-btn');
+    const searchInput = $('#service-search');
+
+    let allServices = [];
+
+    // 异步函数：初始化页面，获取所有服务和当前阻止的服务
+    async function initializePage() {
+        try {
+            // 并行获取所有可用服务和当前已阻止的服务
+            const [servicesResponse, blockedResponse] = await Promise.all([
+                fetch('{{ url_for("main.get_blocked_services") }}'),
+                fetch('{{ url_for("main.api_global_blocked_services") }}')
+            ]);
+
+            if (!servicesResponse.ok || !blockedResponse.ok) {
+                throw new Error('无法从服务器加载数据。');
             }
+
+            const servicesData = await servicesResponse.json();
+            const blockedData = await blockedResponse.json();
+
+            if (servicesData.success && blockedData.success) {
+                allServices = servicesData.services;
+                const blockedIds = new Set(blockedData.blocked_services);
+                renderServices(allServices, blockedIds);
+            } else {
+                alert('加载服务列表失败。');
+            }
+        } catch (error) {
+            console.error('页面初始化错误:', error);
+            alert('页面初始化失败，请检查控制台获取更多信息。');
+        }
+    }
+
+    // 渲染服务列表（作为复选框）
+    function renderServices(services, blockedIds) {
+        servicesList.empty();
+        if (services.length === 0) {
+            servicesList.append('<p class="text-center text-muted">没有可用的服务。</p>');
+            return;
+        }
+        services.forEach(service => {
+            const isChecked = blockedIds.has(service.id);
+            const checkboxHtml = `
+                <label class="list-group-item list-group-item-action">
+                    <input class="form-check-input me-2" type="checkbox" value="${service.id}" ${isChecked ? 'checked' : ''}>
+                    ${service.name}
+                </label>
+            `;
+            servicesList.append(checkboxHtml);
         });
     }
 
-    loadBlockedServices();
+    // 根据搜索输入过滤服务
+    searchInput.on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        const filteredServices = allServices.filter(service => service.name.toLowerCase().includes(searchTerm));
+        
+        const checkedIds = new Set();
+        servicesList.find('input:checked').each(function() {
+            checkedIds.add($(this).val());
+        });
 
-    // 添加服务
-    $('#add-service-btn').click(function() {
-        const newService = $('#new-service-input').val().trim();
-        if (newService) {
-            $('#blocked-services-list').append(
-                `<li class="list-group-item d-flex justify-content-between align-items-center">${newService}<button class="btn btn-danger btn-sm remove-service-btn">移除</button></li>`
-            );
-            $('#new-service-input').val('');
-        }
-    });
-
-    // 移除服务
-    $(document).on('click', '.remove-service-btn', function() {
-        $(this).parent().remove();
+        renderServices(filteredServices, checkedIds);
     });
 
     // 保存更改
-    $('#save-changes-btn').click(function() {
-        const blockedServices = [];
-        $('#blocked-services-list .list-group-item').each(function() {
-            blockedServices.push($(this).text().replace('移除', '').trim());
+    saveButton.on('click', async function() {
+        const selectedIds = [];
+        servicesList.find('input:checked').each(function() {
+            selectedIds.push($(this).val());
         });
 
-        $.ajax({
-            url: '{{ url_for("main.api_global_blocked_services") }}',
-            type: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({ ids: blockedServices }),
-            success: function(response) {
-                if (response.success) {
-                    alert('设置已成功保存！');
-                } else {
-                    alert('保存失败：' + response.error);
-                }
+        try {
+            const response = await fetch('{{ url_for("main.api_global_blocked_services") }}', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('设置已成功保存！');
+            } else {
+                alert('保存失败：' + (result.error || '未知错误'));
             }
-        });
+        } catch (error) {
+            console.error('保存设置时出错:', error);
+            alert('保存时发生错误，请检查网络连接或查看控制台。');
+        }
     });
+
+    // 初始化页面
+    initializePage();
 });
 </script>
 {% endblock %}
