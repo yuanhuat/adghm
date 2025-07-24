@@ -98,52 +98,54 @@
 <script>
 function testEmailConfig(button) {
     console.log('测试邮箱配置函数被调用');
-    
-    // 获取表单数据
-    const formData = new FormData();
-    formData.append('mail_server', document.getElementById('mail_server').value);
-    formData.append('mail_port', document.getElementById('mail_port').value);
-    formData.append('mail_use_tls', document.getElementById('mail_use_tls').checked ? 'true' : 'false');
-    formData.append('mail_username', document.getElementById('mail_username').value);
-    formData.append('mail_password', document.getElementById('mail_password').value);
-    formData.append('mail_default_sender', document.getElementById('mail_default_sender').value);
-    
-    console.log('表单数据:', {
+
+    // 收集表单数据为JS对象
+    const data = {
         mail_server: document.getElementById('mail_server').value,
         mail_port: document.getElementById('mail_port').value,
         mail_use_tls: document.getElementById('mail_use_tls').checked,
         mail_username: document.getElementById('mail_username').value,
+        mail_password: document.getElementById('mail_password').value,
         mail_default_sender: document.getElementById('mail_default_sender').value
-    });
-    
+    };
+
+    console.log('表单数据:', data);
+
     // 显示加载状态
     const testBtn = button;
     const originalText = testBtn.textContent;
     testBtn.disabled = true;
     testBtn.textContent = '测试中...';
-    
+
     // 发送测试请求
     console.log('准备发送请求到:', '{{ url_for("admin.test_email_config") }}');
-    
+
     fetch('{{ url_for("admin.test_email_config") }}', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
     })
     .then(response => {
         console.log('收到响应:', response);
+        if (!response.ok) {
+            // 如果响应状态不是2xx，则尝试解析为JSON以获取错误信息
+            return response.json().then(err => { throw new Error(err.error || '服务器响应错误'); });
+        }
         return response.json();
     })
     .then(data => {
         console.log('响应数据:', data);
         if (data.success) {
-            alert('邮箱配置测试成功！');
+            alert(data.message || '邮箱配置测试成功！');
         } else {
-            alert('邮箱配置测试失败：' + data.error);
+            alert('邮箱配置测试失败：' + (data.error || '未知错误'));
         }
     })
     .catch(error => {
         console.error('请求错误:', error);
-        alert('测试请求失败，请检查网络连接');
+        alert('测试请求失败: ' + error.message);
     })
     .finally(() => {
         // 恢复按钮状态

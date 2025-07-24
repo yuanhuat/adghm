@@ -197,20 +197,36 @@ def operation_logs():
 @login_required
 @admin_required
 def email_config():
+    """邮箱配置管理"""
     config = EmailConfig.query.first()
+    if not config:
+        config = EmailConfig()
+
     if request.method == 'POST':
-        if not config:
-            config = EmailConfig()
-        config.server = request.form.get('server')
-        config.port = request.form.get('port', type=int)
-        config.username = request.form.get('username')
-        config.password = request.form.get('password')
-        config.use_tls = 'use_tls' in request.form
-        config.use_ssl = 'use_ssl' in request.form
+        config.mail_server = request.form.get('mail_server')
+        config.mail_port = request.form.get('mail_port', type=int)
+        config.mail_username = request.form.get('mail_username')
+        
+        # 只有在提供了新密码时才更新
+        new_password = request.form.get('mail_password')
+        if new_password:
+            config.mail_password = new_password
+            
+        config.mail_use_tls = 'mail_use_tls' in request.form
+        config.mail_default_sender = request.form.get('mail_default_sender')
+        config.verification_code_expire_minutes = request.form.get('verification_code_expire_minutes', 10, type=int)
+
         db.session.add(config)
         db.session.commit()
         flash('邮箱配置已更新。', 'success')
         return redirect(url_for('admin.email_config'))
+    
+    if not config.id:
+        config.mail_server = 'smtp.example.com'
+        config.mail_port = 587
+        config.mail_use_tls = True
+        config.verification_code_expire_minutes = 10
+
     return render_template('admin/email_config.html', config=config)
 
 @admin.route('/test-email-config', methods=['POST'])
@@ -218,24 +234,38 @@ def email_config():
 @admin_required
 def test_email_config():
     """测试邮件配置"""
-    data = request.form
+    data = request.get_json()
     try:
-        email_service = EmailService(
-            server=data.get('mail_server'),
-            port=int(data.get('mail_port')),
-            username=data.get('mail_username'),
-            password=data.get('mail_password'),
-            use_tls=data.get('mail_use_tls') == 'true',
-            use_ssl=False  # Assuming SSL is not used based on the form
+        # 创建一个临时的EmailConfig对象用于测试，不保存到数据库
+        temp_config = EmailConfig(
+            mail_server=data.get('mail_server'),
+            mail_port=int(data.get('mail_port')),
+            mail_username=data.get('mail_username'),
+            mail_password=data.get('mail_password'),
+            mail_use_tls=data.get('mail_use_tls'),
+            mail_default_sender=data.get('mail_default_sender')
         )
-        email_service.send_email(
-            subject="测试邮件",
-            recipients=[data.get('mail_username')],
-            body="这是一封来自AdGuardHome Manager的测试邮件。"
+
+        is_valid, error_msg = temp_config.validate()
+        if not is_valid:
+            return jsonify({'success': False, 'error': f'配置无效: {error_msg}'})
+
+        # 使用临时配置发送测试邮件
+        success = EmailService.send_email(
+            to=data.get('mail_username'), # 发送测试邮件到配置中的用户名邮箱
+            subject="邮箱配置测试",
+            template='test_email',
+            config_override=temp_config,
+            test_message="这是一封来自AdGuardHome Manager的测试邮件。如果您能收到此邮件，说明您的邮箱配置正确。"
         )
-        return jsonify({'success': True})
+        
+        if success:
+            return jsonify({'success': True, 'message': '测试邮件已发送，请检查收件箱。'})
+        else:
+            return jsonify({'success': False, 'error': '邮件发送失败，请检查服务器日志获取详细信息。'})
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        current_app.logger.error(f'测试邮件发送异常: {str(e)}')
+        return jsonify({'success': False, 'error': f'发送测试邮件时发生错误: {str(e)}'})
 
 @admin.route('/feedbacks')
 @login_required
