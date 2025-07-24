@@ -30,67 +30,63 @@
             {% endwith %}
             
             <div class="dashboard">
-                <div class="dashboard-card">
-                    <h2>我的客户端</h2>
-                    <p class="dashboard-stat">{{ current_user.client_mappings|length }}</p>
-                    <a href="{{ url_for('main.clients') }}" class="btn btn-primary">管理客户端</a>
+    <div class="dashboard-row">
+        <div class="dashboard-card small-card">
+            <h2>我的客户端</h2>
+            <p class="dashboard-stat">{{ current_user.client_mappings|length }}</p>
+            <a href="{{ url_for('main.clients') }}" class="btn btn-primary">管理客户端</a>
+        </div>
+        <div class="dashboard-card small-card">
+            <h2>我的DNS请求数</h2>
+            <p class="dashboard-stat" id="user-request-count">{{ user_request_count or 0 }}</p>
+            <p>您的客户端总请求数量</p>
+            <div class="ranking-info" id="user-ranking-info">
+                <p>排行榜排名：<span id="user-ranking">-</span> / <span id="total-clients">-</span></p>
+            </div>
+        </div>
+        <div class="dashboard-card small-card">
+            <h2>总DNS查询数</h2>
+            <p class="dashboard-stat" id="total-dns-queries">{{ total_dns_queries or 0 }}</p>
+            <p>AdGuardHome总查询数量</p>
+        </div>
+        <div class="dashboard-card small-card">
+            <h2>账号信息</h2>
+            <div class="info-list">
+                <p><strong>用户名：</strong>{{ current_user.username }}</p>
+                <p><strong>注册时间：</strong>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p><strong>账号类型：</strong>{% if current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-row">
+        <div class="dashboard-card large-card">
+            <h2>客户端排行榜</h2>
+            <div class="ranking-list" id="client-ranking">
+                <p>加载中...</p>
+            </div>
+        </div>
+        <div class="dashboard-card large-card">
+            <h2>需求留言</h2>
+            <form id="feedback-form" class="feedback-form">
+                <div class="form-group">
+                    <label for="feedback-title">标题：</label>
+                    <input type="text" id="feedback-title" name="title" required maxlength="100" placeholder="请输入留言标题">
                 </div>
-                
-                <div class="dashboard-card">
-                      <h2>我的DNS请求数</h2>
-                      <p class="dashboard-stat" id="user-request-count">{{ user_request_count or 0 }}</p>
-                      <p>您的客户端总请求数量</p>
-                      <div class="ranking-info" id="user-ranking-info" style="margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff;">
-                          <p style="margin: 0; font-size: 14px; color: #6c757d;">排行榜排名：<span id="user-ranking" style="font-weight: bold; color: #007bff;">-</span> / <span id="total-clients" style="font-weight: bold;">-</span></p>
-                      </div>
-                  </div>
-                  
-                  <div class="dashboard-card">
-                      <h2>总DNS查询数</h2>
-                      <p class="dashboard-stat" id="total-dns-queries">{{ total_dns_queries or 0 }}</p>
-                      <p>AdGuardHome总查询数量</p>
-                  </div>
-                
-                <div class="dashboard-card">
-                    <h2>账号信息</h2>
-                    <div class="info-list">
-                        <p><strong>用户名：</strong>{{ current_user.username }}</p>
-                        <p><strong>注册时间：</strong>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                        <p><strong>账号类型：</strong>{% if current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
-                    </div>
+                <div class="form-group">
+                    <label for="feedback-content">内容：</label>
+                    <textarea id="feedback-content" name="content" required maxlength="1000" rows="4" placeholder="请详细描述您的需求或问题"></textarea>
                 </div>
-                
-
-                
-                <div class="dashboard-card">
-                    <h2>客户端排行榜</h2>
-                    <div class="ranking-list" id="client-ranking">
-                        <p>加载中...</p>
-                    </div>
-                </div>
-                
-                <div class="dashboard-card">
-                    <h2>需求留言</h2>
-                    <form id="feedback-form" class="feedback-form">
-                        <div class="form-group">
-                            <label for="feedback-title">标题：</label>
-                            <input type="text" id="feedback-title" name="title" required maxlength="100" placeholder="请输入留言标题">
-                        </div>
-                        <div class="form-group">
-                            <label for="feedback-content">内容：</label>
-                            <textarea id="feedback-content" name="content" required maxlength="1000" rows="4" placeholder="请详细描述您的需求或问题"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">提交留言</button>
-                    </form>
-                    
-                    <div class="feedback-list" id="feedback-list">
-                        <h3>我的留言</h3>
-                        <div id="feedback-items">
-                            <p>加载中...</p>
-                        </div>
-                    </div>
+                <button type="submit" class="btn btn-primary">提交留言</button>
+            </form>
+            <div class="feedback-list" id="feedback-list">
+                <h3>我的留言</h3>
+                <div id="feedback-items">
+                    <p>加载中...</p>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
             
 
         </main>

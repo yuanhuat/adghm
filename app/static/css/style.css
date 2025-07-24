@@ -315,11 +315,181 @@ tr:hover {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .main-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.main-header h1 {
+    font-size: 24px;
+    color: #333;
+}
+
+.main-nav a {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 600;
+}
+
+.main-nav a:hover {
+    text-decoration: underline;
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.dashboard-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.dashboard-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.small-card {
+    flex: 1 1 220px;
+    min-width: 220px;
+    max-width: 280px;
+}
+
+.large-card {
+    flex: 2 1 600px;
+    min-width: 300px;
+    max-width: 100%;
+}
+
+.dashboard-card h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.dashboard-stat {
+    font-size: 36px;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.info-list p {
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 14px;
+}
+
+.ranking-info {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.ranking-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.feedback-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.feedback-form .form-group {
+    margin-bottom: 15px;
+}
+
+.feedback-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.feedback-form input[type="text"],
+.feedback-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.feedback-form button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.feedback-form button:hover {
+    background-color: #0056b3;
+}
+
+.feedback-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feedback-status {
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.status-open {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-closed {
+    background-color: #28a745;
+    color: white;
+}
+
+.admin-reply {
+    margin-top: 8px;
+    padding: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+}
     align-items: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
@@ -342,6 +512,7 @@ tr:hover {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
     margin-top: 30px;
+    align-items: start;
 }
 
 .dashboard-card {
@@ -496,6 +667,61 @@ tr:hover {
     font-size: 14px;
     min-width: 80px;
     text-align: right;
+}
+
+/* 留言列表样式 */
+.feedback-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.feedback-item {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #dee2e6;
+}
+
+.feedback-item .title {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.feedback-item .content {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.feedback-item .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #888;
+}
+
+.feedback-item .status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.feedback-item .status.pending {
+    background-color: #fff0c2;
+    color: #856404;
+}
+
+.feedback-item .status.approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.feedback-item .status.rejected {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
 .ranking-item.rank-1 {
