@@ -121,16 +121,24 @@ class DnsConfig(db.Model):
             return None
         return f"tls://{self.dot_server.strip()}:{self.dot_port}"
     
-    def get_doh_config_string(self):
+    def get_doh_config_string(self, client_id=None):
         """获取DNS-over-HTTPS配置字符串
         
+        Args:
+            client_id (str, optional): 客户端ID，如果提供，将添加到路径末尾
+        
         Returns:
-            str: DoH配置字符串，格式为 https://server:port/path
+            str: DoH配置字符串，格式为 https://server:port/path 或 https://server:port/path/client_id
         """
         if not self.doh_enabled or not self.doh_server:
             return None
         server = self.doh_server.strip()
         path = self.doh_path.strip() if self.doh_path else '/dns-query'
+        
+        # 如果提供了客户端ID，将其添加到路径末尾
+        if client_id:
+            path = f"{path}/{client_id}"
+            
         if self.doh_port == 443:
             return f"https://{server}{path}"
         else:
@@ -173,7 +181,7 @@ class DnsConfig(db.Model):
             'doh_port': self.doh_port,
             'doh_path': self.doh_path,
             'doh_description': self.doh_description,
-            'doh_config_string': self.get_doh_config_string(),
+            'doh_config_string': self.get_doh_config_string(),  # 不传递client_id，因为to_dict主要用于管理员界面
             'display_title': self.display_title,
             'display_description': self.display_description,
             'created_at': self.created_at.isoformat() if self.created_at else None,

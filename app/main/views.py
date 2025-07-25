@@ -661,10 +661,11 @@ def api_dns_config():
             # 使用第一个客户端ID
             client_id = client_mapping.client_ids[0] if client_mapping.client_ids else None
         
-        # 构建用户专属的服务器地址：客户端ID.域名
+        # 构建用户专属的服务器地址
         user_doq_server = ''
         user_dot_server = ''
         user_doh_server = ''
+        user_doh_path = ''
         
         if client_id:
             if config.doq_enabled and config.doq_server:
@@ -674,7 +675,10 @@ def api_dns_config():
                 user_dot_server = f"{client_id}.{config.dot_server}"
             
             if config.doh_enabled and config.doh_server:
-                user_doh_server = f"{client_id}.{config.doh_server}"
+                # DoH服务器地址不再包含客户端ID作为子域名
+                user_doh_server = config.doh_server
+                # 将客户端ID添加到路径末尾
+                user_doh_path = f"{config.doh_path or '/dns-query'}/{client_id}"
         else:
             # 如果没有客户端ID，使用原始服务器地址
             if config.doq_enabled and config.doq_server:
@@ -700,7 +704,7 @@ def api_dns_config():
             'doh_enabled': config.doh_enabled,
             'doh_server': user_doh_server,
             'doh_port': config.doh_port,
-            'doh_path': config.doh_path or '/dns-query',
+            'doh_path': user_doh_path or (config.doh_path or '/dns-query'),
             'doh_description': config.doh_description or ''
         })
         
@@ -743,9 +747,9 @@ def apple_doh_mobileconfig():
             }), 400
         
         # 构建DoH服务器地址
-        doh_server = f"{client_id}.{config.doh_server}"
+        doh_server = config.doh_server
         doh_port = config.doh_port or 443
-        doh_path = config.doh_path or '/dns-query'
+        doh_path = f"{config.doh_path or '/dns-query'}/{client_id}"
         
         # 构建DoH URL
         if doh_port == 443:
@@ -867,6 +871,8 @@ def apple_dot_mobileconfig():
             }), 400
         
         # 构建DoT服务器地址
+        # 注意：与DoH不同，DoT协议不支持路径参数，因此无法使用路径格式 (server:port/path/client_id)
+        # 所以DoT仍然使用子域名方式 (client_id.server:port)
         dot_server = f"{client_id}.{config.dot_server}"
         dot_port = config.dot_port or 853
         
