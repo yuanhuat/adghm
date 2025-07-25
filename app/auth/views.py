@@ -135,6 +135,12 @@ def register():
             if not re.match(r'^[a-zA-Z0-9\u4e00-\u9fa5_-]+$', client_name):
                 flash('客户端名称只能包含字母、数字、中文、连字符和下划线', 'error')
                 return render_template('auth/register.html')
+                
+            # 检查客户端名称是否已存在
+            existing_client = ClientMapping.query.filter_by(client_name=client_name).first()
+            if existing_client:
+                flash('该客户端名称已被使用，请更换一个名称', 'error')
+                return render_template('auth/register.html')
             
             # 验证客户端名称长度
             if len(client_name) < 2 or len(client_name) > 20:
