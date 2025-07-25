@@ -10,6 +10,7 @@ from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
 from app.models.dns_config import DnsConfig
+from app.models.system_config import SystemConfig
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -919,6 +920,40 @@ def dns_config():
     """DNS配置管理页面"""
     config = DnsConfig.get_config()
     return render_template('admin/dns_config.html', config=config)
+
+@admin.route('/system-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def system_config():
+    """系统设置管理页面
+    
+    允许管理员配置系统全局设置，如是否允许新用户注册等。
+    """
+    config = SystemConfig.get_config()
+    
+    if request.method == 'POST':
+        # 获取表单数据
+        allow_registration = 'allow_registration' in request.form
+        
+        # 更新配置
+        config.allow_registration = allow_registration
+        db.session.commit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='update_system_config',
+            target_type='SYSTEM',
+            target_id='system_config',
+            details=f'更新系统设置：允许注册={allow_registration}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        flash('系统设置已更新', 'success')
+        return redirect(url_for('admin.system_config'))
+    
+    return render_template('admin/system_config.html', config=config)
 
 
 @admin.route('/api/dns-config', methods=['GET', 'POST'])

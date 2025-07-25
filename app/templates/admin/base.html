@@ -53,6 +53,7 @@
                             系统管理
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="systemConfigDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.system_config') }}">系统设置</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('admin.email_config') }}">邮件配置</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('admin.dns_config') }}">DNS配置</a></li>

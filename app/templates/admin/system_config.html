@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+
+{% block title %}系统设置{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">系统设置</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">管理后台</a></li>
+        <li class="breadcrumb-item active">系统设置</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-cogs me-1"></i>
+            基本设置
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('admin.system_config') }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="allow_registration" name="allow_registration" {% if config.allow_registration %}checked{% endif %}>
+                            <label class="form-check-label" for="allow_registration">允许新用户注册</label>
+                        </div>
+                        <div class="form-text text-muted">
+                            关闭此选项后，登录页面将不再显示注册按钮，新用户将无法注册账号。
+                            <br>注意：第一个用户始终允许注册，不受此设置影响。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> 保存设置
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

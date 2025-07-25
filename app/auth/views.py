@@ -4,7 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
-
+from app.models.system_config import SystemConfig
 
 from app.services.adguard_service import AdGuardService
 
@@ -73,7 +73,19 @@ def register():
     处理用户注册请求，创建新用户并自动为其创建AdGuardHome客户端。
     注册成功后自动登录并重定向到主页。
     第一个注册的用户将自动成为管理员。
+    如果系统配置不允许注册，则重定向到登录页面。
     """
+    # 检查是否为第一个用户，第一个用户始终允许注册
+    user_count = User.query.count()
+    is_first_user = user_count == 0
+    
+    # 如果不是第一个用户，检查系统配置是否允许注册
+    if not is_first_user:
+        system_config = SystemConfig.get_config()
+        if not system_config.allow_registration:
+            flash('系统当前不允许新用户注册，请联系管理员', 'error')
+            return redirect(url_for('auth.login'))
+    
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
         
@@ -358,6 +370,16 @@ def login():
     """
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    
+    # 检查是否为第一个用户，第一个用户始终允许注册
+    user_count = User.query.count()
+    is_first_user = user_count == 0
+    
+    # 获取系统配置，决定是否显示注册按钮
+    allow_registration = True
+    if not is_first_user:
+        system_config = SystemConfig.get_config()
+        allow_registration = system_config.allow_registration
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -366,19 +388,19 @@ def login():
         
         if not email or not password:
             flash('请填写邮箱和密码', 'error')
-            return render_template('auth/login.html')
+            return render_template('auth/login.html', allow_registration=allow_registration, is_first_user=is_first_user)
             
         # 验证邮箱格式
         import re
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, email):
             flash('邮箱格式不正确', 'error')
-            return render_template('auth/login.html')
+            return render_template('auth/login.html', allow_registration=allow_registration, is_first_user=is_first_user)
         
         user = User.query.filter_by(email=email).first()
         if user is None or not user.check_password(password):
             flash('邮箱或密码错误', 'error')
-            return render_template('auth/login.html')
+            return render_template('auth/login.html', allow_registration=allow_registration, is_first_user=is_first_user)
         
         login_user(user, remember=remember)
         flash('登录成功！', 'success')
@@ -389,7 +411,7 @@ def login():
             next_page = url_for('main.index')
         return redirect(next_page)
     
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', allow_registration=allow_registration, is_first_user=is_first_user)
 
 @auth.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
