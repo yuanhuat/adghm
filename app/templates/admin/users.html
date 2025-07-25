@@ -14,6 +14,7 @@
                             <th>用户名</th>
                             <th>注册时间</th>
                             <th>客户端数</th>
+                            <th>客户端名称</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -24,6 +25,17 @@
                             <td>{{ user.username }}</td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>{{ user.client_mappings|length }}</td>
+                            <td>
+                                {% if user.client_mappings %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for mapping in user.client_mappings %}
+                                    <li>{{ mapping.client_name }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <span class="text-muted">无客户端</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{{ url_for('admin.user_clients', user_id=user.id) }}" class="btn btn-sm btn-primary">查看客户端</a>
