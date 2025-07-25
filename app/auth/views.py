@@ -267,7 +267,7 @@ def register():
                         client_response = adguard.create_client(
                             name=client_display_name,
                             ids=client_ids,  # 使用设备信息作为客户端ID
-                            use_global_settings=False,  # 默认不使用全局设置，让用户可以自定义
+                            use_global_settings=True,  # 使用全局设置，确保新用户客户端使用全局配置
                             filtering_enabled=True,
                             safebrowsing_enabled=True,  # 启用安全浏览
                             parental_enabled=False,
@@ -280,7 +280,7 @@ def register():
                                 "yandex": True,
                                 "youtube": True
                             },
-                            use_global_blocked_services=False,  # 默认不使用全局屏蔽服务设置
+                            use_global_blocked_services=True,  # 使用全局屏蔽服务设置
                             ignore_querylog=False,
                             ignore_statistics=False
                         )
