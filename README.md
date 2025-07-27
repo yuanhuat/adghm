@@ -324,7 +324,7 @@ adghm/
 
 如果您遇到问题或有建议，请通过以下方式联系我们：
 
-- 📧 邮箱：your-email@example.com
+- 📧 邮箱：1179736569@qq.com
 - 🐛 [GitHub Issues](https://github.com/yourusername/adghm/issues)
 - 📖 [项目文档](https://github.com/yourusername/adghm/docs)
 
