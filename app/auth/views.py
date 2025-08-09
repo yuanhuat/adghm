@@ -692,16 +692,49 @@ def delete_account():
         # 获取用户的客户端映射，准备删除AdGuard Home中的客户端
         client_mappings = ClientMapping.query.filter_by(user_id=user_id).all()
         
-        # 尝试从AdGuard Home删除客户端
+        # 尝试从AdGuard Home删除客户端和允许列表
         try:
             adguard = AdGuardService()
+            client_delete_errors = []
+            
+            # 先删除AdGuardHome客户端，记录错误但继续执行
             for mapping in client_mappings:
                 try:
                     adguard.delete_client(mapping.client_name)
                     print(f"已从AdGuard Home删除客户端: {mapping.client_name}")
                 except Exception as e:
+                    error_msg = f"客户端 {mapping.client_name} 删除失败：{str(e)}"
+                    client_delete_errors.append(error_msg)
                     print(f"删除AdGuard Home客户端失败 {mapping.client_name}: {str(e)}")
-                    # 继续删除其他客户端，不因单个客户端删除失败而中断
+            
+            # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+            try:
+                # 获取当前的访问控制列表
+                access_list = adguard._make_request('GET', '/access/list')
+                allowed_clients = access_list.get('allowed_clients', [])
+                
+                # 移除用户的所有客户端ID
+                clients_to_remove = []
+                for mapping in client_mappings:
+                    for client_id in mapping.client_ids:
+                        if client_id in allowed_clients:
+                            allowed_clients.remove(client_id)
+                            clients_to_remove.append(client_id)
+                
+                # 如果有客户端ID被移除，更新访问控制列表
+                if clients_to_remove:
+                    access_data = {
+                        'allowed_clients': allowed_clients,
+                        'disallowed_clients': access_list.get('disallowed_clients', []),
+                        'blocked_hosts': access_list.get('blocked_hosts', [])
+                    }
+                    adguard._make_request('POST', '/access/set', json=access_data)
+                    print(f"已从允许列表中移除客户端ID: {clients_to_remove}")
+            except Exception as e:
+                error_msg = f"从允许列表移除客户端ID失败：{str(e)}"
+                client_delete_errors.append(error_msg)
+                print(f"从允许列表移除客户端ID失败: {str(e)}")
+                
         except Exception as e:
             print(f"无法连接到AdGuard Home服务: {str(e)}")
             # 即使AdGuard Home删除失败，也继续删除数据库记录
