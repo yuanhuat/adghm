@@ -7,12 +7,25 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
+    
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --file Dockerfile --tag your-dockerhub-username/your-image-name:latest
+      
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'  # 拉取请求不执行推送
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        
+    - name: Push the Docker image
+      if: github.event_name != 'pull_request'  # 拉取请求不执行推送
+      run: |
+        docker push your-dockerhub-username/your-image-name:latest
+        # 如果需要同时推送版本标签，可以添加以下内容
+        docker tag your-dockerhub-username/your-image-name:latest your-dockerhub-username/your-image-name:${{ github.sha }}
+        docker push your-dockerhub-username/your-image-name:${{ github.sha }}
