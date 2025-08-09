@@ -646,6 +646,119 @@ def change_email():
         
     return render_template('auth/change_email.html')
 
+@auth.route('/delete-account', methods=['GET', 'POST'])
+@login_required
+def delete_account():
+    """注销账户视图
+    
+    处理用户注销账户请求，需要邮箱验证码确认。
+    注销后删除用户数据并重定向到登录页面。
+    """
+    if request.method == 'POST':
+        verification_code = request.form.get('verification_code')
+        confirm_text = request.form.get('confirm_text')
+        
+        # 检查是否为AJAX请求
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if not verification_code:
+            error_msg = '请输入验证码'
+            if is_ajax:
+                return jsonify({'success': False, 'message': error_msg})
+            flash(error_msg, 'error')
+            return render_template('auth/delete_account.html')
+            
+        if confirm_text != '确认注销':
+            error_msg = '请输入正确的确认文本：确认注销'
+            if is_ajax:
+                return jsonify({'success': False, 'message': error_msg})
+            flash(error_msg, 'error')
+            return render_template('auth/delete_account.html')
+            
+        # 验证验证码
+        is_valid, error_msg = EmailService.verify_email_code(
+            current_user.email, verification_code, 'delete_account'
+        )
+        if not is_valid:
+            if is_ajax:
+                return jsonify({'success': False, 'message': error_msg})
+            flash(error_msg, 'error')
+            return render_template('auth/delete_account.html')
+            
+        # 删除用户相关数据
+        user_id = current_user.id
+        username = current_user.username
+        
+        # 获取用户的客户端映射，准备删除AdGuard Home中的客户端
+        client_mappings = ClientMapping.query.filter_by(user_id=user_id).all()
+        
+        # 尝试从AdGuard Home删除客户端
+        try:
+            adguard = AdGuardService()
+            for mapping in client_mappings:
+                try:
+                    adguard.delete_client(mapping.client_name)
+                    print(f"已从AdGuard Home删除客户端: {mapping.client_name}")
+                except Exception as e:
+                    print(f"删除AdGuard Home客户端失败 {mapping.client_name}: {str(e)}")
+                    # 继续删除其他客户端，不因单个客户端删除失败而中断
+        except Exception as e:
+            print(f"无法连接到AdGuard Home服务: {str(e)}")
+            # 即使AdGuard Home删除失败，也继续删除数据库记录
+        
+        # 删除客户端映射
+        ClientMapping.query.filter_by(user_id=user_id).delete()
+        
+        # 删除用户
+        db.session.delete(current_user)
+        db.session.commit()
+        
+        # 登出用户
+        logout_user()
+        
+        success_msg = f'账户 {username} 已成功注销'
+        if is_ajax:
+            return jsonify({
+                'success': True, 
+                'message': success_msg,
+                'redirect': url_for('auth.login')
+            })
+        flash(success_msg, 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/delete_account.html')
+
+@auth.route('/send-delete-account-code', methods=['POST'])
+@login_required
+def send_delete_account_code():
+    """发送注销账户验证码API
+    
+    为注销账户发送验证码到当前用户邮箱。
+    """
+    try:
+        # 发送验证码到当前用户邮箱
+        success, code, error_msg = EmailService.send_verification_code(
+            current_user.email, 
+            'delete_account'
+        )
+        
+        if success:
+            return jsonify({
+                'success': True, 
+                'message': '验证码已发送到您的邮箱，请查收'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'验证码发送失败：{error_msg}'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False, 
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
 @auth.route('/logout')
 @login_required
 def logout():

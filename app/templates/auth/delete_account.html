@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注销账户 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --warning-color: #ffc107;
+            --warning-bg: #fff3cd;
+            --success-color: #28a745;
+            --success-bg: #d4edda;
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --secondary-color: #6c757d;
+            --secondary-hover: #545b62;
+            --border-radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .current-user {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .current-user::before {
+            content: '\f007';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: var(--primary-color);
+            padding: 8px 12px;
+            border-radius: 50%;
+            border: 2px solid #dee2e6;
+            font-size: 1.2rem;
+        }
+
+        .current-user h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .user-info {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .warning-section {
+            background: linear-gradient(135deg, var(--warning-bg) 0%, #ffeaa7 100%);
+            border: 2px solid var(--warning-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .warning-section::before {
+            content: '\f071';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -15px;
+            left: 30px;
+            background: var(--warning-color);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+
+        .warning-title {
+            color: #856404;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .warning-list li {
+            padding: 8px 0;
+            color: #856404;
+            font-weight: 500;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .warning-list li::before {
+            content: '\f00d';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--danger-color);
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 1rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #fff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-group input:invalid {
+            border-color: var(--danger-color);
+        }
+
+        .form-help {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .verification-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .send-code-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary-hover) 0%, #004085 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .send-code-btn:disabled {
+            background: var(--secondary-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition);
+            min-width: 150px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, var(--danger-hover) 0%, #a71e2a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #545b62 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, var(--secondary-hover) 0%, #3d4449 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, var(--success-bg) 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, var(--warning-bg) 0%, #ffeaa7 100%);
+            color: #856404;
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .verification-group {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .send-code-btn {
+                width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>
+                    <i class="fas fa-user-times"></i>
+                    注销账户
+                </h1>
+                <p>此操作将永久删除您的账户和所有相关数据</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="current-user">
+                <h3>当前登录账户</h3>
+                <div class="user-info">
+                    {{ current_user.username }} ({{ current_user.email }})
+                </div>
+            </div>
+
+            <!-- 消息提示 -->
+            <div id="message-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="warning-section">
+                <h3 class="warning-title">
+                    重要警告
+                </h3>
+                <p><strong>注销账户是不可逆的操作，将会：</strong></p>
+                <ul class="warning-list">
+                    <li>永久删除您的用户账户</li>
+                    <li>删除所有客户端配置信息</li>
+                    <li>清除所有相关的操作记录</li>
+                    <li>无法恢复任何已删除的数据</li>
+                    <li>同步删除AdGuard Home中的客户端配置</li>
+                </ul>
+                <p><strong>请确保您已经备份了重要的配置信息！</strong></p>
+            </div>
+
+            <form method="POST" id="deleteAccountForm">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="confirm_text">
+                            <i class="fas fa-keyboard"></i>
+                            确认操作
+                        </label>
+                        <input type="text" 
+                               id="confirm_text" 
+                               name="confirm_text" 
+                               placeholder="请输入：确认注销" 
+                               autocomplete="off"
+                               required>
+                        <div class="form-help">
+                            <i class="fas fa-info-circle"></i>
+                            请准确输入"确认注销"四个字
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="verification-group">
+                            <div>
+                                <label for="verification_code">
+                                    <i class="fas fa-shield-alt"></i>
+                                    邮箱验证码
+                                </label>
+                                <input type="text" 
+                                       id="verification_code" 
+                                       name="verification_code" 
+                                       placeholder="请输入6位验证码" 
+                                       maxlength="6" 
+                                       pattern="\d{6}" 
+                                       autocomplete="off"
+                                       required>
+                                <div class="form-help">
+                                    <i class="fas fa-envelope"></i>
+                                    验证码将发送到您的注册邮箱
+                                </div>
+                            </div>
+                            <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">
+                                <i class="fas fa-paper-plane"></i>
+                                发送验证码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        取消
+                    </a>
+                    <button type="submit" class="btn btn-danger" id="deleteBtn">
+                        <i class="fas fa-trash-alt"></i>
+                        确认注销账户
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class DeleteAccountManager {
+            constructor() {
+                this.countdown = 0;
+                this.sendCodeBtn = document.getElementById('sendCodeBtn');
+                this.deleteBtn = document.getElementById('deleteBtn');
+                this.form = document.getElementById('deleteAccountForm');
+                this.messageContainer = document.getElementById('message-container');
+                
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                // 绑定表单提交处理函数
+                this.handleSubmit = (e) => {
+                    e.preventDefault(); // 总是阻止默认提交，使用自定义处理
+                    
+                    if (!this.validateForm()) {
+                        return false;
+                    }
+                    
+                    const confirmed = confirm('您确定要注销账户吗？此操作无法撤销！');
+                    if (!confirmed) {
+                        return false;
+                    }
+                    
+                    // 验证通过且用户确认，提交表单
+                    this.submitForm();
+                };
+                
+                // 表单提交确认
+                this.form.addEventListener('submit', this.handleSubmit);
+
+                // 实时验证确认文本
+                const confirmInput = document.getElementById('confirm_text');
+                confirmInput.addEventListener('input', () => {
+                    this.validateConfirmText();
+                });
+
+                // 验证码输入格式化
+                const codeInput = document.getElementById('verification_code');
+                codeInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                });
+            }
+
+            validateForm() {
+                const confirmText = document.getElementById('confirm_text').value;
+                const verificationCode = document.getElementById('verification_code').value;
+
+                if (confirmText !== '确认注销') {
+                    this.showMessage('请准确输入"确认注销"四个字', 'error');
+                    return false;
+                }
+
+                if (!/^\d{6}$/.test(verificationCode)) {
+                    this.showMessage('请输入6位数字验证码', 'error');
+                    return false;
+                }
+
+                return true;
+            }
+
+            validateConfirmText() {
+                const confirmInput = document.getElementById('confirm_text');
+                const value = confirmInput.value;
+                
+                if (value && value !== '确认注销') {
+                    confirmInput.style.borderColor = 'var(--danger-color)';
+                } else {
+                    confirmInput.style.borderColor = '#dee2e6';
+                }
+            }
+
+            async sendVerificationCode() {
+                if (this.countdown > 0) {
+                    return;
+                }
+
+                this.setButtonLoading(true);
+
+                try {
+                    const response = await fetch('/send-delete-account-code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.showMessage('验证码已发送到您的邮箱，请查收', 'success');
+                        this.startCountdown();
+                    } else {
+                        this.showMessage(data.message || '发送验证码失败，请稍后重试', 'error');
+                        this.setButtonLoading(false);
+                    }
+                } catch (error) {
+                    console.error('发送验证码错误:', error);
+                    this.showMessage('网络错误，请检查网络连接后重试', 'error');
+                    this.setButtonLoading(false);
+                }
+            }
+
+            setButtonLoading(loading) {
+                if (loading) {
+                    this.sendCodeBtn.disabled = true;
+                    this.sendCodeBtn.innerHTML = '<div class="loading-spinner"></div> 发送中...';
+                } else {
+                    this.sendCodeBtn.disabled = false;
+                    this.sendCodeBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送验证码';
+                }
+            }
+
+            startCountdown() {
+                this.countdown = 60;
+                
+                const timer = setInterval(() => {
+                    this.sendCodeBtn.innerHTML = `<i class="fas fa-clock"></i> ${this.countdown}秒后重发`;
+                    this.countdown--;
+                    
+                    if (this.countdown < 0) {
+                        clearInterval(timer);
+                        this.sendCodeBtn.disabled = false;
+                        this.sendCodeBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 发送验证码';
+                    }
+                }, 1000);
+            }
+
+            async submitForm() {
+                // 禁用提交按钮防止重复提交
+                this.deleteBtn.disabled = true;
+                this.deleteBtn.innerHTML = '<div class="loading-spinner"></div> 处理中...';
+                
+                try {
+                    // 创建FormData对象
+                    const formData = new FormData(this.form);
+                    
+                    // 发送POST请求
+                    const response = await fetch(this.form.action || window.location.pathname, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (response.redirected) {
+                        // 如果服务器返回重定向，跳转到新页面
+                        window.location.href = response.url;
+                        return;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showMessage('账户注销成功，即将跳转...', 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/';
+                        }, 2000);
+                    } else {
+                        this.showMessage(data.message || '注销失败，请重试', 'error');
+                        this.resetSubmitButton();
+                    }
+                } catch (error) {
+                    console.error('提交表单错误:', error);
+                    // 如果AJAX失败，尝试常规表单提交
+                    this.form.removeEventListener('submit', this.handleSubmit);
+                    this.form.submit();
+                }
+            }
+            
+            resetSubmitButton() {
+                this.deleteBtn.disabled = false;
+                this.deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 确认注销账户';
+            }
+
+            showMessage(message, type) {
+                // 移除现有消息
+                const existingAlerts = this.messageContainer.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => {
+                    alert.style.animation = 'slideUp 0.3s ease-out reverse';
+                    setTimeout(() => alert.remove(), 300);
+                });
+
+                // 创建新消息
+                const alertDiv = document.createElement('div');
+                const iconClass = type === 'error' ? 'exclamation-triangle' : 
+                                 type === 'success' ? 'check-circle' : 
+                                 type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+                
+                alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-${iconClass}"></i>
+                    ${message}
+                `;
+                
+                this.messageContainer.appendChild(alertDiv);
+                
+                // 自动移除消息
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.style.animation = 'slideUp 0.3s ease-out reverse';
+                        setTimeout(() => alertDiv.remove(), 300);
+                    }
+                }, 5000);
+            }
+        }
+
+        // 全局函数，供onclick调用
+        function sendVerificationCode() {
+            window.deleteAccountManager.sendVerificationCode();
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.deleteAccountManager = new DeleteAccountManager();
+        });
+    </script>
+</body>
+</html>

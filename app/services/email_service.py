@@ -107,6 +107,12 @@ class EmailService:
             elif code_type == 'reset_password':
                 subject = '密码重置验证码'
                 template = 'reset_password_code'
+            elif code_type == 'delete_account':
+                subject = '注销账户验证码'
+                template = 'delete_account_code'
+            elif code_type.startswith('change_'):
+                subject = '账户变更验证码'
+                template = 'verification_code'
             else:
                 subject = '验证码'
                 template = 'verification_code'

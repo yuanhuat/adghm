@@ -18,6 +18,7 @@
                     <div class="nav-dropdown-menu">
                         <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
                         <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        <a href="{{ url_for('auth.delete_account') }}" style="color: #dc3545;">注销账户</a>
                     </div>
                 </div>
                 {% if current_user.is_admin %}
