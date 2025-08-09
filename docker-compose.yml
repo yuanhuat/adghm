@@ -3,7 +3,7 @@ version: '3'
 services:
   adghm:
     container_name: adghm
-    image: adghm:3.2  # 明确指定本地已有的镜像标签
+    image: yuanhu66/adghm:3.2  # 使用dockerhub上的镜像
     volumes:
       - /opt/adghm:/app/instance
     ports:
