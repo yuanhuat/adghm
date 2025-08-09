@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
+from app.models.announcement import Announcement
 
 from app.models.feedback import Feedback
 from app.models.dns_config import DnsConfig
@@ -959,4 +960,26 @@ def apple_dot_mobileconfig():
         logging.error(f"生成DoT配置文件失败: {str(e)}")
         return jsonify({
             'error': f'生成DoT配置文件失败: {str(e)}'
+        }), 500
+
+@main.route('/api/announcements/active')
+@login_required
+def get_announcements():
+    """获取首页公告"""
+    try:
+        # 获取启用且在首页显示的公告
+        announcements = Announcement.query.filter_by(
+            is_active=True,
+            show_on_homepage=True
+        ).order_by(Announcement.created_at.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'announcements': [announcement.to_dict() for announcement in announcements]
+        })
+    except Exception as e:
+        logging.error(f"获取公告失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500

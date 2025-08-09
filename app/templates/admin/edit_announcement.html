@@ -1,0 +1,115 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>编辑公告</h2>
+        <a href="{{ url_for('admin.announcements') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <form id="announcementForm">
+                <div class="mb-3">
+                    <label for="title" class="form-label">公告标题 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ announcement.title }}" required maxlength="200">
+                    <div class="form-text">最多200个字符</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="content" class="form-label">公告内容 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="content" name="content" rows="8" required>{{ announcement.content }}</textarea>
+                    <div class="form-text">支持HTML格式</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if announcement.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    启用公告
+                                </label>
+                            </div>
+                            <div class="form-text">只有启用的公告才会显示</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="show_on_homepage" name="show_on_homepage" {% if announcement.show_on_homepage %}checked{% endif %}>
+                                <label class="form-check-label" for="show_on_homepage">
+                                    在首页显示
+                                </label>
+                            </div>
+                            <div class="form-text">是否在用户首页弹窗显示</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        创建时间: {{ announcement.created_at.strftime('%Y-%m-%d %H:%M:%S') if announcement.created_at else '' }}<br>
+                        更新时间: {{ announcement.updated_at.strftime('%Y-%m-%d %H:%M:%S') if announcement.updated_at else '' }}
+                    </small>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('announcementForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('title').value.trim(),
+        content: document.getElementById('content').value.trim(),
+        is_active: document.getElementById('is_active').checked,
+        show_on_homepage: document.getElementById('show_on_homepage').checked
+    };
+    
+    // 验证必填字段
+    if (!formData.title) {
+        alert('请输入公告标题');
+        return;
+    }
+    
+    if (!formData.content) {
+        alert('请输入公告内容');
+        return;
+    }
+    
+    // 提交数据
+    fetch('/admin/announcements/{{ announcement.id }}/edit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/admin/announcements';
+        } else {
+            alert('更新失败: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('更新失败');
+    });
+});
+</script>
+{% endblock %}

@@ -5,6 +5,7 @@ from app import db
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
+from app.models.announcement import Announcement
 
 from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
@@ -1077,3 +1078,120 @@ def manage_dns_config():
                 'success': False,
                 'error': str(e)
             }), 500
+
+@admin.route('/announcements')
+@login_required
+@admin_required
+def announcements():
+    """公告管理页面"""
+    announcements = Announcement.query.order_by(Announcement.created_at.desc()).all()
+    return render_template('admin/announcements.html', announcements=announcements)
+
+@admin.route('/announcements/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_announcement():
+    """创建公告"""
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            
+            announcement = Announcement(
+                title=data.get('title'),
+                content=data.get('content'),
+                is_active=data.get('is_active', True),
+                show_on_homepage=data.get('show_on_homepage', True),
+                created_by=current_user.id
+            )
+            
+            db.session.add(announcement)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': '公告创建成功',
+                'announcement': announcement.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    return render_template('admin/create_announcement.html')
+
+@admin.route('/announcements/<int:announcement_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_announcement(announcement_id):
+    """编辑公告"""
+    announcement = Announcement.query.get_or_404(announcement_id)
+    
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            
+            announcement.title = data.get('title', announcement.title)
+            announcement.content = data.get('content', announcement.content)
+            announcement.is_active = data.get('is_active', announcement.is_active)
+            announcement.show_on_homepage = data.get('show_on_homepage', announcement.show_on_homepage)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': '公告更新成功',
+                'announcement': announcement.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    return render_template('admin/edit_announcement.html', announcement=announcement)
+
+@admin.route('/announcements/<int:announcement_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_announcement(announcement_id):
+    """删除公告"""
+    try:
+        announcement = Announcement.query.get_or_404(announcement_id)
+        db.session.delete(announcement)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '公告删除成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@admin.route('/announcements/<int:announcement_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_announcement(announcement_id):
+    """切换公告状态"""
+    try:
+        announcement = Announcement.query.get_or_404(announcement_id)
+        announcement.is_active = not announcement.is_active
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'公告已{"启用" if announcement.is_active else "禁用"}',
+            'is_active': announcement.is_active
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

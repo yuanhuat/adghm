@@ -1,0 +1,130 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>公告管理</h2>
+        <a href="{{ url_for('admin.create_announcement') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新建公告
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>标题</th>
+                            <th>内容预览</th>
+                            <th>状态</th>
+                            <th>首页显示</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for announcement in announcements %}
+                        <tr>
+                            <td>{{ announcement.id }}</td>
+                            <td>{{ announcement.title }}</td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 200px;" title="{{ announcement.content }}">
+                                    {{ announcement.content[:50] }}{% if announcement.content|length > 50 %}...{% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if announcement.is_active %}badge-success{% else %}badge-secondary{% endif %}">
+                                    {% if announcement.is_active %}启用{% else %}禁用{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {% if announcement.show_on_homepage %}badge-info{% else %}badge-secondary{% endif %}">
+                                    {% if announcement.show_on_homepage %}是{% else %}否{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ announcement.created_at.strftime('%Y-%m-%d %H:%M:%S') if announcement.created_at else '' }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.edit_announcement', announcement_id=announcement.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm {% if announcement.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" 
+                                            onclick="toggleAnnouncement({{ announcement.id }})" 
+                                            title="{% if announcement.is_active %}禁用{% else %}启用{% endif %}">
+                                        <i class="fas {% if announcement.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteAnnouncement({{ announcement.id }})" 
+                                            title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">暂无公告</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAnnouncement(announcementId) {
+    if (confirm('确定要切换公告状态吗？')) {
+        fetch(`/admin/announcements/${announcementId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('操作失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败');
+        });
+    }
+}
+
+function deleteAnnouncement(announcementId) {
+    if (confirm('确定要删除这个公告吗？此操作不可恢复！')) {
+        fetch(`/admin/announcements/${announcementId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('删除失败: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('删除失败');
+        });
+    }
+}
+</script>
+{% endblock %}

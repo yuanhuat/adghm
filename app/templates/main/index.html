@@ -113,6 +113,97 @@
         </main>
     </div>
 
+<!-- 公告弹窗模态框 -->
+<div id="announcementModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="announcementTitle">公告</h3>
+            <span class="modal-close" onclick="closeAnnouncementModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="announcementContent"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeAnnouncementModal()">我知道了</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s;
+}
+
+.modal-header {
+    padding: 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    opacity: 0.7;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    text-align: right;
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 8px 8px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 <style>
 /* 苹果配置文件样式 */
 .apple-config-items {
@@ -561,6 +652,85 @@ function updateFeedbackList() {
         });
 }
 
+// 公告弹窗相关函数
+function checkAnnouncements() {
+    fetch('/api/announcements/active', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.status === 401 || response.status === 403) {
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data || !data.announcements || data.announcements.length === 0) {
+            return;
+        }
+        
+        // 获取已读公告列表
+        const readAnnouncements = JSON.parse(localStorage.getItem('readAnnouncements') || '[]');
+        
+        // 查找未读公告
+        const unreadAnnouncement = data.announcements.find(announcement => 
+            !readAnnouncements.includes(announcement.id)
+        );
+        
+        if (unreadAnnouncement) {
+            showAnnouncementModal(unreadAnnouncement);
+        }
+    })
+    .catch(error => {
+        console.error('获取公告失败:', error);
+    });
+}
+
+function showAnnouncementModal(announcement) {
+    const modal = document.getElementById('announcementModal');
+    const title = document.getElementById('announcementTitle');
+    const content = document.getElementById('announcementContent');
+    
+    if (modal && title && content) {
+        title.textContent = announcement.title;
+        content.innerHTML = announcement.content;
+        modal.style.display = 'block';
+        
+        // 记录当前显示的公告ID
+        modal.dataset.announcementId = announcement.id;
+    }
+}
+
+function closeAnnouncementModal() {
+    const modal = document.getElementById('announcementModal');
+    if (modal) {
+        const announcementId = modal.dataset.announcementId;
+        if (announcementId) {
+            // 标记公告为已读
+            const readAnnouncements = JSON.parse(localStorage.getItem('readAnnouncements') || '[]');
+            if (!readAnnouncements.includes(parseInt(announcementId))) {
+                readAnnouncements.push(parseInt(announcementId));
+                localStorage.setItem('readAnnouncements', JSON.stringify(readAnnouncements));
+            }
+        }
+        modal.style.display = 'none';
+    }
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('announcementModal');
+    if (event.target === modal) {
+        closeAnnouncementModal();
+    }
+}
+
 // 页面加载完成后开始定期更新
 document.addEventListener('DOMContentLoaded', function() {
     // 立即更新一次
@@ -568,6 +738,9 @@ document.addEventListener('DOMContentLoaded', function() {
     updateClientRanking();
     updateFeedbackList();
     updateDnsConfig();
+    
+    // 检查公告
+    checkAnnouncements();
     
     // 绑定留言表单提交事件
     const feedbackForm = document.getElementById('feedback-form');
@@ -583,6 +756,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 每30秒更新一次留言列表
     setInterval(updateFeedbackList, 30000);
+    
+    // 每5分钟检查一次新公告
+    setInterval(checkAnnouncements, 300000);
 });
 </script>
 </body>
