@@ -28,6 +28,17 @@
             </nav>
         </header>
         
+        <!-- 系统公告横幅 - 在header下方，main-content上方 -->
+        <div class="announcement-banner" id="announcement-banner" style="display: none;">
+            <div class="announcement-banner-content">
+                <i class="fas fa-bullhorn"></i>
+                <div class="announcement-text" id="banner-announcement-text">暂无公告</div>
+                <button class="announcement-close" onclick="closeAnnouncementBanner()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
         <main class="main-content">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -71,6 +82,7 @@
                 <p>加载中...</p>
             </div>
         </div>
+
         <div class="dashboard-card">
             <h2><i class="fas fa-mobile-alt" style="color: #007bff;"></i> 苹果设备配置</h2>
             <p class="config-description">为您的iPhone、iPad或Mac设备快速配置DNS设置</p>
@@ -202,6 +214,67 @@
 @keyframes slideIn {
     from { transform: translateY(-50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* 公告横幅样式 - 在header之上，挤压页面布局 */
+.announcement-banner {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    animation: slideDown 0.5s ease-out;
+    width: 100%;
+}
+
+.announcement-banner-content {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 15px;
+    min-height: 48px;
+}
+
+.announcement-banner .fas.fa-bullhorn {
+    font-size: 18px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.announcement-banner .announcement-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.announcement-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.announcement-close:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 <style>
@@ -652,8 +725,8 @@ function updateFeedbackList() {
         });
 }
 
-// 公告弹窗相关函数
-function checkAnnouncements() {
+// 公告相关函数
+function loadAnnouncements() {
     fetch('/api/announcements/active', {
         method: 'GET',
         credentials: 'same-origin',
@@ -671,25 +744,78 @@ function checkAnnouncements() {
         return response.json();
     })
     .then(data => {
-        if (!data || !data.announcements || data.announcements.length === 0) {
-            return;
-        }
+        // 更新公告横幅显示
+        updateAnnouncementBanner(data);
         
-        // 获取已读公告列表
-        const readAnnouncements = JSON.parse(localStorage.getItem('readAnnouncements') || '[]');
-        
-        // 查找未读公告
-        const unreadAnnouncement = data.announcements.find(announcement => 
-            !readAnnouncements.includes(announcement.id)
-        );
-        
-        if (unreadAnnouncement) {
-            showAnnouncementModal(unreadAnnouncement);
-        }
+        // 检查是否有未读公告需要弹窗显示
+        checkForUnreadAnnouncements(data);
     })
     .catch(error => {
         console.error('获取公告失败:', error);
     });
+}
+
+function updateAnnouncementBanner(data) {
+    const banner = document.getElementById('announcement-banner');
+    const bannerText = document.getElementById('banner-announcement-text');
+    
+    if (!banner || !bannerText) return;
+    
+    // 检查是否有已关闭的横幅记录
+    const closedBanners = JSON.parse(localStorage.getItem('closedAnnouncementBanners') || '[]');
+    
+    if (!data || !data.announcements || data.announcements.length === 0) {
+        banner.style.display = 'none';
+        return;
+    }
+    
+    // 找到最新的未关闭公告
+    const latestAnnouncement = data.announcements.find(announcement => 
+        !closedBanners.includes(announcement.id)
+    );
+    
+    if (latestAnnouncement) {
+        bannerText.textContent = `${latestAnnouncement.title}: ${latestAnnouncement.content}`;
+        banner.style.display = 'block';
+        banner.dataset.announcementId = latestAnnouncement.id;
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+function closeAnnouncementBanner() {
+    const banner = document.getElementById('announcement-banner');
+    if (!banner) return;
+    
+    const announcementId = banner.dataset.announcementId;
+    if (announcementId) {
+        // 记录已关闭的横幅
+        const closedBanners = JSON.parse(localStorage.getItem('closedAnnouncementBanners') || '[]');
+        if (!closedBanners.includes(parseInt(announcementId))) {
+            closedBanners.push(parseInt(announcementId));
+            localStorage.setItem('closedAnnouncementBanners', JSON.stringify(closedBanners));
+        }
+    }
+    
+    banner.style.display = 'none';
+}
+
+function checkForUnreadAnnouncements(data) {
+    if (!data || !data.announcements || data.announcements.length === 0) {
+        return;
+    }
+    
+    // 获取已读公告列表
+    const readAnnouncements = JSON.parse(localStorage.getItem('readAnnouncements') || '[]');
+    
+    // 查找未读公告
+    const unreadAnnouncement = data.announcements.find(announcement => 
+        !readAnnouncements.includes(announcement.id)
+    );
+    
+    if (unreadAnnouncement) {
+        showAnnouncementModal(unreadAnnouncement);
+    }
 }
 
 function showAnnouncementModal(announcement) {
@@ -739,8 +865,8 @@ document.addEventListener('DOMContentLoaded', function() {
     updateFeedbackList();
     updateDnsConfig();
     
-    // 检查公告
-    checkAnnouncements();
+    // 加载公告
+    loadAnnouncements();
     
     // 绑定留言表单提交事件
     const feedbackForm = document.getElementById('feedback-form');
@@ -757,8 +883,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 每30秒更新一次留言列表
     setInterval(updateFeedbackList, 30000);
     
-    // 每5分钟检查一次新公告
-    setInterval(checkAnnouncements, 300000);
+    // 每2分钟更新一次公告
+    setInterval(loadAnnouncements, 120000);
 });
 </script>
 </body>

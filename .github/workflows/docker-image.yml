@@ -13,7 +13,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag your-dockerhub-username/your-image-name:latest
+      run: docker build . --file Dockerfile --tag yuanhu66/adghm:latest
       
     - name: Log in to Docker Hub
       if: github.event_name != 'pull_request'  # 拉取请求不执行推送
@@ -25,7 +25,7 @@ jobs:
     - name: Push the Docker image
       if: github.event_name != 'pull_request'  # 拉取请求不执行推送
       run: |
-        docker push your-dockerhub-username/your-image-name:latest
-        # 如果需要同时推送版本标签，可以添加以下内容
-        docker tag your-dockerhub-username/your-image-name:latest your-dockerhub-username/your-image-name:${{ github.sha }}
-        docker push your-dockerhub-username/your-image-name:${{ github.sha }}
+        docker push yuanhu66/adghm:latest
+        # 同时推送版本标签，便于版本回溯
+        docker tag yuanhu66/adghm:latest yuanhu66/adghm:${{ github.sha }}
+        docker push yuanhu66/adghm:${{ github.sha }}
