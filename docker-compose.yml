@@ -7,7 +7,7 @@ services:
     volumes:
       - /opt/adghm:/app/instance
     ports:
-      - "80:80"
+      - "5000:5000"
     networks:
       - adghm-network
 
