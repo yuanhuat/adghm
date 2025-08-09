@@ -3,7 +3,7 @@ version: '3'
 services:
   adghm:
     container_name: adghm
-    image: yuanhu66/adghm:3.2  # 使用dockerhub上的镜像
+    image: yuanhu66/adghm:latest
     volumes:
       - /opt/adghm:/app/instance
     ports:
