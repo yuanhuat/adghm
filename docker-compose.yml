@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  adghm:
+    container_name: adghm
+    image: adghm:3.2  # 明确指定本地已有的镜像标签
+    volumes:
+      - /opt/adghm:/app/instance
+    ports:
+      - "80:80"
+    networks:
+      - adghm-network
+
+networks:
+  adghm-network:
+    driver: bridge
+    name: adghm-network
