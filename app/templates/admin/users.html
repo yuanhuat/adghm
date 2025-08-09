@@ -12,8 +12,10 @@
                         <tr>
                             <th>ID</th>
                             <th>用户名</th>
+                            <th>注册邮箱</th>
                             <th>注册时间</th>
                             <th>客户端数</th>
+                            <th>DNS请求数</th>
                             <th>客户端名称</th>
                             <th>操作</th>
                         </tr>
@@ -23,8 +25,20 @@
                         <tr>
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
+                            <td>
+                                {% if user.email %}
+                                    {{ user.email }}
+                                {% else %}
+                                    <span class="text-muted">未设置</span>
+                                {% endif %}
+                            </td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>{{ user.client_mappings|length }}</td>
+                            <td>
+                                <span class="badge badge-info" style="color: black;">
+                                    {{ user_stats.get(user.id, 0) }}
+                                </span>
+                            </td>
                             <td>
                                 {% if user.client_mappings %}
                                 <ul class="list-unstyled mb-0">

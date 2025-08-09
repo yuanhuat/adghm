@@ -48,7 +48,35 @@ def index():
 def users():
     """用户管理页面"""
     users = User.query.all()
-    return render_template('admin/users.html', users=users)
+    
+    # 获取每个用户的DNS请求数
+    user_stats = {}
+    try:
+        adguard_service = AdGuardService()
+        stats = adguard_service.get_stats()
+        
+        if stats and 'top_clients' in stats:
+            for user in users:
+                user_request_count = 0
+                # 获取用户的客户端映射
+                user_clients = ClientMapping.query.filter_by(user_id=user.id).all()
+                user_client_names = [client.client_name for client in user_clients]
+                user_client_ids = []
+                for client in user_clients:
+                    user_client_ids.extend(client.client_ids)
+                
+                # 在top_clients中查找用户的客户端请求数
+                for client_stat in stats['top_clients']:
+                    for client_name, request_count in client_stat.items():
+                        if client_name in user_client_names or client_name in user_client_ids:
+                            user_request_count += request_count
+                
+                user_stats[user.id] = user_request_count
+    except Exception as e:
+        print(f"获取用户DNS请求统计失败: {str(e)}")
+        user_stats = {}
+    
+    return render_template('admin/users.html', users=users, user_stats=user_stats)
 
 @admin.route('/users/<int:user_id>', methods=['DELETE'])
 @login_required
