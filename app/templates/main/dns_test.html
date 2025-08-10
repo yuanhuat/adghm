@@ -7,6 +7,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
     <style>
+        :root {
+            --success-color: #28a745;
+            --success-bg: #d4edda;
+            --success-border: #c3e6cb;
+            --success-text: #155724;
+            --text-muted: #6c757d;
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-display: swap;
+        }
+        
         .dns-test-container {
             max-width: 600px;
             margin: 50px auto;
@@ -14,80 +32,85 @@
             text-align: center;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
+        
         .status-icon {
             font-size: 80px;
-            color: #28a745;
+            color: var(--success-color);
             margin-bottom: 20px;
             animation: pulse 2s infinite;
         }
+        
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        
         .status-title {
             font-size: 28px;
-            color: #28a745;
+            color: var(--success-color);
             margin-bottom: 15px;
             font-weight: bold;
         }
+        
         .status-message {
             font-size: 16px;
-            color: #6c757d;
+            color: var(--text-muted);
             line-height: 1.6;
             margin-bottom: 30px;
         }
+        
         .success-info {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
             padding: 20px;
             border-radius: 8px;
             margin-top: 20px;
         }
+        
         .success-info h4 {
-            color: #155724;
+            color: var(--success-text);
             margin-bottom: 10px;
         }
+        
         .feature-list {
             text-align: left;
-            color: #155724;
+            color: var(--success-text);
         }
+        
         .feature-list li {
             margin-bottom: 8px;
         }
+        
         .timestamp {
             font-size: 12px;
-            color: #6c757d;
+            color: var(--text-muted);
             margin-top: 20px;
         }
-        body {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        
         .back-link {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            transition: background 0.3s;
+            transition: background 0.3s ease;
         }
+        
         .back-link:hover {
-            background: #0056b3;
+            background: var(--primary-hover);
             color: white;
         }
     </style>
 </head>
 <body>
-    <div class="dns-test-container">
-        <div class="status-icon">
-            <i class="fas fa-check-circle"></i>
+    <main class="dns-test-container">
+        <div class="status-icon" aria-label="成功图标">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
         </div>
         <h1 class="status-title">DNS重写配置成功！</h1>
         <p class="status-message">
@@ -95,38 +118,26 @@
             您访问的test.dns.con域名（一个不存在的域名）已被正确重写到服务器IP地址，现在可以享受以下功能：
         </p>
         
-        <div class="success-info">
-            <h4><i class="fas fa-shield-alt"></i> 已启用的功能</h4>
+        <section class="success-info">
+            <h4><i class="fas fa-shield-alt" aria-hidden="true"></i> 已启用的功能</h4>
             <ul class="feature-list">
-                <li><i class="fas fa-check"></i> 广告拦截</li>
-                <li><i class="fas fa-check"></i> 恶意网站防护</li>
-                <li><i class="fas fa-check"></i> DNS查询日志</li>
-                <li><i class="fas fa-check"></i> 自定义过滤规则</li>
-                <li><i class="fas fa-check"></i> 安全DNS解析</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> 广告拦截</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> 恶意网站防护</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> DNS查询日志</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> 自定义过滤规则</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> 安全DNS解析</li>
             </ul>
-        </div>
-        
-        <div class="success-info" style="margin-top: 20px; background: #f8f9fa; border-left: 4px solid #007bff;">
-            <h4><i class="fas fa-info-circle"></i> 配置说明</h4>
-            <p style="text-align: left; margin-bottom: 10px;">如果其他用户无法访问此页面，请在AdGuardHome中配置：</p>
-            <div style="background: #e9ecef; padding: 10px; border-radius: 5px; font-family: monospace;">
-                域名: test.dns.con<br>
-                重写为: 您的服务器IP:5000
-            </div>
-            <small style="color: #6c757d; display: block; margin-top: 8px;">
-                💡 test.dns.con是不存在的域名，访问 http://test.dns.con:5000/dns-test 能打开说明DNS重写配置成功
-            </small>
-        </div>
+        </section>
         
         <div class="timestamp">
-            <i class="fas fa-clock"></i> 
-            检测时间: <span id="current-time"></span>
+            <i class="fas fa-clock" aria-hidden="true"></i> 
+            检测时间: <time id="current-time"></time>
         </div>
         
-        <a href="/" class="back-link">
-            <i class="fas fa-home"></i> 返回主页
+        <a href="javascript:history.back()" class="back-link">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i> 返回上一页
         </a>
-    </div>
+    </main>
     
     <script>
         // 显示当前时间
