@@ -990,17 +990,17 @@ def dns_test_a():
     """DNS检测页面A - 根据Host头判断DNS配置状态
     
     通过检查请求的Host头来判断DNS重写是否生效：
-    - 如果Host包含test-b，说明DNS重写生效，显示成功页面
-    - 如果Host包含test-a，说明DNS未配置，显示警告页面
+    - 如果Host是test.dns.con，说明DNS重写生效（不存在的域名被重写到服务器IP），显示成功页面
+    - 如果Host是其他域名，说明DNS未配置或重写未生效，显示配置页面
     """
     host = request.headers.get('Host', '')
     
-    # 检查是否经过DNS重写（从a.域名重定向到b.域名）
-    if 'b.' in host:
+    # 检查是否通过DNS重写访问（test.dns.con被重写到服务器IP）
+    if host.startswith('test.dns.con'):
         # DNS重写生效，显示成功页面
         return render_template('main/dns_test_b.html')
     else:
-        # DNS未配置或重写未生效，显示警告页面
+        # DNS未配置或重写未生效，显示配置页面
         return render_template('main/dns_test_a.html')
 
 
