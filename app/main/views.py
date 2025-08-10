@@ -985,30 +985,12 @@ def get_announcements():
         }), 500
 
 
-@main.route('/dns-test-a')
-def dns_test_a():
-    """DNS检测页面A - 根据Host头判断DNS配置状态
+@main.route('/dns-test')
+def dns_test():
+    """DNS检测页面 - 显示DNS重写成功页面
     
-    通过检查请求的Host头来判断DNS重写是否生效：
-    - 如果Host是test.dns.con，说明DNS重写生效（不存在的域名被重写到服务器IP），显示成功页面
-    - 如果Host是其他域名，说明DNS未配置或重写未生效，显示配置页面
+    如果用户能访问到这个页面，说明DNS重写已经生效
+    （test.dns.con这个不存在的域名被成功重写到服务器IP）
     """
-    host = request.headers.get('Host', '')
-    
-    # 检查是否通过DNS重写访问（test.dns.con被重写到服务器IP）
-    if host.startswith('test.dns.con'):
-        # DNS重写生效，显示成功页面
-        return render_template('main/dns_test_b.html')
-    else:
-        # DNS未配置或重写未生效，显示配置页面
-        return render_template('main/dns_test_a.html')
-
-
-@main.route('/dns-test-b')
-def dns_test_b():
-    """DNS检测页面B - 显示正确配置DNS的页面
-    
-    这个页面表示DNS配置正确。当用户访问dns-test-a时，
-    如果DNS重写规则生效，会自动跳转到这个页面。
-    """
-    return render_template('main/dns_test_b.html')
+    # 能访问到这里就说明DNS重写生效了
+    return render_template('main/dns_test.html')

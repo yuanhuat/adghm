@@ -106,6 +106,18 @@
             </ul>
         </div>
         
+        <div class="success-info" style="margin-top: 20px; background: #f8f9fa; border-left: 4px solid #007bff;">
+            <h4><i class="fas fa-info-circle"></i> 配置说明</h4>
+            <p style="text-align: left; margin-bottom: 10px;">如果其他用户无法访问此页面，请在AdGuardHome中配置：</p>
+            <div style="background: #e9ecef; padding: 10px; border-radius: 5px; font-family: monospace;">
+                域名: test.dns.con<br>
+                重写为: 您的服务器IP:5000
+            </div>
+            <small style="color: #6c757d; display: block; margin-top: 8px;">
+                💡 test.dns.con是不存在的域名，访问 http://test.dns.con:5000/dns-test 能打开说明DNS重写配置成功
+            </small>
+        </div>
+        
         <div class="timestamp">
             <i class="fas fa-clock"></i> 
             检测时间: <span id="current-time"></span>
