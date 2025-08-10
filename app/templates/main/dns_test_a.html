@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS检测 - 未配置</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <style>
+        .dns-test-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .status-icon {
+            font-size: 80px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .status-title {
+            font-size: 28px;
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .status-message {
+            font-size: 16px;
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .dns-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .dns-info h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .dns-servers {
+            font-family: monospace;
+            font-size: 14px;
+            color: #007bff;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="dns-test-container">
+        <div class="status-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <h1 class="status-title">DNS未正确配置</h1>
+        <p class="status-message">
+            您的DNS设置尚未正确配置AdGuardHome服务器。<br>
+            如果您看到此页面，说明DNS重写规则未生效。
+        </p>
+        
+        <div class="dns-info">
+            <h4><i class="fas fa-cog"></i> 配置说明</h4>
+            <p>请将您的DNS服务器设置为AdGuardHome的IP地址</p>
+            <div class="dns-servers">
+                <div>主DNS: [您的AdGuardHome IP]</div>
+                <div>备用DNS: [备用DNS服务器]</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #6c757d;">
+            <i class="fas fa-info-circle"></i> 
+            配置完成后，重新访问此页面进行验证
+        </div>
+    </div>
+</body>
+</html>

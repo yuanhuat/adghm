@@ -983,3 +983,23 @@ def get_announcements():
             'success': False,
             'error': str(e)
         }), 500
+
+
+@main.route('/dns-test-a')
+def dns_test_a():
+    """DNS检测页面A - 显示未配置DNS的页面
+    
+    这个页面用于检测DNS是否正确配置。如果DNS配置正确，
+    AdGuardHome会将此页面重定向到dns-test-b页面。
+    """
+    return render_template('main/dns_test_a.html')
+
+
+@main.route('/dns-test-b')
+def dns_test_b():
+    """DNS检测页面B - 显示正确配置DNS的页面
+    
+    这个页面表示DNS配置正确。当用户访问dns-test-a时，
+    如果DNS重写规则生效，会自动跳转到这个页面。
+    """
+    return render_template('main/dns_test_b.html')

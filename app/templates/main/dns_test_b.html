@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS检测 - 配置正确</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <style>
+        .dns-test-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .status-icon {
+            font-size: 80px;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .status-title {
+            font-size: 28px;
+            color: #28a745;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .status-message {
+            font-size: 16px;
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .success-info {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .success-info h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        .feature-list {
+            text-align: left;
+            color: #155724;
+        }
+        .feature-list li {
+            margin-bottom: 8px;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+        body {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .back-link:hover {
+            background: #0056b3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="dns-test-container">
+        <div class="status-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1 class="status-title">DNS配置正确！</h1>
+        <p class="status-message">
+            恭喜！您的DNS已正确配置为AdGuardHome服务器。<br>
+            DNS重写规则已成功生效，您现在可以享受以下功能：
+        </p>
+        
+        <div class="success-info">
+            <h4><i class="fas fa-shield-alt"></i> 已启用的功能</h4>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> 广告拦截</li>
+                <li><i class="fas fa-check"></i> 恶意网站防护</li>
+                <li><i class="fas fa-check"></i> DNS查询日志</li>
+                <li><i class="fas fa-check"></i> 自定义过滤规则</li>
+                <li><i class="fas fa-check"></i> 安全DNS解析</li>
+            </ul>
+        </div>
+        
+        <div class="timestamp">
+            <i class="fas fa-clock"></i> 
+            检测时间: <span id="current-time"></span>
+        </div>
+        
+        <a href="/" class="back-link">
+            <i class="fas fa-home"></i> 返回主页
+        </a>
+    </div>
+    
+    <script>
+        // 显示当前时间
+        document.getElementById('current-time').textContent = new Date().toLocaleString('zh-CN');
+    </script>
+</body>
+</html>
