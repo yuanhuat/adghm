@@ -777,8 +777,10 @@ def apple_doh_mobileconfig():
         import uuid
         from datetime import datetime
         
-        payload_uuid = str(uuid.uuid4()).upper()
-        profile_uuid = str(uuid.uuid4()).upper()
+        payload_uuid = str(uuid.uuid4())
+        payload_identifier_uuid = str(uuid.uuid4())
+        profile_uuid = str(uuid.uuid4())
+        profile_identifier_uuid = str(uuid.uuid4())
         
         mobileconfig_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -911,56 +913,54 @@ def apple_dot_mobileconfig():
         import uuid
         from datetime import datetime
         
-        payload_uuid = str(uuid.uuid4()).upper()
-        profile_uuid = str(uuid.uuid4()).upper()
+        payload_uuid = str(uuid.uuid4())
+        payload_identifier_uuid = str(uuid.uuid4())
+        profile_uuid = str(uuid.uuid4())
+        profile_identifier_uuid = str(uuid.uuid4())
         
         mobileconfig_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>PayloadContent</key>
-    <array>
-        <dict>
-            <key>DNSSettings</key>
-            <dict>
-                <key>DNSProtocol</key>
-                <string>TLS</string>
-                <key>ServerName</key>
-                <string>{dot_server}</string>
-                <key>ServerAddresses</key>
-                <array>
-                    <string>{dot_server}</string>
-                </array>
-            </dict>
-            <key>PayloadDescription</key>
-            <string>Configures device to use AdGuard Home DNS-over-TLS</string>
-            <key>PayloadDisplayName</key>
-            <string>AdGuard Home DoT</string>
-            <key>PayloadIdentifier</key>
-            <string>com.adguardhome.dot.{client_id}</string>
-            <key>PayloadType</key>
-            <string>com.apple.dnsSettings.managed</string>
-            <key>PayloadUUID</key>
-            <string>{payload_uuid}</string>
-            <key>PayloadVersion</key>
-            <integer>1</integer>
-        </dict>
-    </array>
-    <key>PayloadDescription</key>
-    <string>AdGuard Home DNS-over-TLS configuration for {current_user.username}</string>
-    <key>PayloadDisplayName</key>
-    <string>AdGuard Home DoT - {current_user.username}</string>
-    <key>PayloadIdentifier</key>
-    <string>com.adguardhome.profile.dot.{client_id}</string>
-    <key>PayloadRemovalDisallowed</key>
-    <false/>
-    <key>PayloadType</key>
-    <string>Configuration</string>
-    <key>PayloadUUID</key>
-    <string>{profile_uuid}</string>
-    <key>PayloadVersion</key>
-    <integer>1</integer>
-</dict>
+	<dict>
+		<key>PayloadContent</key>
+		<array>
+			<dict>
+				<key>DNSSettings</key>
+				<dict>
+					<key>DNSProtocol</key>
+					<string>TLS</string>
+					<key>ServerName</key>
+					<string>{dot_server}</string>
+				</dict>
+				<key>PayloadDescription</key>
+				<string>Configures device to use AdGuard Home</string>
+				<key>PayloadDisplayName</key>
+				<string>{host.strip()} DoT</string>
+				<key>PayloadIdentifier</key>
+				<string>com.apple.dnsSettings.managed.{payload_identifier_uuid.lower()}</string>
+				<key>PayloadType</key>
+				<string>com.apple.dnsSettings.managed</string>
+				<key>PayloadUUID</key>
+				<string>{payload_uuid.lower()}</string>
+				<key>PayloadVersion</key>
+				<integer>1</integer>
+			</dict>
+		</array>
+		<key>PayloadDescription</key>
+		<string>Adds AdGuard Home to macOS Big Sur and iOS 14 or newer systems</string>
+		<key>PayloadDisplayName</key>
+		<string>{host.strip()} DoT</string>
+		<key>PayloadIdentifier</key>
+		<string>{profile_identifier_uuid.lower()}</string>
+		<key>PayloadRemovalDisallowed</key>
+		<false/>
+		<key>PayloadType</key>
+		<string>Configuration</string>
+		<key>PayloadUUID</key>
+		<string>{profile_uuid.lower()}</string>
+		<key>PayloadVersion</key>
+		<integer>1</integer>
+	</dict>
 </plist>'''
         
         # 创建响应
