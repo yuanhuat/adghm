@@ -6,6 +6,7 @@
     <title>AdGuardHome使用指南 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
     <style>
         .guide-container {
             max-width: 1000px;
@@ -192,74 +193,96 @@
                 </section>
                 
                 <section id="setup" class="guide-section">
-                    <h2><i class="fas fa-cog"></i> 设置指南</h2>
-                    
-                    <h3>1. DNS服务器配置</h3>
-                    <div class="step-list">
-                        <div class="step-item">
-                            找到您的路由器管理界面（通常是192.168.1.1或192.168.0.1）
-                        </div>
-                        <div class="step-item">
-                            进入DNS设置或DHCP设置页面
-                        </div>
-                        <div class="step-item">
-                            将主DNS服务器设置为AdGuardHome服务器的IP地址
-                        </div>
-                        <div class="step-item">
-                            保存设置并重启路由器
-                        </div>
-                    </div>
+                    <h2><i class="fas fa-cog"></i> DNS设置指南</h2>
                     
                     <div class="info-box">
-                        <strong><i class="fas fa-info-circle"></i> 提示：</strong>
-                        如果您不确定AdGuardHome服务器的IP地址，请联系管理员获取。
+                        <strong><i class="fas fa-info-circle"></i> 重要说明：</strong>
+                        现代DNS支持加密协议，推荐使用DoT（DNS over TLS）或DoH（DNS over HTTPS）以获得更好的安全性和隐私保护。
                     </div>
                     
-                    <h3>2. 设备级DNS配置</h3>
-                    <p>如果无法修改路由器设置，您也可以在单个设备上配置DNS：</p>
-                    
-                    <h4>Windows系统：</h4>
-                    <div class="step-list">
-                        <div class="step-item">
-                            打开"控制面板" → "网络和Internet" → "网络和共享中心"
+                    <h3>1. DNS协议类型介绍</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h4><i class="fas fa-shield-alt"></i> DoT专线（推荐安卓）</h4>
+                            <p><strong>DNS over TLS协议</strong></p>
+                            <ul>
+                                <li>✅ 安卓/鸿蒙系统原生支持</li>
+                                <li>✅ iOS/Mac系统原生支持</li>
+                                <li>❌ PC浏览器需要软件支持</li>
+                                <li>❌ Windows系统需要第三方软件</li>
+                            </ul>
                         </div>
-                        <div class="step-item">
-                            点击"更改适配器设置"
-                        </div>
-                        <div class="step-item">
-                            右键点击您的网络连接，选择"属性"
-                        </div>
-                        <div class="step-item">
-                            选择"Internet协议版本4(TCP/IPv4)"，点击"属性"
-                        </div>
-                        <div class="step-item">
-                            选择"使用下面的DNS服务器地址"，输入AdGuardHome服务器IP
+                        <div class="feature-card">
+                            <h4><i class="fas fa-globe"></i> DoH专线（推荐iOS）</h4>
+                            <p><strong>DNS over HTTPS协议</strong></p>
+                            <ul>
+                                <li>❌ 安卓/鸿蒙需要第三方软件</li>
+                                <li>✅ iOS/Mac原生支持</li>
+                                <li>✅ PC浏览器原生支持</li>
+                                <li>✅ Windows 11原生支持</li>
+                            </ul>
                         </div>
                     </div>
                     
-                    <h4>Android系统：</h4>
+                    <h3>2. 各系统配置教程</h3>
+                    
+                    <h4><i class="fab fa-android"></i> Android系统配置</h4>
                     <div class="step-list">
                         <div class="step-item">
-                            打开"设置" → "网络和互联网" → "Wi-Fi"
+                            <strong>方法一：私人DNS设置（推荐DoT）</strong>
+                            <br>打开"设置" → "连接" → "更多连接设置" → "私人DNS"
                         </div>
                         <div class="step-item">
-                            长按您连接的Wi-Fi网络，选择"修改网络"
+                            选择"私人DNS提供商主机名"
                         </div>
                         <div class="step-item">
-                            展开"高级选项"，将IP设置改为"静态"
+                            输入DoT服务器地址（请联系管理员获取）
+                        </div>
+                        <div class="step-item">
+                            点击"保存"完成设置
+                        </div>
+                    </div>
+                    
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>方法二：Wi-Fi DNS设置</strong>
+                            <br>打开"设置" → "Wi-Fi" → 长按已连接的网络
+                        </div>
+                        <div class="step-item">
+                            选择"修改网络" → "高级选项"
+                        </div>
+                        <div class="step-item">
+                            将IP设置改为"静态"
                         </div>
                         <div class="step-item">
                             在DNS1字段输入AdGuardHome服务器IP地址
                         </div>
                     </div>
                     
-                    <h4>iOS系统：</h4>
+                    <h4><i class="fab fa-apple"></i> iOS/iPadOS系统配置</h4>
                     <div class="step-list">
                         <div class="step-item">
-                            打开"设置" → "Wi-Fi"
+                            <strong>方法一：DNS描述文件（推荐DoH）</strong>
+                            <br>下载并安装DNS配置描述文件（请联系管理员获取）
                         </div>
                         <div class="step-item">
-                            点击您连接的Wi-Fi网络旁边的"i"图标
+                            打开"设置" → "通用" → "VPN与设备管理"
+                        </div>
+                        <div class="step-item">
+                            点击下载的描述文件并安装
+                        </div>
+                        <div class="step-item">
+                            在"设置" → "通用" → "关于本机" → "证书信任设置"中启用证书
+                        </div>
+                    </div>
+                    
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>方法二：Wi-Fi DNS设置</strong>
+                            <br>打开"设置" → "Wi-Fi"
+                        </div>
+                        <div class="step-item">
+                            点击已连接Wi-Fi网络旁的"ⓘ"图标
                         </div>
                         <div class="step-item">
                             点击"配置DNS" → "手动"
@@ -267,6 +290,105 @@
                         <div class="step-item">
                             删除现有DNS服务器，添加AdGuardHome服务器IP
                         </div>
+                    </div>
+                    
+                    <h4><i class="fab fa-windows"></i> Windows系统配置</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>Windows 11（原生DoH支持）</strong>
+                            <br>打开"设置" → "网络和Internet" → "以太网"或"Wi-Fi"
+                        </div>
+                        <div class="step-item">
+                            点击网络连接 → "DNS服务器分配" → "编辑"
+                        </div>
+                        <div class="step-item">
+                            选择"手动" → 启用"IPv4"
+                        </div>
+                        <div class="step-item">
+                            输入DNS服务器地址，并启用"通过HTTPS的DNS"
+                        </div>
+                    </div>
+                    
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>Windows 10及以下（使用YogaDNS软件）</strong>
+                            <br>下载并安装YogaDNS软件：<a href="https://yogadns.com/" target="_blank">https://yogadns.com/</a>
+                        </div>
+                        <div class="step-item">
+                            启动软件，选择"通过空白模板创建DNS服务"
+                        </div>
+                        <div class="step-item">
+                            点击"DNS Server" → "Add"添加新的DNS服务
+                        </div>
+                        <div class="step-item">
+                            选择"DNS over HTTPS"协议，输入DoH服务器地址
+                        </div>
+                        <div class="step-item">
+                            点击"Check"测试连接，然后"OK"保存并启动服务
+                        </div>
+                    </div>
+                    
+                    <h4><i class="fab fa-apple"></i> macOS系统配置</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>系统偏好设置方法</strong>
+                            <br>打开"系统偏好设置" → "网络"
+                        </div>
+                        <div class="step-item">
+                            选择当前网络连接 → "高级" → "DNS"标签
+                        </div>
+                        <div class="step-item">
+                            点击"+"号添加DNS服务器地址
+                        </div>
+                        <div class="step-item">
+                            点击"好"保存设置
+                        </div>
+                    </div>
+                    
+                    <h4><i class="fas fa-chrome"></i> 浏览器配置（Chrome/Edge）</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>Chrome浏览器DoH设置</strong>
+                            <br>打开Chrome → "设置" → "隐私设置和安全性" → "安全"
+                        </div>
+                        <div class="step-item">
+                            找到"使用安全DNS"选项
+                        </div>
+                        <div class="step-item">
+                            选择"使用自定义"，输入DoH服务器地址
+                        </div>
+                        <div class="step-item">
+                            保存设置，重启浏览器生效
+                        </div>
+                    </div>
+                    
+                    <h3>3. 路由器级别配置（推荐）</h3>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <strong>优势：</strong>一次配置，全家设备自动生效
+                        </div>
+                        <div class="step-item">
+                            访问路由器管理界面（通常是192.168.1.1或192.168.0.1）
+                        </div>
+                        <div class="step-item">
+                            进入"网络设置" → "DNS设置"或"DHCP设置"
+                        </div>
+                        <div class="step-item">
+                            将主DNS服务器设置为AdGuardHome服务器IP地址
+                        </div>
+                        <div class="step-item">
+                            保存设置并重启路由器
+                        </div>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <strong><i class="fas fa-exclamation-triangle"></i> 注意事项：</strong>
+                        <ul>
+                            <li>配置前请记录原有DNS设置，以便出现问题时恢复</li>
+                            <li>如果不确定服务器地址，请联系管理员获取</li>
+                            <li>建议优先使用加密DNS协议（DoT/DoH）以提高安全性</li>
+                            <li>配置完成后，请访问DNS检测页面验证是否生效</li>
+                        </ul>
                     </div>
                 </section>
                 

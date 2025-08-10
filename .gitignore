@@ -34,3 +34,6 @@ env/
 node_modules/
 .trae/
 .vercel/
+
+#临时
+go.18bit.cn/
