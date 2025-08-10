@@ -63,17 +63,25 @@
         </div>
         <h1 class="status-title">DNS未正确配置</h1>
         <p class="status-message">
-            您的DNS设置尚未正确配置AdGuardHome服务器。<br>
-            如果您看到此页面，说明DNS重写规则未生效。
+            您的DNS配置尚未生效或未正确配置AdGuardHome的DNS重写功能。<br>
+            请按照以下步骤配置DNS重写规则（适用于泛解析环境）。
         </p>
         
         <div class="dns-info">
-            <h4><i class="fas fa-cog"></i> 配置说明</h4>
-            <p>请将您的DNS服务器设置为AdGuardHome的IP地址</p>
-            <div class="dns-servers">
-                <div>主DNS: [您的AdGuardHome IP]</div>
-                <div>备用DNS: [备用DNS服务器]</div>
-            </div>
+            <h4><i class="fas fa-cog"></i> 泛解析环境配置步骤</h4>
+            <p style="text-align: left; margin-bottom: 15px;">在AdGuardHome管理界面中：</p>
+            <ol style="text-align: left; padding-left: 20px;">
+                <li>进入 "过滤器" → "DNS重写"</li>
+                <li>添加新的重写规则：
+                     <div class="dns-servers">
+                         域名: test-a.669900.top<br>
+                         重写为: test-b.669900.top
+                     </div>
+                 </li>
+                 <li>保存配置并等待生效</li>
+                 <li>点击页面上的"DNS检测"链接进行验证</li>
+                <li>如果配置正确，页面会自动显示成功状态</li>
+            </ol>
         </div>
         
         <div style="margin-top: 30px; font-size: 14px; color: #6c757d;">

@@ -987,12 +987,21 @@ def get_announcements():
 
 @main.route('/dns-test-a')
 def dns_test_a():
-    """DNS检测页面A - 显示未配置DNS的页面
+    """DNS检测页面A - 根据Host头判断DNS配置状态
     
-    这个页面用于检测DNS是否正确配置。如果DNS配置正确，
-    AdGuardHome会将此页面重定向到dns-test-b页面。
+    通过检查请求的Host头来判断DNS重写是否生效：
+    - 如果Host包含test-b，说明DNS重写生效，显示成功页面
+    - 如果Host包含test-a，说明DNS未配置，显示警告页面
     """
-    return render_template('main/dns_test_a.html')
+    host = request.headers.get('Host', '')
+    
+    # 检查是否经过DNS重写（从test-a重定向到test-b）
+    if 'test-b.' in host:
+        # DNS重写生效，显示成功页面
+        return render_template('main/dns_test_b.html')
+    else:
+        # DNS未配置或重写未生效，显示警告页面
+        return render_template('main/dns_test_a.html')
 
 
 @main.route('/dns-test-b')
