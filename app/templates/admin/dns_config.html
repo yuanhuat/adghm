@@ -150,6 +150,43 @@
                             </div>
                         </div>
 
+                        <!-- 苹果设备配置文件控制 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">苹果设备配置文件下载控制</h5>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apple_config_enabled" name="apple_config_enabled" 
+                                           {% if config.apple_config_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="apple_config_enabled">
+                                        启用苹果设备配置文件下载功能
+                                    </label>
+                                    <small class="form-text text-muted">控制用户是否可以在主页下载苹果设备的DNS配置文件</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apple_doh_config_enabled" name="apple_doh_config_enabled" 
+                                           {% if config.apple_doh_config_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="apple_doh_config_enabled">
+                                        启用DoH配置文件下载
+                                    </label>
+                                    <small class="form-text text-muted">控制DNS-over-HTTPS配置文件的下载</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apple_dot_config_enabled" name="apple_dot_config_enabled" 
+                                           {% if config.apple_dot_config_enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="apple_dot_config_enabled">
+                                        启用DoT配置文件下载
+                                    </label>
+                                    <small class="form-text text-muted">控制DNS-over-TLS配置文件的下载</small>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 预览区域 -->
                         <div class="row mb-4">
                             <div class="col-12">
@@ -272,7 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
             doh_server: formData.get('doh_server'),
             doh_port: parseInt(formData.get('doh_port')) || 443,
             doh_path: formData.get('doh_path'),
-            doh_description: formData.get('doh_description')
+            doh_description: formData.get('doh_description'),
+            // 苹果配置控制字段
+            apple_config_enabled: document.getElementById('apple_config_enabled').checked,
+            apple_doh_config_enabled: document.getElementById('apple_doh_config_enabled').checked,
+            apple_dot_config_enabled: document.getElementById('apple_dot_config_enabled').checked
         };
         
         // 显示加载状态

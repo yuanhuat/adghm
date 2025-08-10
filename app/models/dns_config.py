@@ -34,6 +34,11 @@ class DnsConfig(db.Model):
     display_title = db.Column(db.String(100), default='DNS配置信息', nullable=False)
     display_description = db.Column(db.Text, nullable=True)
     
+    # 苹果设备配置文件下载控制
+    apple_config_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    apple_doh_config_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    apple_dot_config_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    
     # 时间戳
     created_at = db.Column(db.DateTime, default=beijing_time, nullable=False)
     updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time, nullable=False)
@@ -58,6 +63,10 @@ class DnsConfig(db.Model):
         
         self.display_title = 'DNS配置信息'
         self.display_description = '以下是AdGuardHome的DNS配置信息，您可以在设备上配置这些DNS服务器来使用AdGuardHome的广告拦截和隐私保护功能。'
+        
+        self.apple_config_enabled = True
+        self.apple_doh_config_enabled = True
+        self.apple_dot_config_enabled = True
     
     def validate(self):
         """验证配置的有效性
@@ -184,6 +193,9 @@ class DnsConfig(db.Model):
             'doh_config_string': self.get_doh_config_string(),  # 不传递client_id，因为to_dict主要用于管理员界面
             'display_title': self.display_title,
             'display_description': self.display_description,
+            'apple_config_enabled': self.apple_config_enabled,
+            'apple_doh_config_enabled': self.apple_doh_config_enabled,
+            'apple_dot_config_enabled': self.apple_dot_config_enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

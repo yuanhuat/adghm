@@ -582,9 +582,16 @@ function updateAppleConfig(dnsData) {
     let html = '';
     let hasConfig = false;
     
+    // 检查管理员是否启用了苹果配置文件功能
+    if (!dnsData.apple_config_enabled) {
+        html = '<p class="no-config">管理员已禁用苹果设备配置文件下载功能</p>';
+        appleContentElement.innerHTML = html;
+        return;
+    }
+    
     // 检查是否有可用的DNS配置
-    const hasDoH = dnsData.doh_enabled && dnsData.doh_server;
-    const hasDoT = dnsData.dot_enabled && dnsData.dot_server;
+    const hasDoH = dnsData.doh_enabled && dnsData.doh_server && dnsData.apple_doh_config_enabled;
+    const hasDoT = dnsData.dot_enabled && dnsData.dot_server && dnsData.apple_dot_config_enabled;
     
     if (hasDoH || hasDoT) {
         hasConfig = true;

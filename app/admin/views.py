@@ -1046,6 +1046,14 @@ def manage_dns_config():
             if 'display_description' in data:
                 config.display_description = data['display_description'].strip()
             
+            # 更新苹果配置文件控制
+            if 'apple_config_enabled' in data:
+                config.apple_config_enabled = bool(data['apple_config_enabled'])
+            if 'apple_doh_config_enabled' in data:
+                config.apple_doh_config_enabled = bool(data['apple_doh_config_enabled'])
+            if 'apple_dot_config_enabled' in data:
+                config.apple_dot_config_enabled = bool(data['apple_dot_config_enabled'])
+            
             # 验证配置
             is_valid, error_msg = config.validate()
             if not is_valid:

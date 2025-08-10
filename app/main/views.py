@@ -706,7 +706,11 @@ def api_dns_config():
             'doh_server': user_doh_server,
             'doh_port': config.doh_port,
             'doh_path': user_doh_path or (config.doh_path or '/dns-query'),
-            'doh_description': config.doh_description or ''
+            'doh_description': config.doh_description or '',
+            # 添加苹果配置控制字段
+            'apple_config_enabled': config.apple_config_enabled,
+            'apple_doh_config_enabled': config.apple_doh_config_enabled,
+            'apple_dot_config_enabled': config.apple_dot_config_enabled
         })
         
     except Exception as e:
@@ -742,6 +746,12 @@ def apple_doh_mobileconfig():
             return jsonify({
                 'error': 'DNS-over-HTTPS配置未启用或未设置'
             }), 400
+        
+        # 检查管理员是否启用了苹果配置文件功能
+        if not config.apple_config_enabled or not config.apple_doh_config_enabled:
+            return jsonify({
+                'error': '管理员已禁用苹果设备DoH配置文件下载功能'
+            }), 403
         
         # 获取用户的客户端ID
         client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
@@ -883,6 +893,12 @@ def apple_dot_mobileconfig():
             return jsonify({
                 'error': 'DNS-over-TLS配置未启用或未设置'
             }), 400
+        
+        # 检查管理员是否启用了苹果配置文件功能
+        if not config.apple_config_enabled or not config.apple_dot_config_enabled:
+            return jsonify({
+                'error': '管理员已禁用苹果设备DoT配置文件下载功能'
+            }), 403
         
         # 获取用户的客户端ID
         client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
