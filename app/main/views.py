@@ -995,8 +995,8 @@ def dns_test_a():
     """
     host = request.headers.get('Host', '')
     
-    # 检查是否经过DNS重写（从test-a重定向到test-b）
-    if 'test-b.' in host:
+    # 检查是否经过DNS重写（从a.域名重定向到b.域名）
+    if 'b.' in host:
         # DNS重写生效，显示成功页面
         return render_template('main/dns_test_b.html')
     else:
