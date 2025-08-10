@@ -722,11 +722,19 @@ def apple_doh_mobileconfig():
     """生成DNS-over-HTTPS的苹果配置文件
     
     为当前用户生成DoH的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
+    根据AdGuard Home API要求，host参数现在是必需的
     
     Returns:
         .mobileconfig文件下载
     """
     try:
+        # 获取host参数（必需）
+        host = request.args.get('host')
+        if not host:
+            return jsonify({
+                'error': 'host参数是必需的，请提供DNS服务器的主机名'
+            }), 400
+        
         # 获取DNS配置
         config = DnsConfig.get_config()
         
@@ -747,8 +755,15 @@ def apple_doh_mobileconfig():
                 'error': '用户没有关联的客户端ID'
             }), 400
         
-        # 构建DoH服务器地址
-        doh_server = config.doh_server
+        # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
+        import re
+        if not re.match(r'^[0-9a-z-]{1,64}$', client_id):
+            return jsonify({
+                'error': f'客户端ID格式无效：{client_id}，必须是1-64位的小写字母、数字或连字符'
+            }), 400
+        
+        # 构建DoH服务器地址（使用host参数）
+        doh_server = host.strip()
         doh_port = config.doh_port or 443
         doh_path = f"{config.doh_path or '/dns-query'}/{client_id}"
         
@@ -846,11 +861,19 @@ def apple_dot_mobileconfig():
     """生成DNS-over-TLS的苹果配置文件
     
     为当前用户生成DoT的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
+    根据AdGuard Home API要求，host参数现在是必需的
     
     Returns:
         .mobileconfig文件下载
     """
     try:
+        # 获取host参数（必需）
+        host = request.args.get('host')
+        if not host:
+            return jsonify({
+                'error': 'host参数是必需的，请提供DNS服务器的主机名'
+            }), 400
+        
         # 获取DNS配置
         config = DnsConfig.get_config()
         
@@ -871,10 +894,17 @@ def apple_dot_mobileconfig():
                 'error': '用户没有关联的客户端ID'
             }), 400
         
-        # 构建DoT服务器地址
+        # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
+        import re
+        if not re.match(r'^[0-9a-z-]{1,64}$', client_id):
+            return jsonify({
+                'error': f'客户端ID格式无效：{client_id}，必须是1-64位的小写字母、数字或连字符'
+            }), 400
+        
+        # 构建DoT服务器地址（使用host参数）
         # 注意：与DoH不同，DoT协议不支持路径参数，因此无法使用路径格式 (server:port/path/client_id)
-        # 所以DoT仍然使用子域名方式 (client_id.server:port)
-        dot_server = f"{client_id}.{config.dot_server}"
+        # 根据AdGuard Home的实际格式，DoT使用客户端ID+域名格式 (client_id.server:port)
+        dot_server = f"{client_id}.{host.strip()}"
         dot_port = config.dot_port or 853
         
         # 生成.mobileconfig文件内容
