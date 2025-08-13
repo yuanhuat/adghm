@@ -62,9 +62,12 @@ def index():
         user_request_count = 0
         total_dns_queries = 0
     
+    from app.models.system_config import SystemConfig
+    system_config = SystemConfig.get_config()
     return render_template('main/index.html', 
                          user_request_count=user_request_count,
-                         total_dns_queries=total_dns_queries)
+                         total_dns_queries=total_dns_queries,
+                         system_config=system_config)
 
 
 
@@ -78,7 +81,9 @@ def clients():
     
     显示用户的所有客户端及其详细信息
     """
-    return render_template('main/clients.html')
+    from app.models.system_config import SystemConfig
+    system_config = SystemConfig.get_config()
+    return render_template('main/clients.html', system_config=system_config)
 
 @main.route('/guide')
 @login_required
@@ -87,7 +92,9 @@ def guide():
     
     显示AdGuardHome的使用指南和帮助文档
     """
-    return render_template('main/guide.html')
+    from app.models.system_config import SystemConfig
+    system_config = SystemConfig.get_config()
+    return render_template('main/guide.html', system_config=system_config)
 
 @main.route('/settings/change-password')
 @login_required

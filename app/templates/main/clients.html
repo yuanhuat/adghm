@@ -15,7 +15,9 @@
             <nav class="main-nav">
                 <a href="{{ url_for('main.index') }}">返回主页</a>
                 <a href="{{ url_for('main.guide') }}">使用指南</a>
-                <a href="http://test.dns.con:5000/dns-test" target="_blank">DNS检测</a>
+                {% if system_config.dns_test_enabled %}
+                <a href="http://{{ system_config.dns_test_domain }}:{{ system_config.dns_test_port }}/dns-test" target="_blank">DNS检测</a>
+                {% endif %}
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('admin.index') }}">管理员后台</a>
                 {% endif %}

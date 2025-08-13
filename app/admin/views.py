@@ -963,9 +963,25 @@ def system_config():
     if request.method == 'POST':
         # 获取表单数据
         allow_registration = 'allow_registration' in request.form
+        dns_test_enabled = 'dns_test_enabled' in request.form
+        dns_test_domain = request.form.get('dns_test_domain', '').strip()
+        dns_test_port = request.form.get('dns_test_port', type=int)
+        
+        # 验证DNS检测配置
+        if dns_test_enabled:
+            if not dns_test_domain:
+                flash('启用DNS检测时，域名不能为空', 'error')
+                return render_template('admin/system_config.html', config=config)
+            if not dns_test_port or dns_test_port < 1 or dns_test_port > 65535:
+                flash('DNS检测端口必须在1-65535之间', 'error')
+                return render_template('admin/system_config.html', config=config)
         
         # 更新配置
         config.allow_registration = allow_registration
+        config.dns_test_enabled = dns_test_enabled
+        config.dns_test_domain = dns_test_domain if dns_test_domain else 'test.dns.con'
+        config.dns_test_port = dns_test_port if dns_test_port else 5000
+        
         db.session.commit()
         
         # 记录操作日志
@@ -974,7 +990,7 @@ def system_config():
             operation_type='update_system_config',
             target_type='SYSTEM',
             target_id='system_config',
-            details=f'更新系统设置：允许注册={allow_registration}'
+            details=f'更新系统设置：允许注册={allow_registration}, DNS检测={dns_test_enabled}, 域名={config.dns_test_domain}, 端口={config.dns_test_port}'
         )
         db.session.add(log)
         db.session.commit()
