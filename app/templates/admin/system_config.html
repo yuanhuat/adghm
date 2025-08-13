@@ -43,22 +43,15 @@
                 
 
                 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> 保存设置
-                    </button>
                 </div>
-            </form>
-        </div>
-    </div>
-    
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-network-wired me-1"></i>
-            DNS检测配置
-        </div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.system_config') }}">
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-network-wired me-1"></i>
+                    DNS检测配置
+                </div>
+                <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-check form-switch">
@@ -101,14 +94,17 @@
                     </ul>
                 </div>
                 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> 保存DNS检测配置
-                    </button>
                 </div>
-            </form>
-        </div>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> 保存所有设置
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 </div>
 
 <script>
