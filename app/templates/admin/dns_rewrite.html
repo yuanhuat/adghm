@@ -140,6 +140,9 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="batch-delete-tab" data-bs-toggle="tab" data-bs-target="#batch-delete" type="button" role="tab">批量删除</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="import-sources-tab" data-bs-toggle="tab" data-bs-target="#import-sources" type="button" role="tab" onclick="loadImportSources()">导入源管理</button>
+                    </li>
                 </ul>
                 <div class="tab-content mt-3" id="batchTabContent">
                     <div class="tab-pane fade show active" id="batch-add" role="tabpanel">
@@ -183,6 +186,40 @@ test.com 192.168.1.101
                                 <i class="fas fa-trash"></i> 批量删除
                             </button>
                             <button type="button" class="btn btn-outline-secondary" onclick="clearBatchDelete()">清空</button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="import-sources" role="tabpanel">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">导入源列表</h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadImportSources()">
+                                    <i class="fas fa-sync"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                        <div id="importSourcesLoading" class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </div>
+                        <div id="importSourcesList" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>导入源URL</th>
+                                            <th>最后导入时间</th>
+                                            <th>规则统计</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="importSourcesTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="noImportSources" class="text-center text-muted py-4" style="display: none;">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>暂无导入源记录</p>
                         </div>
                     </div>
                 </div>
@@ -658,6 +695,126 @@ function clearBatchAdd() {
 // 清空批量删除
 function clearBatchDelete() {
     document.getElementById('batchDeleteText').value = '';
+}
+
+// 加载导入源列表
+async function loadImportSources() {
+    document.getElementById('importSourcesLoading').style.display = 'block';
+    document.getElementById('importSourcesList').style.display = 'none';
+    document.getElementById('noImportSources').style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin/api/dns-import-sources');
+        const data = await response.json();
+        
+        if (data.success) {
+            const sources = data.sources || [];
+            renderImportSourcesTable(sources);
+        } else {
+            showError(data.error || '加载导入源失败');
+        }
+    } catch (error) {
+        console.error('加载导入源失败:', error);
+        showError('加载导入源失败：' + error.message);
+    } finally {
+        document.getElementById('importSourcesLoading').style.display = 'none';
+    }
+}
+
+// 渲染导入源表格
+function renderImportSourcesTable(sources) {
+    const tbody = document.getElementById('importSourcesTableBody');
+    
+    if (sources.length === 0) {
+        document.getElementById('noImportSources').style.display = 'block';
+        return;
+    }
+    
+    tbody.innerHTML = sources.map(source => {
+        const lastImportTime = source.last_import_time ? 
+            new Date(source.last_import_time).toLocaleString('zh-CN') : '未知';
+        
+        const statsText = `总计: ${source.total_rules || 0}, 成功: ${source.success_rules || 0}, 失败: ${source.failed_rules || 0}`;
+        
+        const statusBadge = source.status === 'active' ? 
+            '<span class="badge bg-success">活跃</span>' : 
+            '<span class="badge bg-secondary">非活跃</span>';
+        
+        return `
+            <tr>
+                <td>
+                    <div class="text-truncate" style="max-width: 200px;" title="${source.source_url}">
+                        ${source.source_url}
+                    </div>
+                </td>
+                <td>${lastImportTime}</td>
+                <td><small>${statsText}</small></td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-danger" onclick="deleteImportSourceRules(${source.id})" title="删除规则和记录">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="deleteImportSourceRecord(${source.id})" title="仅删除记录">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('importSourcesList').style.display = 'block';
+}
+
+// 删除导入源及其规则
+async function deleteImportSourceRules(sourceId) {
+    if (!confirm('确定要删除该导入源及其所有相关规则吗？此操作不可撤销。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/api/dns-import-sources/${sourceId}/delete-rules`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const result = data.result;
+            showSuccess(`删除完成：成功删除 ${result.success_count || 0} 条规则，失败 ${result.failed_count || 0} 条`);
+            loadImportSources();
+            loadRules(); // 刷新规则列表
+        } else {
+            showError(data.error || '删除失败');
+        }
+    } catch (error) {
+        showError('删除失败：' + error.message);
+    }
+}
+
+// 删除导入源记录（不删除规则）
+async function deleteImportSourceRecord(sourceId) {
+    if (!confirm('确定要删除该导入源记录吗？规则将保留。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/api/dns-import-sources/${sourceId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('导入源记录已删除');
+            loadImportSources();
+        } else {
+            showError(data.error || '删除失败');
+        }
+    } catch (error) {
+        showError('删除失败：' + error.message);
+    }
 }
 </script>
 {% endblock %}

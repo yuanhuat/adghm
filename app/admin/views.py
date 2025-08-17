@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 from app.models.announcement import Announcement
+from app.models.dns_import_source import DnsImportSource
 
 from app.models.feedback import Feedback
 from app.models.email_config import EmailConfig
@@ -1319,3 +1320,98 @@ def toggle_announcement(announcement_id):
 def dns_rewrite_page():
     """DNS 重写规则管理页面"""
     return render_template('admin/dns_rewrite.html')
+
+@admin.route('/api/dns-import-sources', methods=['GET'])
+@login_required
+@admin_required
+def get_dns_import_sources():
+    """获取DNS导入源列表"""
+    try:
+        sources = DnsImportSource.query.order_by(DnsImportSource.last_import_time.desc()).all()
+        return jsonify({
+            'success': True,
+            'sources': [{
+                'id': source.id,
+                'source_url': source.source_url,
+                'last_import_time': source.last_import_time.isoformat() if source.last_import_time else None,
+                'total_rules': source.total_rules,
+                'success_rules': source.success_rules,
+                'failed_rules': source.failed_rules,
+                'status': source.status
+            } for source in sources]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-import-sources/<int:source_id>/delete-rules', methods=['POST'])
+@login_required
+@admin_required
+def delete_rules_by_source(source_id):
+    """根据导入源删除相关的DNS重写规则"""
+    try:
+        source = DnsImportSource.query.get_or_404(source_id)
+        
+        if not source.rules_snapshot:
+            return jsonify({'success': False, 'error': '该导入源没有规则快照，无法删除'}), 400
+        
+        # 从快照中获取规则并删除
+        svc = AdGuardService()
+        rules_to_delete = source.get_rules_snapshot()  # 使用模型方法解析JSON
+        
+        # 批量删除规则
+        result = svc.batch_delete_rewrite_rules(rules_to_delete)
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_batch_delete',
+            target_type='dns_import_source',
+            target_id=str(source_id),
+            details=f'删除导入源规则：{source.source_url}，成功{result.get("success", 0)}条，失败{result.get("failed", 0)}条'
+        )
+        db.session.add(log)
+        
+        # 删除导入源记录
+        db.session.delete(source)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'成功删除导入源及其相关规则',
+            'result': result
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-import-sources/<int:source_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_import_source(source_id):
+    """删除导入源记录（不删除规则）"""
+    try:
+        source = DnsImportSource.query.get_or_404(source_id)
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_import_source_delete',
+            target_type='dns_import_source',
+            target_id=str(source_id),
+            details=f'删除导入源记录：{source.source_url}'
+        )
+        db.session.add(log)
+        
+        # 删除导入源记录
+        db.session.delete(source)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '成功删除导入源记录'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500

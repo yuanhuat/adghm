@@ -769,6 +769,8 @@ class AdGuardService:
         """
         try:
             import requests
+            from app.models.dns_import_source import DnsImportSource
+            from app import db
             
             # 获取远程文件内容
             response = requests.get(url, timeout=30)
@@ -788,6 +790,30 @@ class AdGuardService:
             
             # 批量导入规则
             import_result = self.batch_add_rewrite_rules(rules)
+            
+            # 记录导入源信息
+            try:
+                # 查找或创建导入源记录
+                import_source = DnsImportSource.find_by_url(url)
+                if not import_source:
+                    import_source = DnsImportSource(source_url=url)
+                    db.session.add(import_source)
+                
+                # 更新导入统计
+                success_count = import_result.get('success_count', 0)
+                failed_count = import_result.get('failed_count', 0)
+                import_source.update_import_stats(
+                    total=len(rules),
+                    success=success_count,
+                    failed=failed_count,
+                    rules_data=rules
+                )
+                
+                db.session.commit()
+                
+            except Exception as db_error:
+                # 数据库操作失败不影响主要功能
+                print(f"记录导入源失败: {str(db_error)}")
             
             return {
                 "success": True,
