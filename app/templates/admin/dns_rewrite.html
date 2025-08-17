@@ -686,6 +686,10 @@ async function importRules() {
                 message += `，跳过 ${importResult.skipped_duplicate} 条重复规则`;
             }
             
+            if (importResult.replaced_rules && importResult.replaced_rules > 0) {
+                message += `，替换旧规则 ${importResult.replaced_rules} 条`;
+            }
+            
             showSuccess(message);
             
             if (importResult.errors && importResult.errors.length > 0) {

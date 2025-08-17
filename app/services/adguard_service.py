@@ -804,10 +804,11 @@ class AdGuardService:
                     existing_domain_to_answers[domain] = set()
                 existing_domain_to_answers[domain].add(answer)
             
-            # 过滤重复规则
+            # 过滤重复规则并处理域名重复但IP不同的情况
             filtered_rules = []
+            rules_to_delete = []  # 需要删除的旧规则
             skipped_duplicate = 0
-            skipped_same_domain_ip = 0
+            replaced_rules = 0
             
             for rule in rules:
                 domain = rule.get('domain', '').strip().lower()
@@ -822,14 +823,25 @@ class AdGuardService:
                 # 检查域名重复但IP不同的情况
                 if domain in existing_domain_to_answers:
                     if answer not in existing_domain_to_answers[domain]:
-                        # 域名重复但IP不重复，允许导入
+                        # 域名重复但IP不重复，删除旧规则，导入新规则
+                        for old_answer in existing_domain_to_answers[domain]:
+                            rules_to_delete.append({
+                                'domain': domain,
+                                'answer': old_answer
+                            })
                         filtered_rules.append(rule)
+                        replaced_rules += 1
                     else:
                         # 域名和IP都重复，跳过
                         skipped_duplicate += 1
                 else:
                     # 新域名，允许导入
                     filtered_rules.append(rule)
+             
+            # 先删除需要替换的旧规则
+            if rules_to_delete:
+                delete_result = self.batch_delete_rewrite_rules(rules_to_delete)
+                print(f"删除旧规则结果：成功 {delete_result.get('success', 0)} 条，失败 {delete_result.get('failed', 0)} 条")
             
             # 如果没有需要导入的规则
             if not filtered_rules:
@@ -841,7 +853,7 @@ class AdGuardService:
                         "success": 0,
                         "failed": 0,
                         "skipped_duplicate": skipped_duplicate,
-                        "skipped_same_domain_ip": skipped_same_domain_ip,
+                        "replaced_rules": replaced_rules,
                         "errors": []
                     }
                 }
@@ -849,7 +861,7 @@ class AdGuardService:
             # 批量导入过滤后的规则
             import_result = self.batch_add_rewrite_rules(filtered_rules)
             import_result['skipped_duplicate'] = skipped_duplicate
-            import_result['skipped_same_domain_ip'] = skipped_same_domain_ip
+            import_result['replaced_rules'] = replaced_rules
             
             # 记录导入源信息
             try:
