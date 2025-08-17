@@ -788,8 +788,68 @@ class AdGuardService:
                     "import_result": None
                 }
             
-            # 批量导入规则
-            import_result = self.batch_add_rewrite_rules(rules)
+            # 获取现有规则进行重复检查
+            existing_rules = self.get_rewrite_list()
+            existing_rules_set = set()
+            existing_domain_to_answers = {}
+            
+            for existing_rule in existing_rules:
+                domain = existing_rule.get('domain', '').strip().lower()
+                answer = existing_rule.get('answer', '').strip()
+                rule_key = f"{domain}:{answer}"
+                existing_rules_set.add(rule_key)
+                
+                # 记录域名对应的所有答案
+                if domain not in existing_domain_to_answers:
+                    existing_domain_to_answers[domain] = set()
+                existing_domain_to_answers[domain].add(answer)
+            
+            # 过滤重复规则
+            filtered_rules = []
+            skipped_duplicate = 0
+            skipped_same_domain_ip = 0
+            
+            for rule in rules:
+                domain = rule.get('domain', '').strip().lower()
+                answer = rule.get('answer', '').strip()
+                rule_key = f"{domain}:{answer}"
+                
+                # 检查完全重复的规则（域名和IP都相同）
+                if rule_key in existing_rules_set:
+                    skipped_duplicate += 1
+                    continue
+                
+                # 检查域名重复但IP不同的情况
+                if domain in existing_domain_to_answers:
+                    if answer not in existing_domain_to_answers[domain]:
+                        # 域名重复但IP不重复，允许导入
+                        filtered_rules.append(rule)
+                    else:
+                        # 域名和IP都重复，跳过
+                        skipped_duplicate += 1
+                else:
+                    # 新域名，允许导入
+                    filtered_rules.append(rule)
+            
+            # 如果没有需要导入的规则
+            if not filtered_rules:
+                return {
+                    "success": True,
+                    "message": f"从URL解析出 {len(rules)} 条规则，但全部为重复规则，跳过导入",
+                    "rules_parsed": len(rules),
+                    "import_result": {
+                        "success": 0,
+                        "failed": 0,
+                        "skipped_duplicate": skipped_duplicate,
+                        "skipped_same_domain_ip": skipped_same_domain_ip,
+                        "errors": []
+                    }
+                }
+            
+            # 批量导入过滤后的规则
+            import_result = self.batch_add_rewrite_rules(filtered_rules)
+            import_result['skipped_duplicate'] = skipped_duplicate
+            import_result['skipped_same_domain_ip'] = skipped_same_domain_ip
             
             # 记录导入源信息
             try:
@@ -799,14 +859,14 @@ class AdGuardService:
                     import_source = DnsImportSource(source_url=url)
                     db.session.add(import_source)
                 
-                # 更新导入统计
-                success_count = import_result.get('success_count', 0)
-                failed_count = import_result.get('failed_count', 0)
+                # 更新导入统计（只记录实际导入的规则）
+                success_count = import_result.get('success', 0)
+                failed_count = import_result.get('failed', 0)
                 import_source.update_import_stats(
-                    total=len(rules),
+                    total=len(filtered_rules),
                     success=success_count,
                     failed=failed_count,
-                    rules_data=rules
+                    rules_data=filtered_rules
                 )
                 
                 db.session.commit()
@@ -815,9 +875,15 @@ class AdGuardService:
                 # 数据库操作失败不影响主要功能
                 print(f"记录导入源失败: {str(db_error)}")
             
+            message_parts = [f"成功从URL解析出 {len(rules)} 条规则"]
+            if skipped_duplicate > 0:
+                message_parts.append(f"跳过 {skipped_duplicate} 条重复规则")
+            if len(filtered_rules) > 0:
+                message_parts.append(f"实际导入 {len(filtered_rules)} 条新规则")
+            
             return {
                 "success": True,
-                "message": f"成功从URL解析出 {len(rules)} 条规则",
+                "message": "，".join(message_parts),
                 "rules_parsed": len(rules),
                 "import_result": import_result
             }

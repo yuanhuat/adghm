@@ -670,7 +670,23 @@ async function importRules() {
         if (data.success && data.result.success) {
             const result = data.result;
             const importResult = result.import_result;
-            showSuccess(`导入完成：解析 ${result.rules_parsed} 条规则，成功添加 ${importResult.success} 条，失败 ${importResult.failed} 条`);
+            
+            // 构建详细的导入结果消息
+            let message = `导入完成：解析 ${result.rules_parsed} 条规则`;
+            
+            if (importResult.success > 0) {
+                message += `，成功添加 ${importResult.success} 条`;
+            }
+            
+            if (importResult.failed > 0) {
+                message += `，失败 ${importResult.failed} 条`;
+            }
+            
+            if (importResult.skipped_duplicate > 0) {
+                message += `，跳过 ${importResult.skipped_duplicate} 条重复规则`;
+            }
+            
+            showSuccess(message);
             
             if (importResult.errors && importResult.errors.length > 0) {
                 console.error('导入错误:', importResult.errors);
