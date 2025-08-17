@@ -608,3 +608,284 @@ class AdGuardService:
         except Exception as e:
             print(f"获取AdGuardHome统计数据失败: {str(e)}")
             return {}
+    
+    # DNS重写相关方法
+    def get_rewrite_list(self) -> List[Dict]:
+        """获取所有DNS重写规则
+        
+        Returns:
+            List[Dict]: DNS重写规则列表，每个规则包含domain和answer字段
+        """
+        try:
+            result = self._make_request('GET', '/rewrite/list')
+            return result if isinstance(result, list) else []
+        except Exception as e:
+            print(f"获取DNS重写规则失败: {str(e)}")
+            return []
+    
+    def add_rewrite_rule(self, domain: str, answer: str) -> Dict:
+        """添加DNS重写规则
+        
+        Args:
+            domain: 要重写的域名
+            answer: 重写后的地址（IP地址或域名）
+            
+        Returns:
+            Dict: 操作结果
+        """
+        data = {
+            "domain": domain,
+            "answer": answer
+        }
+        try:
+            return self._make_request('POST', '/rewrite/add', json=data)
+        except Exception as e:
+            print(f"添加DNS重写规则失败: {str(e)}")
+            raise
+    
+    def delete_rewrite_rule(self, domain: str, answer: str) -> Dict:
+        """删除DNS重写规则
+        
+        Args:
+            domain: 要删除的域名
+            answer: 要删除的重写地址
+            
+        Returns:
+            Dict: 操作结果
+        """
+        data = {
+            "domain": domain,
+            "answer": answer
+        }
+        try:
+            return self._make_request('POST', '/rewrite/delete', json=data)
+        except Exception as e:
+            print(f"删除DNS重写规则失败: {str(e)}")
+            raise
+    
+    def update_rewrite_rule(self, target_domain: str, target_answer: str, 
+                           new_domain: str, new_answer: str) -> Dict:
+        """更新DNS重写规则
+        
+        Args:
+            target_domain: 要更新的原域名
+            target_answer: 要更新的原地址
+            new_domain: 新的域名
+            new_answer: 新的地址
+            
+        Returns:
+            Dict: 操作结果
+        """
+        data = {
+            "target": {
+                "domain": target_domain,
+                "answer": target_answer
+            },
+            "update": {
+                "domain": new_domain,
+                "answer": new_answer
+            }
+        }
+        try:
+            return self._make_request('PUT', '/rewrite/update', json=data)
+        except Exception as e:
+            print(f"更新DNS重写规则失败: {str(e)}")
+            raise
+    
+    def batch_add_rewrite_rules(self, rules: List[Dict]) -> Dict:
+        """批量添加DNS重写规则
+        
+        Args:
+            rules: 重写规则列表，每个规则包含domain和answer字段
+            
+        Returns:
+            Dict: 操作结果，包含成功和失败的统计信息
+        """
+        results = {
+            "success": 0,
+            "failed": 0,
+            "errors": []
+        }
+        
+        for rule in rules:
+            try:
+                domain = rule.get('domain', '').strip()
+                answer = rule.get('answer', '').strip()
+                
+                if not domain or not answer:
+                    results["failed"] += 1
+                    results["errors"].append(f"无效规则：域名和地址不能为空")
+                    continue
+                
+                self.add_rewrite_rule(domain, answer)
+                results["success"] += 1
+            except Exception as e:
+                results["failed"] += 1
+                results["errors"].append(f"添加规则 {rule.get('domain', 'unknown')} -> {rule.get('answer', 'unknown')} 失败: {str(e)}")
+        
+        return results
+    
+    def batch_delete_rewrite_rules(self, rules: List[Dict]) -> Dict:
+        """批量删除DNS重写规则
+        
+        Args:
+            rules: 要删除的重写规则列表，每个规则包含domain和answer字段
+            
+        Returns:
+            Dict: 操作结果，包含成功和失败的统计信息
+        """
+        results = {
+            "success": 0,
+            "failed": 0,
+            "errors": []
+        }
+        
+        for rule in rules:
+            try:
+                domain = rule.get('domain', '').strip()
+                answer = rule.get('answer', '').strip()
+                
+                if not domain or not answer:
+                    results["failed"] += 1
+                    results["errors"].append(f"无效规则：域名和地址不能为空")
+                    continue
+                
+                self.delete_rewrite_rule(domain, answer)
+                results["success"] += 1
+            except Exception as e:
+                results["failed"] += 1
+                results["errors"].append(f"删除规则 {rule.get('domain', 'unknown')} -> {rule.get('answer', 'unknown')} 失败: {str(e)}")
+        
+        return results
+    
+    def import_rewrite_rules_from_url(self, url: str) -> Dict:
+        """从外部URL导入DNS重写规则
+        
+        Args:
+            url: 规则文件的URL地址
+            
+        Returns:
+            Dict: 导入结果，包含解析的规则数量和导入结果
+        """
+        try:
+            import requests
+            
+            # 获取远程文件内容
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            content = response.text
+            
+            # 解析规则
+            rules = self._parse_rewrite_rules_from_text(content)
+            
+            if not rules:
+                return {
+                    "success": False,
+                    "message": "未能从URL中解析出有效的DNS重写规则",
+                    "rules_parsed": 0,
+                    "import_result": None
+                }
+            
+            # 批量导入规则
+            import_result = self.batch_add_rewrite_rules(rules)
+            
+            return {
+                "success": True,
+                "message": f"成功从URL解析出 {len(rules)} 条规则",
+                "rules_parsed": len(rules),
+                "import_result": import_result
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"从URL导入规则失败: {str(e)}",
+                "rules_parsed": 0,
+                "import_result": None
+            }
+    
+    def _parse_rewrite_rules_from_text(self, content: str) -> List[Dict]:
+        """从文本内容中解析DNS重写规则
+        
+        支持多种格式：
+        - domain.com 192.168.1.1
+        - domain.com=192.168.1.1
+        - domain.com -> 192.168.1.1
+        - AdGuard Home格式的hosts文件
+        
+        Args:
+            content: 文本内容
+            
+        Returns:
+            List[Dict]: 解析出的规则列表
+        """
+        rules = []
+        lines = content.strip().split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            
+            # 跳过注释和空行
+            if not line or line.startswith('#') or line.startswith('//'):
+                continue
+            
+            # 尝试不同的格式解析
+            domain = None
+            answer = None
+            
+            # 格式1: domain.com 192.168.1.1 或 格式4: hosts文件格式 (IP domain)
+            # 使用split()处理空格、制表符等所有空白字符
+            parts = line.split()
+            if len(parts) >= 2:
+                # 判断第一个部分是否为IP地址
+                if self._is_valid_ip(parts[0]):
+                    # hosts格式：IP domain
+                    answer = parts[0]
+                    domain = parts[1]
+                else:
+                    # 普通格式：domain IP
+                    domain = parts[0]
+                    answer = parts[1]
+            
+            # 格式2: domain.com=192.168.1.1
+            elif '=' in line:
+                parts = line.split('=', 1)
+                if len(parts) == 2:
+                    domain = parts[0].strip()
+                    answer = parts[1].strip()
+            
+            # 格式3: domain.com -> 192.168.1.1
+            elif '->' in line:
+                parts = line.split('->', 1)
+                if len(parts) == 2:
+                    domain = parts[0].strip()
+                    answer = parts[1].strip()
+            
+
+            
+            # 验证解析结果
+            if domain and answer:
+                # 基本验证
+                if '.' in domain and (self._is_valid_ip(answer) or '.' in answer):
+                    rules.append({
+                        "domain": domain,
+                        "answer": answer
+                    })
+        
+        return rules
+    
+    def _is_valid_ip(self, ip: str) -> bool:
+        """验证IP地址格式
+        
+        Args:
+            ip: IP地址字符串
+            
+        Returns:
+            bool: 是否为有效的IP地址
+        """
+        try:
+            import ipaddress
+            ipaddress.ip_address(ip)
+            return True
+        except ValueError:
+            return False

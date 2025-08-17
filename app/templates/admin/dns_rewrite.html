@@ -1,0 +1,663 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>DNS重写规则管理</h2>
+                <div>
+                    <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addRuleModal">
+                        <i class="fas fa-plus"></i> 添加规则
+                    </button>
+                    <button class="btn btn-info me-2" data-bs-toggle="modal" data-bs-target="#batchModal">
+                        <i class="fas fa-list"></i> 批量操作
+                    </button>
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="fas fa-download"></i> 导入规则
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 规则列表 -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0">当前规则列表</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadRules()">
+                        <i class="fas fa-sync"></i> 刷新
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="rulesLoading" class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                    <div id="rulesTable" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                        </th>
+                                        <th width="40%">域名</th>
+                                        <th width="40%">重写地址</th>
+                                        <th width="15%">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rulesTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-danger" onclick="deleteSelectedRules()" id="deleteSelectedBtn" style="display: none;">
+                                <i class="fas fa-trash"></i> 删除选中的规则
+                            </button>
+                        </div>
+                    </div>
+                    <div id="noRules" class="text-center text-muted py-4" style="display: none;">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>暂无DNS重写规则</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加规则弹窗 -->
+<div class="modal fade" id="addRuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加DNS重写规则</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <div class="mb-3">
+                        <label for="addDomain" class="form-label">域名 *</label>
+                        <input type="text" class="form-control" id="addDomain" placeholder="例如：example.com" required>
+                        <div class="form-text">要重写的域名，支持通配符</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addAnswer" class="form-label">重写地址 *</label>
+                        <input type="text" class="form-control" id="addAnswer" placeholder="例如：192.168.1.100" required>
+                        <div class="form-text">重写后的IP地址或域名</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addRule()">添加规则</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑规则弹窗 -->
+<div class="modal fade" id="editRuleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑DNS重写规则</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRuleForm">
+                    <input type="hidden" id="editOriginalDomain">
+                    <input type="hidden" id="editOriginalAnswer">
+                    <div class="mb-3">
+                        <label for="editDomain" class="form-label">域名 *</label>
+                        <input type="text" class="form-control" id="editDomain" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAnswer" class="form-label">重写地址 *</label>
+                        <input type="text" class="form-control" id="editAnswer" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="updateRule()">更新规则</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批量操作弹窗 -->
+<div class="modal fade" id="batchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批量操作</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="batchTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="batch-add-tab" data-bs-toggle="tab" data-bs-target="#batch-add" type="button" role="tab">批量添加</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="batch-delete-tab" data-bs-toggle="tab" data-bs-target="#batch-delete" type="button" role="tab">批量删除</button>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="batchTabContent">
+                    <div class="tab-pane fade show active" id="batch-add" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="batchAddText" class="form-label">规则列表</label>
+                            <textarea class="form-control" id="batchAddText" rows="10" placeholder="支持多种格式：
+1. 域名 IP地址 (空格分隔)
+   example.com 192.168.1.100
+
+2. 域名=IP地址 (等号分隔)
+   example.com=192.168.1.100
+
+3. 域名 -> IP地址 (箭头分隔)
+   example.com -> 192.168.1.100
+
+4. hosts格式
+   192.168.1.100 example.com
+
+每行一条规则，支持注释行（#开头）"></textarea>
+                            <div class="form-text">支持多种格式，每行一条规则</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" onclick="batchAddRules()">
+                                <i class="fas fa-plus"></i> 批量添加
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearBatchAdd()">清空</button>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="batch-delete" role="tabpanel">
+                        <div class="mb-3">
+                            <label for="batchDeleteText" class="form-label">要删除的规则</label>
+                            <textarea class="form-control" id="batchDeleteText" rows="10" placeholder="格式：域名 IP地址
+example.com 192.168.1.100
+test.com 192.168.1.101
+
+每行一条规则"></textarea>
+                            <div class="form-text">格式：域名 IP地址，每行一条</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-danger" onclick="batchDeleteRules()">
+                                <i class="fas fa-trash"></i> 批量删除
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearBatchDelete()">清空</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 导入规则弹窗 -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">导入DNS重写规则</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="mb-3">
+                        <label for="importUrl" class="form-label">规则文件URL *</label>
+                        <input type="url" class="form-control" id="importUrl" placeholder="https://example.com/rules.txt" required>
+                        <div class="form-text">支持hosts文件、AdGuard格式等多种规则文件</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>支持的格式：</strong>
+                        <ul class="mb-0">
+                            <li>标准hosts文件格式</li>
+                            <li>AdGuard重写规则格式</li>
+                            <li>域名=IP格式</li>
+                            <li>域名 -> IP格式</li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-warning" onclick="importRules()">
+                    <i class="fas fa-download"></i> 导入规则
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast容器 -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="successToast" class="toast" role="alert">
+        <div class="toast-header bg-success text-white">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-auto">成功</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="successMessage"></div>
+    </div>
+    <div id="errorToast" class="toast" role="alert">
+        <div class="toast-header bg-danger text-white">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong class="me-auto">错误</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="errorMessage"></div>
+    </div>
+</div>
+
+<script>
+// 全局变量
+let currentRules = [];
+let selectedRules = new Set();
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadRules();
+});
+
+// 显示成功提示
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    const toast = new bootstrap.Toast(document.getElementById('successToast'));
+    toast.show();
+}
+
+// 显示错误提示
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+    toast.show();
+}
+
+// 加载规则列表
+async function loadRules() {
+    document.getElementById('rulesLoading').style.display = 'block';
+    document.getElementById('rulesTable').style.display = 'none';
+    document.getElementById('noRules').style.display = 'none';
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/list');
+        const data = await response.json();
+        
+        if (data.success) {
+            currentRules = data.rules || [];
+            renderRulesTable();
+        } else {
+            showError(data.error || '加载规则失败');
+        }
+    } catch (error) {
+        console.error('加载规则失败:', error);
+        showError('加载规则失败：' + error.message);
+    } finally {
+        document.getElementById('rulesLoading').style.display = 'none';
+    }
+}
+
+// 渲染规则表格
+function renderRulesTable() {
+    const tbody = document.getElementById('rulesTableBody');
+    
+    if (currentRules.length === 0) {
+        document.getElementById('noRules').style.display = 'block';
+        return;
+    }
+    
+    document.getElementById('rulesTable').style.display = 'block';
+    
+    tbody.innerHTML = currentRules.map(rule => `
+        <tr>
+            <td>
+                <input type="checkbox" class="rule-checkbox" data-domain="${rule.domain}" data-answer="${rule.answer}" onchange="updateSelectButtons()">
+            </td>
+            <td><code>${escapeHtml(rule.domain)}</code></td>
+            <td><code>${escapeHtml(rule.answer)}</code></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="editRule('${escapeHtml(rule.domain)}', '${escapeHtml(rule.answer)}')" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteRule('${escapeHtml(rule.domain)}', '${escapeHtml(rule.answer)}')" title="删除">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    selectedRules.clear();
+    document.getElementById('selectAll').checked = false;
+    updateSelectButtons();
+}
+
+// HTML转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 全选/取消全选
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.rule-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelectButtons();
+}
+
+// 更新选择按钮状态
+function updateSelectButtons() {
+    const checkboxes = document.querySelectorAll('.rule-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    
+    if (checkboxes.length > 0) {
+        deleteBtn.style.display = 'inline-block';
+    } else {
+        deleteBtn.style.display = 'none';
+    }
+    
+    // 更新全选框状态
+    const allCheckboxes = document.querySelectorAll('.rule-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+}
+
+// 添加规则
+async function addRule() {
+    const domain = document.getElementById('addDomain').value.trim();
+    const answer = document.getElementById('addAnswer').value.trim();
+    
+    if (!domain || !answer) {
+        showError('请填写完整的域名和地址');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain, answer })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('规则添加成功');
+            bootstrap.Modal.getInstance(document.getElementById('addRuleModal')).hide();
+            document.getElementById('addRuleForm').reset();
+            loadRules();
+        } else {
+            showError(data.error || '添加规则失败');
+        }
+    } catch (error) {
+        showError('添加规则失败：' + error.message);
+    }
+}
+
+// 编辑规则
+function editRule(domain, answer) {
+    document.getElementById('editOriginalDomain').value = domain;
+    document.getElementById('editOriginalAnswer').value = answer;
+    document.getElementById('editDomain').value = domain;
+    document.getElementById('editAnswer').value = answer;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editRuleModal'));
+    modal.show();
+}
+
+// 更新规则
+async function updateRule() {
+    const targetDomain = document.getElementById('editOriginalDomain').value;
+    const targetAnswer = document.getElementById('editOriginalAnswer').value;
+    const newDomain = document.getElementById('editDomain').value.trim();
+    const newAnswer = document.getElementById('editAnswer').value.trim();
+    
+    if (!newDomain || !newAnswer) {
+        showError('请填写完整的域名和地址');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                target: { domain: targetDomain, answer: targetAnswer },
+                update: { domain: newDomain, answer: newAnswer }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('规则更新成功');
+            bootstrap.Modal.getInstance(document.getElementById('editRuleModal')).hide();
+            loadRules();
+        } else {
+            showError(data.error || '更新规则失败');
+        }
+    } catch (error) {
+        showError('更新规则失败：' + error.message);
+    }
+}
+
+// 删除单条规则
+async function deleteRule(domain, answer) {
+    if (!confirm(`确定要删除规则 "${domain} -> ${answer}" 吗？`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain, answer })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('规则删除成功');
+            loadRules();
+        } else {
+            showError(data.error || '删除规则失败');
+        }
+    } catch (error) {
+        showError('删除规则失败：' + error.message);
+    }
+}
+
+// 删除选中的规则
+async function deleteSelectedRules() {
+    const checkboxes = document.querySelectorAll('.rule-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        showError('请先选择要删除的规则');
+        return;
+    }
+    
+    if (!confirm(`确定要删除选中的 ${checkboxes.length} 条规则吗？`)) {
+        return;
+    }
+    
+    const rules = Array.from(checkboxes).map(checkbox => ({
+        domain: checkbox.dataset.domain,
+        answer: checkbox.dataset.answer
+    }));
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/batch-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rules })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const result = data.result;
+            showSuccess(`批量删除完成：成功 ${result.success} 条，失败 ${result.failed} 条`);
+            if (result.errors && result.errors.length > 0) {
+                console.error('删除错误:', result.errors);
+            }
+            loadRules();
+        } else {
+            showError(data.error || '批量删除失败');
+        }
+    } catch (error) {
+        showError('批量删除失败：' + error.message);
+    }
+}
+
+// 批量添加规则
+async function batchAddRules() {
+    const text = document.getElementById('batchAddText').value.trim();
+    
+    if (!text) {
+        showError('请输入要添加的规则');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/batch-add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const result = data.result;
+            showSuccess(`批量添加完成：成功 ${result.success} 条，失败 ${result.failed} 条`);
+            if (result.errors && result.errors.length > 0) {
+                console.error('添加错误:', result.errors);
+            }
+            clearBatchAdd();
+            loadRules();
+        } else {
+            showError(data.error || '批量添加失败');
+        }
+    } catch (error) {
+        showError('批量添加失败：' + error.message);
+    }
+}
+
+// 批量删除规则
+async function batchDeleteRules() {
+    const text = document.getElementById('batchDeleteText').value.trim();
+    
+    if (!text) {
+        showError('请输入要删除的规则');
+        return;
+    }
+    
+    // 解析规则
+    const rules = [];
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        
+        const parts = trimmed.split(/\s+/);
+        if (parts.length >= 2) {
+            rules.push({
+                domain: parts[0],
+                answer: parts[1]
+            });
+        }
+    }
+    
+    if (rules.length === 0) {
+        showError('未能解析出有效的规则');
+        return;
+    }
+    
+    if (!confirm(`确定要删除 ${rules.length} 条规则吗？`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/batch-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rules })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const result = data.result;
+            showSuccess(`批量删除完成：成功 ${result.success} 条，失败 ${result.failed} 条`);
+            if (result.errors && result.errors.length > 0) {
+                console.error('删除错误:', result.errors);
+            }
+            clearBatchDelete();
+            loadRules();
+        } else {
+            showError(data.error || '批量删除失败');
+        }
+    } catch (error) {
+        showError('批量删除失败：' + error.message);
+    }
+}
+
+// 导入规则
+async function importRules() {
+    const url = document.getElementById('importUrl').value.trim();
+    
+    if (!url) {
+        showError('请输入规则文件URL');
+        return;
+    }
+    
+    if (!confirm('确定要从指定URL导入规则吗？这可能需要一些时间。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/api/dns-rewrite/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.result.success) {
+            const result = data.result;
+            const importResult = result.import_result;
+            showSuccess(`导入完成：解析 ${result.rules_parsed} 条规则，成功添加 ${importResult.success} 条，失败 ${importResult.failed} 条`);
+            
+            if (importResult.errors && importResult.errors.length > 0) {
+                console.error('导入错误:', importResult.errors);
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+            document.getElementById('importForm').reset();
+            loadRules();
+        } else {
+            showError(data.result ? data.result.message : (data.error || '导入规则失败'));
+        }
+    } catch (error) {
+        showError('导入规则失败：' + error.message);
+    }
+}
+
+// 清空批量添加
+function clearBatchAdd() {
+    document.getElementById('batchAddText').value = '';
+}
+
+// 清空批量删除
+function clearBatchDelete() {
+    document.getElementById('batchDeleteText').value = '';
+}
+</script>
+{% endblock %}

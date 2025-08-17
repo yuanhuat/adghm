@@ -828,88 +828,197 @@ def manage_ai_analysis_config():
             }), 500
 
 
-@admin.route('/api/query-log-analysis/<int:analysis_id>/status')
+
+
+
+
+
+
+
+@admin.route('/api/dns-rewrite/list', methods=['GET'])
 @login_required
 @admin_required
-def get_analysis_status(analysis_id):
-    """获取分析任务状态"""
+def dns_rewrite_list():
+    """获取DNS重写规则列表"""
     try:
-        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
-        return jsonify({
-            'success': True,
-            'analysis': analysis.to_dict()
-        })
+        svc = AdGuardService()
+        rules = svc.get_rewrite_list()
+        return jsonify({'success': True, 'rules': rules or []})
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-
-@admin.route('/api/query-log-analysis/<int:analysis_id>/result')
+@admin.route('/api/dns-rewrite/add', methods=['POST'])
 @login_required
 @admin_required
-def get_analysis_result(analysis_id):
-    """获取分析结果"""
+def dns_rewrite_add():
+    """添加单条DNS重写规则"""
     try:
-        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
-        if analysis.status != 'completed':
-            return jsonify({
-                'success': False,
-                'error': '分析尚未完成'
-            }), 400
-            
-        return jsonify({
-            'success': True,
-            'result': analysis.result_data
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
-@admin.route('/api/query-log-analysis/export', methods=['POST'])
-@login_required
-@admin_required
-def export_query_log_analysis():
-    """导出查询日志分析结果"""
-    try:
-        data = request.get_json()
-        analysis_id = data.get('analysis_id')
-        export_format = data.get('format', 'json')
-        
-        analysis = QueryLogAnalysis.query.get_or_404(analysis_id)
-        
-        # 创建导出任务
-        export_task = QueryLogExport(
-            analysis_id=analysis_id,
+        data = request.get_json() or {}
+        domain = (data.get('domain') or '').strip()
+        answer = (data.get('answer') or '').strip()
+        if not domain or not answer:
+            return jsonify({'success': False, 'error': '参数不完整'}), 400
+        svc = AdGuardService()
+        result = svc.add_rewrite_rule(domain, answer)
+        # 记录操作日志
+        log = OperationLog(
             user_id=current_user.id,
-            export_format=export_format,
-            status='pending'
+            operation_type='dns_rewrite_add',
+            target_type='dns_rewrite',
+            target_id=domain,
+            details=f'添加DNS重写：{domain} -> {answer}'
         )
-        db.session.add(export_task)
-        db.session.flush()
-        
-        # 启动导出任务
-        query_log_service = QueryLogService()
-        query_log_service.start_export_task(export_task.id)
-        
+        db.session.add(log)
         db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'export_id': export_task.id,
-            'message': '导出任务已启动'
-        })
+        return jsonify({'success': True, 'result': result})
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+@admin.route('/api/dns-rewrite/delete', methods=['POST'])
+@login_required
+@admin_required
+def dns_rewrite_delete():
+    """删除单条DNS重写规则"""
+    try:
+        data = request.get_json() or {}
+        domain = (data.get('domain') or '').strip()
+        answer = (data.get('answer') or '').strip()
+        if not domain or not answer:
+            return jsonify({'success': False, 'error': '参数不完整'}), 400
+        svc = AdGuardService()
+        result = svc.delete_rewrite_rule(domain, answer)
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_delete',
+            target_type='dns_rewrite',
+            target_id=domain,
+            details=f'删除DNS重写：{domain} -> {answer}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({'success': True, 'result': result})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-rewrite/import', methods=['POST'])
+@login_required
+@admin_required
+def dns_rewrite_import():
+    """通过外部链接导入DNS重写规则"""
+    try:
+        data = request.get_json() or {}
+        url = (data.get('url') or '').strip()
+        if not url:
+            return jsonify({'success': False, 'error': 'URL不能为空'}), 400
+        svc = AdGuardService()
+        result = svc.import_rewrite_rules_from_url(url)
+        # 记录日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_import',
+            target_type='dns_rewrite',
+            target_id='import',
+            details=f'从URL导入DNS重写：{url}，解析{result.get("rules_parsed",0)}条'
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({'success': result.get('success', False), 'result': result}), (200 if result.get('success') else 400)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-rewrite/update', methods=['PUT', 'POST'])
+@login_required
+@admin_required
+def dns_rewrite_update():
+    """更新DNS重写规则"""
+    try:
+        data = request.get_json() or {}
+        target = data.get('target') or {}
+        update = data.get('update') or {}
+        target_domain = (target.get('domain') or '').strip()
+        target_answer = (target.get('answer') or '').strip()
+        new_domain = (update.get('domain') or '').strip()
+        new_answer = (update.get('answer') or '').strip()
+        if not target_domain or not target_answer or not new_domain or not new_answer:
+            return jsonify({'success': False, 'error': '参数不完整'}), 400
+        svc = AdGuardService()
+        result = svc.update_rewrite_rule(target_domain, target_answer, new_domain, new_answer)
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_update',
+            target_type='dns_rewrite',
+            target_id=target_domain,
+            details=f'更新DNS重写：{target_domain} -> {target_answer} 到 {new_domain} -> {new_answer}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({'success': True, 'result': result})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-rewrite/batch-add', methods=['POST'])
+@login_required
+@admin_required
+def dns_rewrite_batch_add():
+    """批量添加DNS重写规则，支持传入rules数组或纯文本text"""
+    try:
+        data = request.get_json() or {}
+        rules = data.get('rules')
+        text = data.get('text')
+        svc = AdGuardService()
+        if not rules and text:
+            # 允许直接传入文本，后端解析
+            rules = svc._parse_rewrite_rules_from_text(text)
+        if not rules or not isinstance(rules, list):
+            return jsonify({'success': False, 'error': '未提供有效规则'}), 400
+        result = svc.batch_add_rewrite_rules(rules)
+        # 记录日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_batch_add',
+            target_type='dns_rewrite',
+            target_id='batch',
+            details=f'批量添加DNS重写：成功{result.get("success",0)}条，失败{result.get("failed",0)}条'
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({'success': True, 'result': result})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@admin.route('/api/dns-rewrite/batch-delete', methods=['POST'])
+@login_required
+@admin_required
+def dns_rewrite_batch_delete():
+    """批量删除DNS重写规则"""
+    try:
+        data = request.get_json() or {}
+        rules = data.get('rules')
+        if not rules or not isinstance(rules, list):
+            return jsonify({'success': False, 'error': '未提供有效规则'}), 400
+        svc = AdGuardService()
+        result = svc.batch_delete_rewrite_rules(rules)
+        # 记录日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='dns_rewrite_batch_delete',
+            target_type='dns_rewrite',
+            target_id='batch',
+            details=f'批量删除DNS重写：成功{result.get("success",0)}条，失败{result.get("failed",0)}条'
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({'success': True, 'result': result})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @admin.route('/api/query-log-analysis/ai-insights', methods=['POST'])
 @login_required
@@ -1203,3 +1312,10 @@ def toggle_announcement(announcement_id):
             'success': False,
             'error': str(e)
         }), 500
+
+@admin.route('/dns-rewrite', methods=['GET'])
+@login_required
+@admin_required
+def dns_rewrite_page():
+    """DNS 重写规则管理页面"""
+    return render_template('admin/dns_rewrite.html')
