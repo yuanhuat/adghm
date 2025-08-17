@@ -676,10 +676,10 @@ def api_dns_config():
                 user_dot_server = f"{client_id}.{config.dot_server}"
             
             if config.doh_enabled and config.doh_server:
-                # DoH服务器地址不再包含客户端ID作为子域名
-                user_doh_server = config.doh_server
-                # 将客户端ID添加到路径末尾
-                user_doh_path = f"{config.doh_path or '/dns-query'}/{client_id}"
+                # DoH服务器地址包含客户端ID作为子域名
+                user_doh_server = f"{client_id}.{config.doh_server}"
+                # 路径不包含客户端ID
+                user_doh_path = config.doh_path or '/dns-query'
         else:
             # 如果没有客户端ID，使用原始服务器地址
             if config.doq_enabled and config.doq_server:
@@ -775,7 +775,7 @@ def apple_doh_mobileconfig():
         # 构建DoH服务器地址（使用host参数）
         doh_server = host.strip()
         doh_port = config.doh_port or 443
-        doh_path = f"{config.doh_path or '/dns-query'}/{client_id}"
+        doh_path = config.doh_path or '/dns-query'
         
         # 构建DoH URL
         if doh_port == 443:
