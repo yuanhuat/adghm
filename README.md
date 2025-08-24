@@ -2,7 +2,9 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0.23-orange.svg)](https://www.sqlalchemy.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
 
 一个专为简化 AdGuardHome 管理而设计的 Web 应用程序，支持多用户管理、本地DNS记录管理、AI智能分析等功能。
 
@@ -110,8 +112,9 @@
 
 - **Python**: 3.11 或更高版本
 - **操作系统**: Linux、Windows、macOS
-- **内存**: 至少 2GB RAM
+- **内存**: 至少 2GB RAM（推荐 4GB）
 - **存储**: 至少 1GB 可用空间
+- **网络**: 需要访问 AdGuardHome API 和互联网（用于 AI 分析）
 
 ### 安装方式
 
@@ -525,37 +528,99 @@ python run.py
 ### 后端技术栈
 
 - **Web 框架**: Flask 2.3.3
-- **数据库**: SQLAlchemy + SQLite
-- **认证**: Flask-Login
-- **邮件**: Flask-Mail
-- **任务调度**: Flask-APScheduler
-- **AI 集成**: DeepSeek API
+- **ORM**: SQLAlchemy 2.0.23
+- **数据库**: SQLite（默认）
+- **认证**: Flask-Login 0.6.2
+- **表单处理**: Flask-WTF 1.2.1 + WTForms 3.0.1
+- **数据库迁移**: Flask-Migrate 4.0.5
+- **邮件服务**: Flask-Mail 0.9.1
+- **任务调度**: Flask-APScheduler 1.13.1
+- **HTTP 客户端**: Requests 2.31.0 + httpx 0.25.2
+- **AI 集成**: OpenAI 1.3.0（兼容 DeepSeek API）
 
 ### 前端技术栈
 
-- **模板引擎**: Jinja2
-- **CSS 框架**: Bootstrap 4
+- **模板引擎**: Jinja2 3.1.2
+- **CSS 框架**: Bootstrap 4（Flask-Bootstrap4 4.0.2）
 - **图标**: Font Awesome
 - **图表**: Chart.js
 - **JavaScript**: jQuery
+- **安全**: Werkzeug 2.3.7 + MarkupSafe 2.1.3
 
 ### 项目结构
 
 ```
 adghm/
 ├── app/                    # 应用主目录
+│   ├── __init__.py        # 应用工厂函数
 │   ├── admin/             # 管理员模块
+│   │   ├── __init__.py    # 管理员蓝图
+│   │   └── views.py       # 管理员视图
 │   ├── auth/              # 认证模块
+│   │   ├── __init__.py    # 认证蓝图
+│   │   └── views.py       # 认证视图
 │   ├── main/              # 主要视图
+│   │   ├── __init__.py    # 主要蓝图
+│   │   └── views.py       # 主要视图
 │   ├── models/            # 数据模型
+│   │   ├── __init__.py
+│   │   ├── user.py        # 用户模型
+│   │   ├── client_mapping.py  # 客户端映射
+│   │   ├── dns_config.py  # DNS配置
+│   │   ├── adguard_config.py  # AdGuard配置
+│   │   ├── email_config.py    # 邮件配置
+│   │   ├── system_config.py   # 系统配置
+│   │   ├── operation_log.py   # 操作日志
+│   │   ├── feedback.py        # 反馈模型
+│   │   ├── announcement.py    # 公告模型
+│   │   ├── query_log_analysis.py  # 查询日志分析
+│   │   ├── dns_import_source.py   # DNS导入源
+│   │   └── verification_code.py   # 验证码
 │   ├── services/          # 服务层
+│   │   ├── adguard_service.py     # AdGuard服务
+│   │   ├── ai_analysis_service.py # AI分析服务
+│   │   ├── email_service.py       # 邮件服务
+│   │   └── query_log_service.py   # 查询日志服务
 │   ├── static/            # 静态文件
+│   │   ├── css/           # 样式文件
+│   │   ├── vendor/        # 第三方库
+│   │   ├── Android.jpg    # 安卓配置图
+│   │   └── WIFI.jpg       # WiFi配置图
 │   ├── templates/         # 模板文件
-│   └── utils/             # 工具函数
-├── docs/                  # 文档
+│   │   ├── admin/         # 管理员模板
+│   │   ├── auth/          # 认证模板
+│   │   ├── email/         # 邮件模板
+│   │   └── main/          # 主要模板
+│   ├── utils/             # 工具函数
+│   │   └── timezone.py    # 时区工具
+│   ├── config.py          # 配置文件
+│   └── tasks.py           # 定时任务
+├── docs/                  # 文档目录
+│   ├── index.md           # 文档首页
+│   ├── installation_guide.md  # 安装指南
+│   ├── user_manual.md     # 用户手册
+│   ├── developer_guide.md # 开发者指南
+│   └── QUERY_LOG_ENHANCEMENT.md  # 查询日志增强
 ├── migrations/            # 数据库迁移
+│   ├── README             # 迁移说明
+│   ├── alembic.ini        # Alembic配置
+│   ├── env.py             # 迁移环境
+│   ├── script.py.mako     # 迁移脚本模板
+│   └── versions/          # 迁移版本
 ├── openapi/              # API 文档
-└── requirements.txt       # 依赖列表
+│   ├── openapi.yaml       # OpenAPI规范
+│   ├── index.html         # API文档页面
+│   ├── README.md          # API文档说明
+│   ├── CHANGELOG.md       # API变更日志
+│   └── next.yaml          # 下一版本API
+├── screenshots/           # 功能截图
+├── .github/              # GitHub配置
+│   └── workflows/        # CI/CD工作流
+├── .gitignore            # Git忽略文件
+├── Dockerfile            # Docker镜像构建
+├── docker-compose.yml    # Docker编排
+├── requirements.txt      # Python依赖
+└── run.py               # 应用启动入口
 ```
 
 
@@ -564,22 +629,29 @@ adghm/
 
 ### 核心特性
 
-- ✅ **多用户支持**：独立账户和权限管理
-- ✅ **本地DNS管理**：自定义域名解析记录
-- ✅ **双栈支持**：IPv4 和 IPv6 地址解析
-- ✅ **AI 智能分析**：DeepSeek AI 集成
-- ✅ **高级日志管理**：搜索、导出、分析
-- ✅ **邮件服务**：验证和通知功能
-- ✅ **Docker 支持**：容器化部署
-- ✅ **响应式设计**：移动端友好
+- ✅ **多用户支持**：独立账户和权限管理，支持管理员和普通用户角色
+- ✅ **客户端管理**：AdGuardHome 客户端的创建、配置和监控
+- ✅ **DNS 配置管理**：支持 DNS-over-QUIC、DNS-over-TLS、DNS-over-HTTPS
+- ✅ **AI 智能分析**：集成 DeepSeek AI 进行域名威胁分析
+- ✅ **高级日志管理**：查询日志搜索、导出、趋势分析
+- ✅ **邮件服务**：SMTP 邮件验证和通知功能
+- ✅ **系统监控**：操作日志记录和系统状态监控
+- ✅ **反馈管理**：用户反馈收集和处理
+- ✅ **Docker 支持**：完整的容器化部署方案
+- ✅ **响应式设计**：移动端友好的现代化界面
+- ✅ **API 文档**：完整的 OpenAPI 规范文档
+- ✅ **数据库迁移**：自动化数据库版本管理
 
 ### 安全特性
 
-- 🔒 **密码加密**：使用 Werkzeug 安全哈希
-- 🔒 **会话管理**：Flask-Login 安全会话
-- 🔒 **权限控制**：基于角色的访问控制
-- 🔒 **API 安全**：AdGuardHome API 认证
-- 🔒 **数据保护**：敏感信息加密存储
+- 🔒 **密码安全**：使用 Werkzeug 2.3.7 安全哈希算法
+- 🔒 **会话管理**：Flask-Login 0.6.2 安全会话控制
+- 🔒 **权限控制**：基于角色的访问控制（RBAC）
+- 🔒 **API 安全**：AdGuardHome API 认证和授权
+- 🔒 **数据保护**：敏感配置信息加密存储
+- 🔒 **输入验证**：WTForms 3.0.1 表单验证和 CSRF 保护
+- 🔒 **SQL 注入防护**：SQLAlchemy 2.0.23 ORM 安全查询
+- 🔒 **XSS 防护**：Jinja2 3.1.2 模板自动转义
 
 ## 🤝 贡献指南
 
@@ -592,6 +664,14 @@ adghm/
 5. 创建 Pull Request
 
 ## 📝 更新日志
+
+### v1.1.0 (2025-08-25)
+- 🔄 更新技术栈版本信息
+- 📚 完善文档和安装指南
+- 🐛 修复已知问题和性能优化
+- 🔧 改进系统配置和部署流程
+- 📊 增强查询日志分析功能
+- 🛡️ 加强安全性和错误处理
 
 ### v1.0.0 (2025-08-07)
 - ✨ 新增多用户管理系统
