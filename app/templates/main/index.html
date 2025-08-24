@@ -5,27 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>主页 - AdGuardHome用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
 </head>
 <body>
     <div class="main-container">
         <header class="main-header">
             <h1>欢迎，{{ current_user.username }}</h1>
             <nav class="main-nav">
-                <a href="{{ url_for('main.clients') }}">客户端管理</a>
-                <a href="{{ url_for('main.guide') }}">使用指南</a>
-                <a href="http://test.dns.con:5000/dns-test" target="_blank">DNS检测</a>
+                <a href="{{ url_for('main.clients') }}"><i class="fas fa-desktop"></i> 客户端管理</a>
+                <a href="{{ url_for('main.guide') }}"><i class="fas fa-book"></i> 使用指南</a>
+                <a href="http://test.dns.con:5000/dns-test" target="_blank"><i class="fas fa-network-wired"></i> DNS检测</a>
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-dropdown-toggle">账户设置 ▼</a>
+                    <a href="#" class="nav-dropdown-toggle"><i class="fas fa-user-cog"></i> 账户设置 ▼</a>
                     <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
-                        <a href="{{ url_for('auth.delete_account') }}" style="color: #dc3545;">注销账户</a>
+                        <a href="{{ url_for('main.change_password_page') }}"><i class="fas fa-key"></i> 修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}"><i class="fas fa-envelope"></i> 修改邮箱</a>
+                        <a href="{{ url_for('auth.delete_account') }}" style="color: #dc3545;"><i class="fas fa-user-times"></i> 注销账户</a>
                     </div>
                 </div>
                 {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> 管理员后台</a>
                 {% endif %}
-                <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
             </nav>
         </header>
         
