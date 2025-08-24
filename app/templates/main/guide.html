@@ -277,18 +277,23 @@
                     <div class="step-list">
                         <div class="step-item">
                             <strong>方法一：DNS描述文件（推荐DoH）</strong>
-                            {% if dns_config and dns_config.doh_enabled and dns_config.doh_server %}
-                                <br>下载并安装DNS配置描述文件：
-                                <a href="{{ url_for('main.apple_doh_mobileconfig') }}" class="btn btn-sm btn-primary" download>
-                                    <i class="fas fa-download"></i> 下载DoH配置文件
-                                </a>
-                            {% elif dns_config and dns_config.dot_enabled and dns_config.dot_server %}
-                                <br>下载并安装DNS配置描述文件：
-                                <a href="{{ url_for('main.apple_dot_mobileconfig') }}" class="btn btn-sm btn-primary" download>
-                                    <i class="fas fa-download"></i> 下载DoT配置文件
-                                </a>
+                            {% if dns_config and dns_config.apple_config_enabled %}
+                                {% if dns_config.doh_enabled and dns_config.doh_server and dns_config.apple_doh_config_enabled %}
+                                    <br>下载并安装DNS配置描述文件：
+                                    <a href="/api/apple/doh.mobileconfig?host={{ dns_config.doh_server }}" class="btn btn-sm btn-primary" download>
+                                        <i class="fas fa-download"></i> 下载DoH配置文件
+                                    </a>
+                                {% elif dns_config.dot_enabled and dns_config.dot_server and dns_config.apple_dot_config_enabled %}
+                                    <br>下载并安装DNS配置描述文件：
+                                    {% set dot_host = dns_config.dot_server.split('.', 1)[1] if '.' in dns_config.dot_server else dns_config.dot_server %}
+                                    <a href="/api/apple/dot.mobileconfig?host={{ dot_host }}" class="btn btn-sm btn-primary" download>
+                                        <i class="fas fa-download"></i> 下载DoT配置文件
+                                    </a>
+                                {% else %}
+                                    <br>下载并安装DNS配置描述文件（管理员已禁用配置文件下载功能）
+                                {% endif %}
                             {% else %}
-                                <br>下载并安装DNS配置描述文件（请联系管理员获取）
+                                <br>下载并安装DNS配置描述文件（管理员已禁用苹果设备配置文件下载功能）
                             {% endif %}
                         </div>
                         <div class="step-item">
