@@ -362,6 +362,58 @@
 </style>
 
 <script>
+// 数字滚动动画函数
+         function animateNumber(element, targetValue) {
+             const currentValue = parseInt(element.textContent.replace(/,/g, '')) || 0;
+             const difference = Math.abs(targetValue - currentValue);
+             
+             // 如果数值没有变化，直接返回
+             if (difference === 0) return;
+             
+             // 清除可能存在的动画
+             if (element.animationTimer) {
+                 cancelAnimationFrame(element.animationTimer);
+             }
+             
+             // 根据数值变化大小动态调整动画时间
+             let duration;
+             if (difference < 100) {
+                 duration = 800;  // 小变化：快速动画
+             } else if (difference < 1000) {
+                 duration = 1200; // 中等变化：中等速度
+             } else if (difference < 10000) {
+                 duration = 1800; // 大变化：较慢动画
+             } else {
+                 duration = 2500; // 巨大变化：最慢动画
+             }
+             
+             const startTime = Date.now();
+             
+             // 使用 requestAnimationFrame 实现更平滑的动画
+             function animate() {
+                 const elapsed = Date.now() - startTime;
+                 const progress = Math.min(elapsed / duration, 1);
+                 
+                 // 使用更平滑的缓动函数（easeOutCubic）
+                 const easeProgress = 1 - Math.pow(1 - progress, 3);
+                 
+                 const newValue = Math.round(currentValue + ((targetValue - currentValue) * easeProgress));
+                 
+                 // 格式化数字（添加千位分隔符）
+                 element.textContent = newValue.toLocaleString();
+                 
+                 if (progress < 1) {
+                     element.animationTimer = requestAnimationFrame(animate);
+                 } else {
+                     // 动画完成，确保显示准确值
+                     element.textContent = targetValue.toLocaleString();
+                     delete element.animationTimer;
+                 }
+             }
+             
+             animate();
+         }
+
 // 动态更新统计数据
 function updateStats() {
     fetch('/api/stats', {
@@ -389,16 +441,16 @@ function updateStats() {
             }
             console.log('Stats API data:', data);
             
-            // 更新用户请求数
+            // 更新用户请求数（滚动效果）
             const userRequestElement = document.getElementById('user-request-count');
             if (userRequestElement) {
-                userRequestElement.textContent = data.user_request_count || 0;
+                animateNumber(userRequestElement, data.user_request_count || 0);
             }
             
-            // 更新总DNS查询数
+            // 更新总DNS查询数（滚动效果）
             const totalQueriesElement = document.getElementById('total-dns-queries');
             if (totalQueriesElement) {
-                totalQueriesElement.textContent = data.total_dns_queries || 0;
+                animateNumber(totalQueriesElement, data.total_dns_queries || 0);
             }
             
             // 更新用户排名信息

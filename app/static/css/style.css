@@ -426,9 +426,9 @@ tr:hover {
 }
 
 .small-card {
-    flex: 1 1 220px;
-    min-width: 220px;
-    max-width: 280px;
+    flex: 1 1 240px;
+    min-width: 240px;
+    max-width: 320px;
 }
 
 .large-card {
@@ -444,10 +444,17 @@ tr:hover {
 }
 
 .dashboard-stat {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: bold;
     color: #007bff;
     margin-bottom: 10px;
+    transition: color 0.3s ease;
+    word-break: break-all;
+    line-height: 1.2;
+}
+
+.dashboard-stat.counting {
+    color: #007bff;
 }
 
 .info-list p {
