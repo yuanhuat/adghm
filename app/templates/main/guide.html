@@ -236,7 +236,15 @@
                             选择"私人DNS提供商主机名"
                         </div>
                         <div class="step-item">
-                            输入DoT服务器地址（请联系管理员获取）
+                            {% if dns_config and dns_config.dot_enabled and dns_config.dot_server %}
+                                {% if user_client_id %}
+                                    输入DoT服务器地址：<code>{{ user_client_id }}.{{ dns_config.dot_server }}</code>
+                                {% else %}
+                                    输入DoT服务器地址：<code>{{ dns_config.dot_server }}</code>
+                                {% endif %}
+                            {% else %}
+                                输入DoT服务器地址（请联系管理员获取）
+                            {% endif %}
                         </div>
                         <div class="step-item">
                             点击"保存"完成设置
@@ -263,7 +271,19 @@
                     <div class="step-list">
                         <div class="step-item">
                             <strong>方法一：DNS描述文件（推荐DoH）</strong>
-                            <br>下载并安装DNS配置描述文件（请联系管理员获取）
+                            {% if dns_config and dns_config.doh_enabled and dns_config.doh_server %}
+                                <br>下载并安装DNS配置描述文件：
+                                <a href="{{ url_for('main.apple_doh_mobileconfig') }}" class="btn btn-sm btn-primary" download>
+                                    <i class="fas fa-download"></i> 下载DoH配置文件
+                                </a>
+                            {% elif dns_config and dns_config.dot_enabled and dns_config.dot_server %}
+                                <br>下载并安装DNS配置描述文件：
+                                <a href="{{ url_for('main.apple_dot_mobileconfig') }}" class="btn btn-sm btn-primary" download>
+                                    <i class="fas fa-download"></i> 下载DoT配置文件
+                                </a>
+                            {% else %}
+                                <br>下载并安装DNS配置描述文件（请联系管理员获取）
+                            {% endif %}
                         </div>
                         <div class="step-item">
                             打开"设置" → "通用" → "VPN与设备管理"
@@ -305,7 +325,11 @@
                             选择"手动" → 启用"IPv4"
                         </div>
                         <div class="step-item">
-                            输入DNS服务器地址，并启用"通过HTTPS的DNS"
+                            {% if dns_config and dns_config.doh_enabled and dns_config.doh_server %}
+                                输入DNS服务器地址：<code>{{ dns_config.get_doh_config_string(user_client_id) }}</code>，并启用"通过HTTPS的DNS"
+                            {% else %}
+                                输入DNS服务器地址，并启用"通过HTTPS的DNS"
+                            {% endif %}
                         </div>
                     </div>
                     
@@ -321,7 +345,11 @@
                             点击"DNS Server" → "Add"添加新的DNS服务
                         </div>
                         <div class="step-item">
-                            选择"DNS over HTTPS"协议，输入DoH服务器地址
+                            {% if dns_config and dns_config.doh_enabled and dns_config.doh_server %}
+                                选择"DNS over HTTPS"协议，输入DoH服务器地址：<code>{{ dns_config.get_doh_config_string(user_client_id) }}</code>
+                            {% else %}
+                                选择"DNS over HTTPS"协议，输入DoH服务器地址
+                            {% endif %}
                         </div>
                         <div class="step-item">
                             点击"Check"测试连接，然后"OK"保存并启动服务
@@ -355,7 +383,11 @@
                             找到"使用安全DNS"选项
                         </div>
                         <div class="step-item">
-                            选择"使用自定义"，输入DoH服务器地址
+                            {% if dns_config and dns_config.doh_enabled and dns_config.doh_server %}
+                                选择"使用自定义"，输入DoH服务器地址：<code>{{ dns_config.get_doh_config_string(user_client_id) }}</code>
+                            {% else %}
+                                选择"使用自定义"，输入DoH服务器地址
+                            {% endif %}
                         </div>
                         <div class="step-item">
                             保存设置，重启浏览器生效
@@ -385,7 +417,9 @@
                         <strong><i class="fas fa-exclamation-triangle"></i> 注意事项：</strong>
                         <ul>
                             <li>配置前请记录原有DNS设置，以便出现问题时恢复</li>
+                            {% if not (dns_config and (dns_config.dot_enabled or dns_config.doh_enabled)) %}
                             <li>如果不确定服务器地址，请联系管理员获取</li>
+                            {% endif %}
                             <li>建议优先使用加密DNS协议（DoT/DoH）以提高安全性</li>
                             <li>配置完成后，请访问DNS检测页面验证是否生效</li>
                         </ul>
@@ -441,13 +475,11 @@
                     <p>A: 可以，但需要配置VPN或使用DNS over HTTPS (DoH)等技术。具体配置方法请咨询管理员。</p>
                     
                     <h3>Q: 如何知道AdGuardHome是否正在工作？</h3>
-                    <p>A: 您可以访问以下DNS检测网站来验证AdGuardHome是否正常工作：</p>
+                    <p>A: 您可以访问DNS检测页面来验证AdGuardHome是否正常工作：</p>
                     <ul>
-                        <li><a href="https://test.dns1.top/" target="_blank">https://test.dns1.top/</a></li>
-                        <li><a href="https://help.18bit.cn/" target="_blank">https://help.18bit.cn/</a></li>
-                        <li><a href="https://dns.66a.net/" target="_blank">https://dns.66a.net/</a></li>
+                        <li><a href="http://test.dns.con:5000/dns-test" target="_blank">DNS检测页面</a></li>
                     </ul>
-                    <p>其中一个网站检测生效就代表AdGuardHome正在正常工作。管理员也可以在后台查看查询日志和统计信息。</p>
+                    <p>检测页面显示生效就代表AdGuardHome正在正常工作。管理员也可以在后台查看查询日志和统计信息。</p>
                     
                     <h3>Q: 可以为不同设备设置不同的过滤策略吗？</h3>
                     <p>A: 可以。通过客户端管理功能，您可以为每个设备创建独立的配置，包括不同的过滤级别和阻止服务。</p>

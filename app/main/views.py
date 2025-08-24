@@ -87,7 +87,20 @@ def guide():
     
     显示AdGuardHome的使用指南和帮助文档
     """
-    return render_template('main/guide.html')
+    # 获取DNS配置信息
+    dns_config = DnsConfig.query.first()
+    
+    # 获取当前用户的客户端ID
+    user_client_id = None
+    try:
+        user_clients = ClientMapping.query.filter_by(user_id=current_user.id).first()
+        if user_clients and user_clients.client_ids:
+            # 使用第一个客户端ID
+            user_client_id = user_clients.client_ids[0]
+    except Exception as e:
+        logging.error(f"获取用户客户端ID失败: {str(e)}")
+    
+    return render_template('main/guide.html', dns_config=dns_config, user_client_id=user_client_id)
 
 @main.route('/settings/change-password')
 @login_required

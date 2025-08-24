@@ -134,19 +134,19 @@ class DnsConfig(db.Model):
         """获取DNS-over-HTTPS配置字符串
         
         Args:
-            client_id (str, optional): 客户端ID，如果提供，将添加到路径末尾
+            client_id (str, optional): 客户端ID，如果提供，将添加为子域名前缀
         
         Returns:
-            str: DoH配置字符串，格式为 https://server:port/path 或 https://server:port/path/client_id
+            str: DoH配置字符串，格式为 https://client_id.server:port/path 或 https://server:port/path
         """
         if not self.doh_enabled or not self.doh_server:
             return None
         server = self.doh_server.strip()
         path = self.doh_path.strip() if self.doh_path else '/dns-query'
         
-        # 如果提供了客户端ID，将其添加到路径末尾
+        # 如果提供了客户端ID，将其添加为子域名前缀
         if client_id:
-            path = f"{path}/{client_id}"
+            server = f"{client_id}.{server}"
             
         if self.doh_port == 443:
             return f"https://{server}{path}"
