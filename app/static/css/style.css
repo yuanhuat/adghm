@@ -617,6 +617,82 @@ tr:hover {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .main-container {
+        padding: 10px;
+    }
+    
+    .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding-bottom: 15px;
+    }
+    
+    .main-header h1 {
+        font-size: 20px;
+        margin: 0;
+    }
+    
+    .main-nav {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .main-nav a {
+        margin-left: 0;
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        display: block;
+        text-align: center;
+    }
+    
+    .nav-dropdown {
+        width: 100%;
+    }
+    
+    .nav-dropdown-toggle {
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        display: block;
+        box-sizing: border-box;
+    }
+    
+    .nav-dropdown-menu {
+        position: static;
+        display: none;
+        box-shadow: none;
+        border: none;
+        margin-top: 0;
+        background: transparent;
+    }
+    
+    .nav-dropdown:hover .nav-dropdown-menu {
+        display: block;
+    }
+    
+    .nav-dropdown-menu a {
+        background-color: #e9ecef;
+        margin-bottom: 5px;
+        border: 1px solid #ced4da;
+    }
+    
+    .dashboard-row {
+        flex-direction: column;
+    }
+    
+    .small-card,
+    .large-card {
+        min-width: 100%;
+        max-width: 100%;
+    }
+    
     .auth-container {
         max-width: 90%;
         margin: 30px auto;
@@ -635,6 +711,50 @@ tr:hover {
 }
 
 @media (max-width: 480px) {
+    .main-container {
+        padding: 5px;
+    }
+    
+    .main-header {
+        gap: 10px;
+        padding-bottom: 10px;
+    }
+    
+    .main-header h1 {
+        font-size: 18px;
+    }
+    
+    .main-nav {
+        gap: 8px;
+    }
+    
+    .main-nav a {
+        padding: 12px 10px;
+        font-size: 14px;
+    }
+    
+    .nav-dropdown-toggle {
+        padding: 12px 10px;
+        font-size: 14px;
+    }
+    
+    .nav-dropdown-menu a {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .dashboard-card {
+        padding: 15px;
+    }
+    
+    .dashboard-card h2 {
+        font-size: 18px;
+    }
+    
+    .dashboard-stat {
+        font-size: 28px;
+    }
+    
     .auth-container {
         max-width: 95%;
         margin: 20px auto;
@@ -1208,4 +1328,95 @@ tr:hover {
     .dns-desc {
         font-size: 12px !important;
     }
-}
+    
+    /* 管理员后台移动端优化 */
+    .admin-container {
+        padding: 10px;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .admin-nav {
+        width: 100%;
+    }
+    
+    .admin-nav a {
+        display: block;
+        margin: 5px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+    }
+    
+    /* Bootstrap导航栏移动端优化 */
+    .navbar-nav .nav-link {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        border: none;
+        box-shadow: none;
+        background-color: #f8f9fa;
+    }
+    
+    .dropdown-item {
+         padding: 8px 15px;
+         text-align: center;
+     }
+     
+     /* 移动端触摸优化 */
+     .main-nav a,
+     .nav-dropdown-toggle,
+     .nav-dropdown-menu a {
+         min-height: 44px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+     }
+     
+     /* 表格移动端优化 */
+     table {
+         font-size: 14px;
+     }
+     
+     th, td {
+         padding: 8px 4px;
+         word-break: break-word;
+     }
+     
+     /* 按钮移动端优化 */
+     .btn {
+         min-height: 44px;
+         padding: 12px 16px;
+     }
+ }
+ 
+ /* 超小屏幕优化 */
+ @media (max-width: 360px) {
+     .main-header h1 {
+         font-size: 16px;
+     }
+     
+     .main-nav a,
+     .nav-dropdown-toggle {
+         font-size: 13px;
+         padding: 10px 8px;
+     }
+     
+     .dashboard-stat {
+         font-size: 24px;
+     }
+     
+     .dashboard-card h2 {
+         font-size: 16px;
+     }
+ }
