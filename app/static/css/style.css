@@ -655,33 +655,48 @@ tr:hover {
 .ranking-item {
     display: flex;
     align-items: center;
-    padding: 12px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    border-left: 4px solid #dee2e6;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 8px;
 }
 
 .ranking-item:hover {
-    background-color: #e9ecef;
-    transform: translateX(2px);
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .ranking-item.current-user {
-    background-color: #e3f2fd;
-    border-left-color: #2196f3;
+    background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+    border-color: #2196f3;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
 
 .ranking-item.current-user:hover {
-    background-color: #bbdefb;
+    background: linear-gradient(135deg, #bbdefb 0%, #e3f2fd 100%);
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.3);
+}
+
+.rank-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 15px;
+    min-width: 50px;
+}
+
+.rank-badge i {
+    font-size: 20px;
+    margin-bottom: 4px;
 }
 
 .rank-number {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
-    min-width: 30px;
-    text-align: center;
-    margin-right: 15px;
     color: #666;
 }
 
@@ -702,28 +717,60 @@ tr:hover {
 
 .client-info {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    margin-right: 15px;
 }
 
 .client-name {
-    font-weight: 600;
+    font-weight: bold;
     color: #2c3e50;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.client-name i {
+    color: #6c757d;
     font-size: 14px;
 }
 
+.current-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .user-name {
+    color: #7f8c8d;
     font-size: 12px;
-    color: #666;
+    margin-top: 2px;
+}
+
+.request-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 80px;
 }
 
 .request-count {
     font-weight: bold;
     color: #3498db;
-    font-size: 14px;
-    min-width: 80px;
-    text-align: right;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.request-label {
+    color: #6c757d;
+    font-size: 11px;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* 留言列表样式 */
@@ -782,42 +829,85 @@ tr:hover {
 }
 
 .ranking-item.rank-1 {
-    border-left-color: #ffd700;
-    background: linear-gradient(135deg, #fff9c4 0%, #f8f9fa 100%);
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #fff9c4 0%, #ffffff 100%);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.ranking-item.rank-1 .rank-badge i {
+    color: #ffd700;
 }
 
 .ranking-item.rank-2 {
-    border-left-color: #c0c0c0;
-    background: linear-gradient(135deg, #f5f5f5 0%, #f8f9fa 100%);
+    border-color: #c0c0c0;
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+    box-shadow: 0 2px 8px rgba(192, 192, 192, 0.3);
+}
+
+.ranking-item.rank-2 .rank-badge i {
+    color: #c0c0c0;
 }
 
 .ranking-item.rank-3 {
-    border-left-color: #cd7f32;
-    background: linear-gradient(135deg, #ffeaa7 0%, #f8f9fa 100%);
+    border-color: #cd7f32;
+    background: linear-gradient(135deg, #ffeaa7 0%, #ffffff 100%);
+    box-shadow: 0 2px 8px rgba(205, 127, 50, 0.3);
+}
+
+.ranking-item.rank-3 .rank-badge i {
+    color: #cd7f32;
+}
+
+.ranking-item.rank-other .rank-badge i {
+    color: #6c757d;
 }
 
 /* 响应式设计 - 排行榜 */
 @media (max-width: 768px) {
     .ranking-item {
-        padding: 10px;
+        padding: 12px;
+    }
+    
+    .rank-badge {
+        min-width: 40px;
+        margin-right: 10px;
+    }
+    
+    .rank-badge i {
+        font-size: 16px;
     }
     
     .rank-number {
-        min-width: 25px;
-        margin-right: 10px;
-        font-size: 16px;
+        font-size: 12px;
     }
     
     .client-name {
         font-size: 13px;
     }
     
+    .client-name i {
+        font-size: 12px;
+    }
+    
+    .current-badge {
+        font-size: 9px;
+        padding: 1px 4px;
+    }
+    
     .user-name {
         font-size: 11px;
     }
     
+    .request-stats {
+        min-width: 60px;
+    }
+    
     .request-count {
-        font-size: 13px;
+        font-size: 14px;
+    }
+    
+    .request-label {
+        font-size: 10px;
         min-width: 60px;
     }
 }

@@ -458,14 +458,34 @@ function updateClientRanking() {
                     data.client_ranking.forEach((client, index) => {
                         const rankClass = index < 3 ? `rank-${index + 1}` : 'rank-other';
                         const currentUserClass = client.is_current_user ? 'current-user' : '';
+                        
+                        // 获取排名图标
+                        let rankIcon = '';
+                        if (index === 0) rankIcon = '<i class="fas fa-crown"></i>';
+                        else if (index === 1) rankIcon = '<i class="fas fa-medal"></i>';
+                        else if (index === 2) rankIcon = '<i class="fas fa-award"></i>';
+                        else rankIcon = '<i class="fas fa-user"></i>';
+                        
+                        // 显示完整数字
+                        let formattedCount = client.request_count.toLocaleString();
+                        
                         html += `
                             <div class="ranking-item ${rankClass} ${currentUserClass}">
-                                <span class="rank-number">${index + 1}</span>
-                                <div class="client-info">
-                                    <div class="client-name">${client.client_name}</div>
-    
+                                <div class="rank-badge">
+                                    ${rankIcon}
+                                    <span class="rank-number">${index + 1}</span>
                                 </div>
-                                <span class="request-count">${client.request_count.toLocaleString()}</span>
+                                <div class="client-info">
+                                    <div class="client-name">
+                                        <i class="fas fa-desktop"></i>
+                                        ${client.client_name}
+                                        ${client.is_current_user ? '<span class="current-badge">当前</span>' : ''}
+                                    </div>
+                                </div>
+                                <div class="request-stats">
+                                    <span class="request-count">${formattedCount}</span>
+                                    <span class="request-label">请求数</span>
+                                </div>
                             </div>
                         `;
                     });
