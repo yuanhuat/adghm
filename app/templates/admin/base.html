@@ -50,6 +50,17 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.global_blocked_services_page') }}">全局阻止服务</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="paymentDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            支付管理
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="paymentDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('payment.admin_index') }}">支付概览</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('payment.admin_config') }}">支付配置</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('payment.admin_orders') }}">订单管理</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('payment.admin_logs') }}">支付日志</a></li>
+                        </ul>
+                    </li>
                     
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="systemConfigDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

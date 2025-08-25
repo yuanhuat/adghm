@@ -29,3 +29,11 @@ class Config:
 
     # 分页配置
     ITEMS_PER_PAGE = int(os.environ.get('ITEMS_PER_PAGE') or 20)
+    
+    # 支付配置
+    PAYMENT_TIMEOUT = int(os.environ.get('PAYMENT_TIMEOUT') or 300)  # 支付超时时间（秒）
+    PAYMENT_MIN_AMOUNT = float(os.environ.get('PAYMENT_MIN_AMOUNT') or 0.01)  # 最小支付金额
+    PAYMENT_MAX_AMOUNT = float(os.environ.get('PAYMENT_MAX_AMOUNT') or 10000)  # 最大支付金额
+    PAYMENT_CURRENCY = os.environ.get('PAYMENT_CURRENCY') or 'CNY'  # 支付货币
+    PAYMENT_NOTIFY_URL = os.environ.get('PAYMENT_NOTIFY_URL')  # 支付异步通知地址
+    PAYMENT_RETURN_URL = os.environ.get('PAYMENT_RETURN_URL')  # 支付同步返回地址

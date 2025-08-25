@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+{% block title %}爱心捐赠{% endblock %}
+
+{% block head %}
+<style>
+.donate-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.donate-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.donate-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.donate-header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.amount-section {
+    margin-bottom: 2rem;
+}
+
+.amount-presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.amount-btn {
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.amount-btn:hover {
+    border-color: #3498db;
+    background: #f8f9fa;
+}
+
+.amount-btn.active {
+    border-color: #3498db;
+    background: #3498db;
+    color: #fff;
+}
+
+.custom-amount {
+    margin-top: 1rem;
+}
+
+.custom-amount input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: border-color 0.3s ease;
+}
+
+.custom-amount input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.payment-methods {
+    margin-bottom: 2rem;
+}
+
+.payment-methods h3 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.payment-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.payment-option {
+    padding: 1.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    background: #fff;
+}
+
+.payment-option:hover {
+    border-color: #3498db;
+    background: #f8f9fa;
+}
+
+.payment-option.active {
+    border-color: #3498db;
+    background: #3498db;
+    color: #fff;
+}
+
+.payment-option img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0.5rem;
+}
+
+.donor-info {
+    margin-bottom: 2rem;
+}
+
+.donor-info h3 {
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.donate-btn {
+    width: 100%;
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.donate-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #1f5f8b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+}
+
+.donate-btn:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.loading .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.alert-error {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+@media (max-width: 768px) {
+    .donate-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .amount-presets {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .payment-options {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="donate-container">
+    <div class="donate-header">
+        <h1>💝 爱心捐赠</h1>
+        <p>您的每一份爱心，都将温暖需要帮助的人</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form id="donateForm">
+        <!-- 捐赠金额选择 -->
+        <div class="amount-section">
+            <h3>选择捐赠金额</h3>
+            <div class="amount-presets">
+                <div class="amount-btn" data-amount="10">¥10</div>
+                <div class="amount-btn" data-amount="50">¥50</div>
+                <div class="amount-btn" data-amount="100">¥100</div>
+                <div class="amount-btn" data-amount="200">¥200</div>
+                <div class="amount-btn" data-amount="500">¥500</div>
+                <div class="amount-btn" data-amount="1000">¥1000</div>
+            </div>
+            <div class="custom-amount">
+                <input type="number" id="customAmount" placeholder="自定义金额（{{ config.min_amount }}-{{ config.max_amount }}元）" 
+                       min="{{ config.min_amount }}" max="{{ config.max_amount }}" step="0.01">
+            </div>
+        </div>
+        
+        <!-- 支付方式选择 -->
+        <div class="payment-methods">
+            <h3>选择支付方式</h3>
+            <div class="payment-options">
+                {% if config.enable_alipay %}
+                <div class="payment-option" data-type="alipay">
+                    <div>💰</div>
+                    <div>支付宝</div>
+                </div>
+                {% endif %}
+                {% if config.enable_wxpay %}
+                <div class="payment-option" data-type="wxpay">
+                    <div>💚</div>
+                    <div>微信支付</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 捐赠者信息 -->
+        <div class="donor-info">
+            <h3>捐赠者信息（可选）</h3>
+            <div class="form-group">
+                <label for="donorName">姓名</label>
+                <input type="text" id="donorName" placeholder="请输入您的姓名（可匿名）">
+            </div>
+            <div class="form-group">
+                <label for="donorEmail">邮箱</label>
+                <input type="email" id="donorEmail" placeholder="请输入您的邮箱（用于接收捐赠凭证）">
+            </div>
+            <div class="form-group">
+                <label for="donorMessage">留言</label>
+                <textarea id="donorMessage" placeholder="留下您的祝福或心愿（可选）"></textarea>
+            </div>
+        </div>
+        
+        <button type="submit" class="donate-btn" id="submitBtn" disabled>
+            立即捐赠
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>正在处理，请稍候...</span>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountBtns = document.querySelectorAll('.amount-btn');
+    const customAmountInput = document.getElementById('customAmount');
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const submitBtn = document.getElementById('submitBtn');
+    const donateForm = document.getElementById('donateForm');
+    const loading = document.getElementById('loading');
+    
+    let selectedAmount = 0;
+    let selectedPaymentType = '';
+    
+    // 金额选择
+    amountBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            amountBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedAmount = parseFloat(this.dataset.amount);
+            customAmountInput.value = '';
+            checkFormValid();
+        });
+    });
+    
+    // 自定义金额输入
+    customAmountInput.addEventListener('input', function() {
+        amountBtns.forEach(btn => btn.classList.remove('active'));
+        selectedAmount = parseFloat(this.value) || 0;
+        checkFormValid();
+    });
+    
+    // 支付方式选择
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            paymentOptions.forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            selectedPaymentType = this.dataset.type;
+            checkFormValid();
+        });
+    });
+    
+    // 检查表单有效性
+    function checkFormValid() {
+        const minAmount = {{ config.min_amount }};
+        const maxAmount = {{ config.max_amount }};
+        
+        if (selectedAmount >= minAmount && selectedAmount <= maxAmount && selectedPaymentType) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // 表单提交
+    donateForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (submitBtn.disabled) return;
+        
+        // 显示加载状态
+        submitBtn.style.display = 'none';
+        loading.style.display = 'block';
+        
+        // 收集表单数据
+        const formData = {
+            amount: selectedAmount,
+            payment_type: selectedPaymentType,
+            donor_name: document.getElementById('donorName').value.trim(),
+            donor_email: document.getElementById('donorEmail').value.trim(),
+            donor_message: document.getElementById('donorMessage').value.trim()
+        };
+        
+        // 发送请求创建订单
+        fetch('/payment/create_order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 跳转到支付页面
+                window.location.href = `/payment/pay/${data.order_no}`;
+            } else {
+                showAlert(data.message, 'error');
+                resetForm();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('网络异常，请重试', 'error');
+            resetForm();
+        });
+    });
+    
+    // 重置表单状态
+    function resetForm() {
+        submitBtn.style.display = 'block';
+        loading.style.display = 'none';
+    }
+    
+    // 显示提示信息
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        const container = document.querySelector('.donate-container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // 3秒后自动移除
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

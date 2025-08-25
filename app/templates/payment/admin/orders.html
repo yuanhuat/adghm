@@ -1,0 +1,1022 @@
+{% extends "admin/base.html" %}
+{% block title %}订单管理 - 管理后台{% endblock %}
+
+{% block head %}
+<style>
+.orders-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.orders-title {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.back-btn {
+    padding: 0.5rem 1rem;
+    background: #6c757d;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.filters-section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filters-title {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.filter-input {
+    padding: 0.5rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-export {
+    background: #28a745;
+    color: #fff;
+}
+
+.btn-export:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.orders-table-section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-title {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.orders-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.orders-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.orders-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.order-id {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #3498db;
+}
+
+.order-amount {
+    font-weight: 600;
+    color: #e74c3c;
+    font-size: 1.1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-cancelled {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-icon {
+    font-size: 1.2rem;
+}
+
+.donor-info {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.order-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-view {
+    background: #17a2b8;
+    color: #fff;
+}
+
+.action-view:hover {
+    background: #138496;
+}
+
+.action-refund {
+    background: #ffc107;
+    color: #212529;
+}
+
+.action-refund:hover {
+    background: #e0a800;
+}
+
+.action-delete {
+    background: #dc3545;
+    color: #fff;
+}
+
+.action-delete:hover {
+    background: #c82333;
+}
+
+.pagination {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-btn {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #6c757d;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.page-btn.active {
+    background: #3498db;
+    color: #fff;
+    border-color: #3498db;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.empty-description {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.loading {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.close:hover {
+    background: #f8f9fa;
+    color: #2c3e50;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.detail-value {
+    color: #495057;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .orders-container {
+        margin: 1rem auto;
+    }
+    
+    .orders-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .orders-table {
+        font-size: 0.8rem;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 0.5rem;
+    }
+    
+    .donor-info {
+        max-width: 100px;
+    }
+    
+    .pagination {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="orders-container">
+    <div class="orders-header">
+        <h1 class="orders-title">📋 订单管理</h1>
+        <a href="{{ url_for('payment.admin_index') }}" class="back-btn">← 返回控制台</a>
+    </div>
+    
+    <!-- 筛选器 -->
+    <div class="filters-section">
+        <h3 class="filters-title">🔍 筛选条件</h3>
+        <form id="filtersForm">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">订单状态</label>
+                    <select name="status" class="filter-input">
+                        <option value="">全部状态</option>
+                        <option value="pending">待支付</option>
+                        <option value="paid">已支付</option>
+                        <option value="failed">支付失败</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">支付方式</label>
+                    <select name="payment_method" class="filter-input">
+                        <option value="">全部方式</option>
+                        <option value="alipay">支付宝</option>
+                        <option value="wxpay">微信支付</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">开始日期</label>
+                    <input type="date" name="start_date" class="filter-input">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">结束日期</label>
+                    <input type="date" name="end_date" class="filter-input">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">订单号/捐赠者</label>
+                    <input type="text" name="search" class="filter-input" placeholder="搜索订单号或捐赠者">
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">金额范围</label>
+                    <select name="amount_range" class="filter-input">
+                        <option value="">全部金额</option>
+                        <option value="0-50">0-50元</option>
+                        <option value="50-200">50-200元</option>
+                        <option value="200-500">200-500元</option>
+                        <option value="500+">500元以上</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="button" id="resetFilters" class="btn btn-secondary">🔄 重置</button>
+                <button type="button" id="exportBtn" class="btn btn-export">📊 导出Excel</button>
+                <button type="submit" class="btn btn-primary">🔍 筛选</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="totalOrders">{{ stats.total_orders or 0 }}</div>
+            <div class="stat-label">总订单数</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="paidOrders">{{ stats.paid_orders or 0 }}</div>
+            <div class="stat-label">成功支付</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="totalAmount">¥{{ "%.2f"|format(stats.total_amount or 0) }}</div>
+            <div class="stat-label">总捐赠金额</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value" id="successRate">{{ "%.1f"|format(stats.success_rate or 0) }}%</div>
+            <div class="stat-label">支付成功率</div>
+        </div>
+    </div>
+    
+    <!-- 订单表格 -->
+    <div class="orders-table-section">
+        <div class="table-header">
+            <h3 class="table-title">📋 订单列表</h3>
+            <div class="table-actions">
+                <button id="refreshBtn" class="btn btn-secondary">🔄 刷新</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="tableLoading">
+            <div class="spinner"></div>
+            <span>加载中...</span>
+        </div>
+        
+        <div id="tableContainer">
+            {% if orders %}
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>订单号</th>
+                        <th>捐赠者</th>
+                        <th>金额</th>
+                        <th>支付方式</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <span class="order-id">{{ order.order_no }}</span>
+                        </td>
+                        <td>
+                            <div class="donor-info" title="{{ order.donor_name }}">
+                                {{ order.donor_name or '匿名' }}
+                                {% if order.donor_email %}
+                                <br><small>{{ order.donor_email }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="order-amount">¥{{ "%.2f"|format(order.amount) }}</span>
+                        </td>
+                        <td>
+                            <div class="payment-method">
+                                {% if order.payment_method == 'alipay' %}
+                                    <span class="payment-icon">💰</span>
+                                    <span>支付宝</span>
+                                {% elif order.payment_method == 'wxpay' %}
+                                    <span class="payment-icon">💚</span>
+                                    <span>微信支付</span>
+                                {% else %}
+                                    <span>{{ order.payment_method }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ order.status }}">
+                                {% if order.status == 'pending' %}
+                                    待支付
+                                {% elif order.status == 'paid' %}
+                                    已支付
+                                {% elif order.status == 'failed' %}
+                                    支付失败
+                                {% elif order.status == 'cancelled' %}
+                                    已取消
+                                {% else %}
+                                    {{ order.status }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                {{ order.created_at.strftime('%Y-%m-%d') }}
+                                <br><small>{{ order.created_at.strftime('%H:%M:%S') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="order-actions">
+                                <button class="action-btn action-view" onclick="viewOrder('{{ order.order_no }}')">👁️ 查看</button>
+                                {% if order.status == 'paid' %}
+                                <button class="action-btn action-refund" onclick="refundOrder('{{ order.order_no }}')">💸 退款</button>
+                                {% endif %}
+                                {% if order.status in ['failed', 'cancelled'] %}
+                                <button class="action-btn action-delete" onclick="deleteOrder('{{ order.order_no }}')">🗑️ 删除</button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <div class="pagination-info">
+                    显示第 {{ (page - 1) * per_page + 1 }} - {{ page * per_page if page * per_page < total else total }} 条，共 {{ total }} 条记录
+                </div>
+                <div class="pagination-controls">
+                    {% if page > 1 %}
+                    <a href="?page=1" class="page-btn">首页</a>
+                    <a href="?page={{ page - 1 }}" class="page-btn">上一页</a>
+                    {% endif %}
+                    
+                    {% for p in range(max(1, page - 2), min(pages + 1, page + 3)) %}
+                        {% if p == page %}
+                        <span class="page-btn active">{{ p }}</span>
+                        {% else %}
+                        <a href="?page={{ p }}" class="page-btn">{{ p }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page < pages %}
+                    <a href="?page={{ page + 1 }}" class="page-btn">下一页</a>
+                    <a href="?page={{ pages }}" class="page-btn">末页</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3 class="empty-title">暂无订单数据</h3>
+                <p class="empty-description">还没有任何捐赠订单，等待用户的第一笔捐赠吧！</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 订单详情模态框 -->
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">📋 订单详情</h3>
+            <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="orderDetails">
+            <!-- 订单详情内容将通过JavaScript动态加载 -->
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filtersForm = document.getElementById('filtersForm');
+    const resetFilters = document.getElementById('resetFilters');
+    const exportBtn = document.getElementById('exportBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const tableLoading = document.getElementById('tableLoading');
+    const tableContainer = document.getElementById('tableContainer');
+    
+    // 筛选表单提交
+    filtersForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        loadOrders();
+    });
+    
+    // 重置筛选器
+    resetFilters.addEventListener('click', function() {
+        filtersForm.reset();
+        loadOrders();
+    });
+    
+    // 导出Excel
+    exportBtn.addEventListener('click', function() {
+        const formData = new FormData(filtersForm);
+        const params = new URLSearchParams(formData);
+        window.open('/payment/admin/orders/export?' + params.toString());
+    });
+    
+    // 刷新数据
+    refreshBtn.addEventListener('click', function() {
+        loadOrders();
+    });
+    
+    // 加载订单数据
+    function loadOrders() {
+        tableLoading.style.display = 'flex';
+        tableContainer.style.display = 'none';
+        
+        const formData = new FormData(filtersForm);
+        const params = new URLSearchParams(formData);
+        
+        fetch('/payment/admin/orders/data?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateTable(data.orders);
+                updateStats(data.stats);
+                updatePagination(data.pagination);
+            } else {
+                showAlert('加载失败：' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('加载失败：' + error.message, 'error');
+        })
+        .finally(() => {
+            tableLoading.style.display = 'none';
+            tableContainer.style.display = 'block';
+        });
+    }
+    
+    // 更新表格
+    function updateTable(orders) {
+        // 这里可以实现动态更新表格的逻辑
+        // 为了简化，这里直接刷新页面
+        // 在实际项目中，建议使用模板引擎或虚拟DOM来更新
+    }
+    
+    // 更新统计数据
+    function updateStats(stats) {
+        document.getElementById('totalOrders').textContent = stats.total_orders || 0;
+        document.getElementById('paidOrders').textContent = stats.paid_orders || 0;
+        document.getElementById('totalAmount').textContent = '¥' + (stats.total_amount || 0).toFixed(2);
+        document.getElementById('successRate').textContent = (stats.success_rate || 0).toFixed(1) + '%';
+    }
+    
+    // 显示提示信息
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        const container = document.querySelector('.orders-container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 3000);
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+
+// 查看订单详情
+function viewOrder(orderNo) {
+    fetch(`/payment/admin/orders/${orderNo}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showOrderDetails(data.order);
+        } else {
+            alert('获取订单详情失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('获取订单详情失败：' + error.message);
+    });
+}
+
+// 显示订单详情
+function showOrderDetails(order) {
+    const detailsHtml = `
+        <div class="detail-grid">
+            <div class="detail-label">订单号：</div>
+            <div class="detail-value">${order.order_no}</div>
+            
+            <div class="detail-label">捐赠者姓名：</div>
+            <div class="detail-value">${order.donor_name || '匿名'}</div>
+            
+            <div class="detail-label">捐赠者邮箱：</div>
+            <div class="detail-value">${order.donor_email || '未提供'}</div>
+            
+            <div class="detail-label">捐赠金额：</div>
+            <div class="detail-value">¥${order.amount.toFixed(2)}</div>
+            
+            <div class="detail-label">支付方式：</div>
+            <div class="detail-value">${order.payment_method === 'alipay' ? '支付宝' : order.payment_method === 'wxpay' ? '微信支付' : order.payment_method}</div>
+            
+            <div class="detail-label">订单状态：</div>
+            <div class="detail-value">
+                <span class="status-badge status-${order.status}">
+                    ${order.status === 'pending' ? '待支付' : order.status === 'paid' ? '已支付' : order.status === 'failed' ? '支付失败' : order.status === 'cancelled' ? '已取消' : order.status}
+                </span>
+            </div>
+            
+            <div class="detail-label">第三方交易号：</div>
+            <div class="detail-value">${order.third_party_order_no || '无'}</div>
+            
+            <div class="detail-label">创建时间：</div>
+            <div class="detail-value">${new Date(order.created_at).toLocaleString()}</div>
+            
+            <div class="detail-label">支付时间：</div>
+            <div class="detail-value">${order.paid_at ? new Date(order.paid_at).toLocaleString() : '未支付'}</div>
+            
+            <div class="detail-label">客户端IP：</div>
+            <div class="detail-value">${order.client_ip || '未知'}</div>
+            
+            <div class="detail-label">用户代理：</div>
+            <div class="detail-value" style="word-break: break-all;">${order.user_agent || '未知'}</div>
+            
+            ${order.message ? `
+            <div class="detail-label">捐赠留言：</div>
+            <div class="detail-value" style="grid-column: 1 / -1; padding: 1rem; background: #f8f9fa; border-radius: 6px; margin-top: 0.5rem;">${order.message}</div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('orderDetails').innerHTML = detailsHtml;
+    document.getElementById('orderModal').style.display = 'block';
+}
+
+// 关闭模态框
+function closeModal() {
+    document.getElementById('orderModal').style.display = 'none';
+}
+
+// 退款订单
+function refundOrder(orderNo) {
+    if (confirm('确定要退款此订单吗？此操作不可撤销！')) {
+        fetch(`/payment/admin/orders/${orderNo}/refund`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('退款申请已提交，请等待处理结果');
+                location.reload();
+            } else {
+                alert('退款失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('退款失败：' + error.message);
+        });
+    }
+}
+
+// 删除订单
+function deleteOrder(orderNo) {
+    if (confirm('确定要删除此订单吗？此操作不可撤销！')) {
+        fetch(`/payment/admin/orders/${orderNo}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('订单删除成功');
+                location.reload();
+            } else {
+                alert('删除失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('删除失败：' + error.message);
+        });
+    }
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('orderModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1031 @@
+{% extends "admin/base.html" %}
+{% block title %}支付配置 - 管理后台{% endblock %}
+
+{% block head %}
+<style>
+:root {
+    --primary-color: #667eea;
+    --primary-dark: #5a67d8;
+    --secondary-color: #764ba2;
+    --success-color: #48bb78;
+    --warning-color: #ed8936;
+    --error-color: #f56565;
+    --info-color: #4299e1;
+    --gray-50: #f9fafb;
+    --gray-100: #f7fafc;
+    --gray-200: #edf2f7;
+    --gray-300: #e2e8f0;
+    --gray-400: #cbd5e0;
+    --gray-500: #a0aec0;
+    --gray-600: #718096;
+    --gray-700: #4a5568;
+    --gray-800: #2d3748;
+    --gray-900: #1a202c;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.config-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.config-title {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+.back-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--gray-600), var(--gray-700));
+    color: #fff;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.back-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.back-btn:hover::before {
+    left: 100%;
+}
+
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.config-form {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-section {
+    padding: 2.5rem;
+    position: relative;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.form-section:hover::before {
+    opacity: 1;
+}
+
+.section-title {
+    background: linear-gradient(135deg, var(--gray-800), var(--gray-600));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: -0.025em;
+}
+
+.section-description {
+    color: var(--gray-600);
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    padding: 1rem;
+    background: var(--gray-50);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: -0.025em;
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: var(--error-color);
+    font-weight: 700;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.form-input:hover {
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-md);
+}
+
+.form-input:invalid {
+    border-color: var(--error-color);
+}
+
+.form-input.error {
+    border-color: var(--error-color);
+    background: #fef5f5;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.form-help.error {
+    color: var(--error-color);
+    font-weight: 600;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border: 2px solid var(--gray-200);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.checkbox-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.checkbox-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.checkbox-item:hover::before {
+    opacity: 0.05;
+}
+
+.checkbox-item.checked {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    box-shadow: var(--shadow-md);
+}
+
+.checkbox-item.checked::before {
+    opacity: 0.1;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin: 0;
+    transform: scale(1.3);
+    accent-color: var(--primary-color);
+    z-index: 1;
+    position: relative;
+}
+
+.checkbox-label {
+    font-weight: 600;
+    color: var(--gray-800);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    z-index: 1;
+    position: relative;
+}
+
+.amount-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.input-group .form-input {
+    padding-left: 2rem;
+}
+
+.test-section {
+    background: linear-gradient(135deg, var(--gray-50), var(--gray-100));
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 1.5rem;
+    border: 2px solid var(--gray-200);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.test-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--info-color), #3182ce);
+}
+
+.test-btn {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--info-color), #3182ce);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-right: 1rem;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    font-size: 1rem;
+}
+
+.test-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.test-btn:hover::before {
+    left: 100%;
+}
+
+.test-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.test-btn:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.test-btn:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.test-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.test-result.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.test-result.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.form-actions {
+    padding: 2.5rem;
+    background: linear-gradient(135deg, var(--gray-50), var(--gray-100));
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-end;
+    align-items: center;
+    border-top: 1px solid var(--gray-200);
+    position: relative;
+}
+
+.form-actions::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+}
+
+.btn {
+    padding: 1rem 2.5rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    gap: 0.5rem;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #fff;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+    background: var(--gray-400);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--gray-600), var(--gray-700));
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.loading {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.alert {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid;
+    box-shadow: var(--shadow-md);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #f0fff4, #e6fffa);
+    border-color: var(--success-color);
+    color: #22543d;
+}
+
+.alert-success::before {
+    content: '✅';
+    font-size: 1.2rem;
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #fef5f5, #fed7d7);
+    border-color: var(--error-color);
+    color: #742a2a;
+}
+
+.alert-error::before {
+    content: '❌';
+    font-size: 1.2rem;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fffbf0, #fef5e7);
+    border-color: var(--warning-color);
+    color: #744210;
+}
+
+.alert-warning::before {
+    content: '⚠️';
+    font-size: 1.2rem;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border-color: var(--info-color);
+    color: #1e3a8a;
+}
+
+.alert-info::before {
+    content: 'ℹ️';
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .config-container {
+        margin: 1rem auto;
+    }
+    
+    .config-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .amount-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkbox-group {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="config-container">
+    <div class="config-header">
+        <h1 class="config-title">⚙️ 支付配置</h1>
+        <a href="{{ url_for('payment.admin_index') }}" class="back-btn">← 返回控制台</a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form id="configForm" class="config-form">
+        <!-- 基础配置 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                🔑 基础配置
+            </h2>
+            <p class="section-description">
+                配置您的支付商户信息，这些信息用于与第三方支付平台进行通信。
+            </p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="merchantId" class="form-label required">商户ID</label>
+                    <input type="text" id="merchantId" name="merchant_id" class="form-input" 
+                           value="{{ config.merchant_id if config else '' }}" 
+                           placeholder="请输入商户ID" required>
+                    <div class="form-help">由支付平台提供的唯一商户标识</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="merchantKey" class="form-label required">商户密钥</label>
+                    <input type="password" id="merchantKey" name="merchant_key" class="form-input" 
+                           value="{{ config.merchant_key if config else '' }}" 
+                           placeholder="请输入商户密钥" required>
+                    <div class="form-help">用于签名验证的密钥，请妥善保管</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API配置 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                🌐 API配置
+            </h2>
+            <p class="section-description">
+                配置支付接口地址和回调地址，确保支付流程正常运行。
+            </p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="apiUrl" class="form-label">API接口地址</label>
+                    <input type="url" id="apiUrl" name="api_url" class="form-input" 
+                           value="{{ config.api_url if config else 'https://pay.mcnode.cn/mapi.php' }}" 
+                           placeholder="https://pay.mcnode.cn/mapi.php">
+                    <div class="form-help">支付API接口地址</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="submitUrl" class="form-label">提交地址</label>
+                    <input type="url" id="submitUrl" name="submit_url" class="form-input" 
+                           value="{{ config.submit_url if config else 'https://pay.mcnode.cn/submit.php' }}" 
+                           placeholder="https://pay.mcnode.cn/submit.php">
+                    <div class="form-help">支付页面提交地址</div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="notifyUrl" class="form-label required">异步通知地址</label>
+                    <input type="url" id="notifyUrl" name="notify_url" class="form-input" 
+                           value="{{ config.notify_url if config else '' }}" 
+                           placeholder="https://yourdomain.com/payment/notify" required>
+                    <div class="form-help">支付成功后，支付平台会向此地址发送异步通知</div>
+                    <div class="alert alert-info" style="margin-top: 0.5rem; font-size: 0.875rem;">
+                        <strong>示例：</strong> https://yourdomain.com/payment/notify<br>
+                        <strong>说明：</strong> 此地址用于接收支付平台的异步通知，必须是公网可访问的地址
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="returnUrl" class="form-label required">同步返回地址</label>
+                    <input type="url" id="returnUrl" name="return_url" class="form-input" 
+                           value="{{ config.return_url if config else '' }}" 
+                           placeholder="https://yourdomain.com/payment/return" required>
+                    <div class="form-help">支付完成后用户浏览器跳转的地址</div>
+                    <div class="alert alert-info" style="margin-top: 0.5rem; font-size: 0.875rem;">
+                        <strong>示例：</strong> https://yourdomain.com/payment/return<br>
+                        <strong>说明：</strong> 用户支付完成后浏览器会跳转到此地址，建议设置为支付成功页面<br>
+                        <strong>注意：</strong> 请将 yourdomain.com 替换为您的实际域名，如 example.com
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 支付方式配置 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                💳 支付方式
+            </h2>
+            <p class="section-description">
+                选择要启用的支付方式，用户将只能使用已启用的支付方式进行捐赠。
+            </p>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-item {{ 'checked' if config and config.enable_alipay else '' }}">
+                    <input type="checkbox" name="enable_alipay" 
+                           {{ 'checked' if config and config.enable_alipay else '' }}>
+                    <span class="checkbox-label">
+                        💰 启用支付宝支付
+                    </span>
+                </label>
+                
+                <label class="checkbox-item {{ 'checked' if config and config.enable_wxpay else '' }}">
+                    <input type="checkbox" name="enable_wxpay" 
+                           {{ 'checked' if config and config.enable_wxpay else '' }}>
+                    <span class="checkbox-label">
+                        💚 启用微信支付
+                    </span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- 金额限制 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                💰 金额限制
+            </h2>
+            <p class="section-description">
+                设置单笔捐赠的最小和最大金额限制，帮助控制风险和提升用户体验。
+            </p>
+            
+            <div class="amount-inputs">
+                <div class="form-group">
+                    <label for="minAmount" class="form-label">最小金额</label>
+                    <div class="input-group">
+                        <span class="input-prefix">¥</span>
+                        <input type="number" id="minAmount" name="min_amount" class="form-input" 
+                               value="{{ config.min_amount if config else '1.00' }}" 
+                               min="0.01" step="0.01" placeholder="1.00">
+                    </div>
+                    <div class="form-help">单笔捐赠最小金额</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxAmount" class="form-label">最大金额</label>
+                    <div class="input-group">
+                        <span class="input-prefix">¥</span>
+                        <input type="number" id="maxAmount" name="max_amount" class="form-input" 
+                               value="{{ config.max_amount if config else '10000.00' }}" 
+                               min="0.01" step="0.01" placeholder="10000.00">
+                    </div>
+                    <div class="form-help">单笔捐赠最大金额</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 配置测试 -->
+        <div class="form-section">
+            <h2 class="section-title">
+                🧪 配置测试
+            </h2>
+            <p class="section-description">
+                在保存配置前，建议先测试配置的有效性，确保支付功能正常运行。
+            </p>
+            
+            <div class="test-section">
+                <button type="button" id="testBtn" class="test-btn">🔍 测试配置</button>
+                <div class="loading" id="testLoading">
+                    <div class="spinner"></div>
+                    <span>正在测试配置...</span>
+                </div>
+                <div id="testResult" class="test-result"></div>
+            </div>
+        </div>
+        
+        <!-- 表单操作 -->
+        <div class="form-actions">
+            <div class="loading" id="saveLoading">
+                <div class="spinner"></div>
+                <span>正在保存...</span>
+            </div>
+            <button type="button" id="resetBtn" class="btn btn-secondary">🔄 重置</button>
+            <button type="submit" id="saveBtn" class="btn btn-primary">💾 保存配置</button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const configForm = document.getElementById('configForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const testBtn = document.getElementById('testBtn');
+    const saveLoading = document.getElementById('saveLoading');
+    const testLoading = document.getElementById('testLoading');
+    const testResult = document.getElementById('testResult');
+    
+    // 复选框状态管理
+    const checkboxItems = document.querySelectorAll('.checkbox-item');
+    checkboxItems.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        
+        item.addEventListener('click', function(e) {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+            updateCheckboxState(item, checkbox.checked);
+        });
+        
+        checkbox.addEventListener('change', function() {
+            updateCheckboxState(item, this.checked);
+        });
+        
+        // 初始化状态
+        updateCheckboxState(item, checkbox.checked);
+    });
+    
+    function updateCheckboxState(item, checked) {
+        if (checked) {
+            item.classList.add('checked');
+        } else {
+            item.classList.remove('checked');
+        }
+    }
+    
+    // 表单验证
+    function validateForm() {
+        const requiredFields = configForm.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                isValid = false;
+            } else {
+                field.classList.remove('error');
+            }
+        });
+        
+        // 验证至少启用一种支付方式
+        const enableAlipay = document.querySelector('input[name="enable_alipay"]').checked;
+        const enableWxpay = document.querySelector('input[name="enable_wxpay"]').checked;
+        
+        if (!enableAlipay && !enableWxpay) {
+            showAlert('请至少启用一种支付方式', 'error');
+            isValid = false;
+        }
+        
+        // 验证金额范围
+        const minAmount = parseFloat(document.getElementById('minAmount').value);
+        const maxAmount = parseFloat(document.getElementById('maxAmount').value);
+        
+        if (minAmount >= maxAmount) {
+            showAlert('最大金额必须大于最小金额', 'error');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    // 测试配置
+    testBtn.addEventListener('click', function() {
+        if (!validateForm()) return;
+        
+        testBtn.style.display = 'none';
+        testLoading.style.display = 'flex';
+        testResult.style.display = 'none';
+        
+        const formData = new FormData(configForm);
+        const data = Object.fromEntries(formData.entries());
+        
+        // 处理复选框
+        data.enable_alipay = document.querySelector('input[name="enable_alipay"]').checked;
+        data.enable_wxpay = document.querySelector('input[name="enable_wxpay"]').checked;
+        
+        fetch('/payment/admin/config/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            testResult.style.display = 'block';
+            if (result.success) {
+                testResult.className = 'test-result success';
+                testResult.textContent = '✅ ' + result.message;
+            } else {
+                testResult.className = 'test-result error';
+                testResult.textContent = '❌ ' + result.message;
+            }
+        })
+        .catch(error => {
+            testResult.style.display = 'block';
+            testResult.className = 'test-result error';
+            testResult.textContent = '❌ 测试失败：' + error.message;
+        })
+        .finally(() => {
+            testBtn.style.display = 'inline-block';
+            testLoading.style.display = 'none';
+        });
+    });
+    
+    // 保存配置
+    configForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) return;
+        
+        saveBtn.disabled = true;
+        saveLoading.style.display = 'flex';
+        
+        const formData = new FormData(configForm);
+        const data = Object.fromEntries(formData.entries());
+        
+        // 处理复选框
+        data.enable_alipay = document.querySelector('input[name="enable_alipay"]').checked;
+        data.enable_wxpay = document.querySelector('input[name="enable_wxpay"]').checked;
+        data.is_active = true;
+        
+        fetch('/payment/admin/config/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showAlert('配置保存成功！', 'success');
+                // 可选：刷新页面或跳转
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showAlert('保存失败：' + result.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('保存失败：' + error.message, 'error');
+        })
+        .finally(() => {
+            saveBtn.disabled = false;
+            saveLoading.style.display = 'none';
+        });
+    });
+    
+    // 重置表单
+    resetBtn.addEventListener('click', function() {
+        if (confirm('确定要重置所有配置吗？')) {
+            configForm.reset();
+            // 重置复选框状态
+            checkboxItems.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                updateCheckboxState(item, checkbox.checked);
+            });
+        }
+    });
+    
+    // 显示提示信息
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        const container = document.querySelector('.config-container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // 3秒后自动移除
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 3000);
+        
+        // 滚动到顶部
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+</script>
+{% endblock %}

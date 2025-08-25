@@ -1,0 +1,569 @@
+{% extends "admin/base.html" %}
+{% block title %}支付管理 - 控制台{% endblock %}
+
+{% block head %}
+<style>
+.admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.admin-title {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-btn {
+    padding: 0.5rem 1rem;
+    background: #3498db;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-left: 4px solid;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card.orders {
+    border-left-color: #3498db;
+}
+
+.stat-card.paid {
+    border-left-color: #27ae60;
+}
+
+.stat-card.amount {
+    border-left-color: #e74c3c;
+}
+
+.stat-card.rate {
+    border-left-color: #f39c12;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-title {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.stat-change {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.stat-change.positive {
+    color: #27ae60;
+}
+
+.stat-change.negative {
+    color: #e74c3c;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.section-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.section-action {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.section-action:hover {
+    color: #2980b9;
+}
+
+.section-content {
+    padding: 1.5rem;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.orders-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.orders-table td {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.amount-cell {
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+.logs-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.log-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: background 0.3s ease;
+}
+
+.log-item:hover {
+    background: #f8f9fa;
+}
+
+.log-item:last-child {
+    border-bottom: none;
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.log-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.log-time {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.log-content {
+    color: #495057;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.log-type {
+    display: inline-block;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-right: 0.5rem;
+}
+
+.log-type.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.log-type.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.log-type.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.log-type.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.quick-action {
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #2c3e50;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-action:hover {
+    border-color: #3498db;
+    background: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 1rem auto;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .admin-nav {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .orders-table {
+        font-size: 0.8rem;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+    }
+    
+    .quick-action {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1 class="admin-title">💳 支付管理控制台</h1>
+        <div class="admin-nav">
+            <a href="{{ url_for('payment.admin_config') }}" class="nav-btn">⚙️ 支付配置</a>
+            <a href="{{ url_for('payment.admin_orders') }}" class="nav-btn">📋 订单管理</a>
+            <a href="{{ url_for('payment.admin_logs') }}" class="nav-btn">📊 日志查看</a>
+        </div>
+    </div>
+    
+    <!-- 快捷操作 -->
+    <div class="quick-actions">
+        <a href="{{ url_for('payment.donate') }}" class="quick-action">
+            💝 查看捐赠页面
+        </a>
+        <a href="{{ url_for('payment.admin_config') }}" class="quick-action">
+            🔧 配置支付参数
+        </a>
+        <a href="{{ url_for('payment.admin_orders') }}" class="quick-action">
+            📈 查看所有订单
+        </a>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card orders">
+            <div class="stat-header">
+                <h3 class="stat-title">总订单数</h3>
+                <div class="stat-icon">📊</div>
+            </div>
+            <p class="stat-value">{{ total_orders }}</p>
+            <div class="stat-change positive">📈 持续增长中</div>
+        </div>
+        
+        <div class="stat-card paid">
+            <div class="stat-header">
+                <h3 class="stat-title">成功支付</h3>
+                <div class="stat-icon">✅</div>
+            </div>
+            <p class="stat-value">{{ paid_orders }}</p>
+            <div class="stat-change positive">
+                📊 成功率: {{ "%.1f"|format((paid_orders / total_orders * 100) if total_orders > 0 else 0) }}%
+            </div>
+        </div>
+        
+        <div class="stat-card amount">
+            <div class="stat-header">
+                <h3 class="stat-title">总捐赠金额</h3>
+                <div class="stat-icon">💰</div>
+            </div>
+            <p class="stat-value">¥{{ "%.2f"|format(total_amount) }}</p>
+            <div class="stat-change positive">💝 爱心汇聚</div>
+        </div>
+        
+        <div class="stat-card rate">
+            <div class="stat-header">
+                <h3 class="stat-title">平均捐赠</h3>
+                <div class="stat-icon">📈</div>
+            </div>
+            <p class="stat-value">¥{{ "%.2f"|format((total_amount / paid_orders) if paid_orders > 0 else 0) }}</p>
+            <div class="stat-change positive">💖 每笔爱心</div>
+        </div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content-grid">
+        <!-- 最近订单 -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">📋 最近订单</h2>
+                <a href="{{ url_for('payment.admin_orders') }}" class="section-action">查看全部 →</a>
+            </div>
+            <div class="section-content">
+                {% if recent_orders %}
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>捐赠者</th>
+                            <th>金额</th>
+                            <th>支付方式</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>
+                                <code style="font-size: 0.8rem;">{{ order.order_no[-8:] }}</code>
+                            </td>
+                            <td>{{ order.donor_name or '匿名' }}</td>
+                            <td class="amount-cell">¥{{ "%.2f"|format(order.amount) }}</td>
+                            <td>
+                                {% if order.payment_type.value == 'alipay' %}
+                                    💰 支付宝
+                                {% elif order.payment_type.value == 'wxpay' %}
+                                    💚 微信
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.payment_status.value == 'pending' %}
+                                    <span class="status-badge status-pending">待支付</span>
+                                {% elif order.payment_status.value == 'paid' %}
+                                    <span class="status-badge status-paid">已支付</span>
+                                {% elif order.payment_status.value == 'failed' %}
+                                    <span class="status-badge status-failed">失败</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ order.created_at.strftime('%m-%d %H:%M') }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>暂无订单数据</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 最近日志 -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">📊 系统日志</h2>
+                <a href="{{ url_for('payment.admin_logs') }}" class="section-action">查看全部 →</a>
+            </div>
+            <div class="section-content">
+                {% if recent_logs %}
+                <div class="logs-list">
+                    {% for log in recent_logs %}
+                    <div class="log-item">
+                        <div class="log-header">
+                            <div>
+                                <span class="log-type {{ 'success' if log.is_success else ('error' if log.error_message else 'info') }}">
+                                    {{ log.log_type.value }}
+                                </span>
+                                <span class="log-title">{{ log.title }}</span>
+                            </div>
+                            <span class="log-time">{{ log.created_at.strftime('%H:%M:%S') }}</span>
+                        </div>
+                        {% if log.content %}
+                        <div class="log-content">
+                            {{ log.content[:100] }}{% if log.content|length > 100 %}...{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <p>暂无日志数据</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 自动刷新页面数据
+setInterval(function() {
+    // 每30秒刷新一次页面数据
+    location.reload();
+}, 30000);
+
+// 添加实时时间显示
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    // 如果页面有时间显示元素，更新它
+    const timeElement = document.getElementById('currentTime');
+    if (timeElement) {
+        timeElement.textContent = timeString;
+    }
+}
+
+// 每秒更新时间
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+{% endblock %}

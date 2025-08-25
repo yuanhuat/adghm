@@ -33,14 +33,19 @@ def create_app():
     from app.auth import auth
     from app.admin import admin
     from app.main import main
+    from app.payment import payment
 
     app.register_blueprint(auth)
     app.register_blueprint(admin, url_prefix='/admin')
     app.register_blueprint(main)
+    app.register_blueprint(payment, url_prefix='/payment')
 
     # 导入所有模型以确保它们在创建数据库表之前被定义
     from app.models import User, ClientMapping, OperationLog, AdGuardConfig, Feedback, VerificationCode, EmailConfig
     from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
+    from app.models.payment_config import PaymentConfig
+    from app.models.donation_order import DonationOrder
+    from app.models.payment_log import PaymentLog
 
     # 在应用上下文中创建所有数据库表
     with app.app_context():
