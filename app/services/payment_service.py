@@ -41,25 +41,39 @@ class PaymentService:
                     'request_data': request_data
                 }
             elif order.payment_type == PaymentType.WXPAY:
-                # 微信支付 - API接口
-                response = requests.post(self.config.api_url, data=params, timeout=30)
-                response_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {'raw': response.text}
+                # 微信支付 - 根据设备类型决定处理方式
+                is_mobile = self._is_mobile_device(order.user_agent)
                 
-                if response.status_code == 200 and response_data.get('code') == 1:
+                if is_mobile:
+                    # 手机端 - 页面跳转
+                    payurl = f"{self.config.submit_url}?{urlencode(params)}"
                     return {
                         'success': True,
-                        'qrcode': response_data.get('qrcode'),
-                        'payurl': response_data.get('payurl'),
+                        'payurl': payurl,
                         'request_data': request_data,
-                        'response_data': response_data
+                        'device_type': 'mobile'
                     }
                 else:
-                    return {
-                        'success': False,
-                        'message': response_data.get('msg', '支付接口返回异常'),
-                        'request_data': request_data,
-                        'response_data': response_data
-                    }
+                    # PC端 - API接口获取二维码
+                    response = requests.post(self.config.api_url, data=params, timeout=30)
+                    response_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {'raw': response.text}
+                    
+                    if response.status_code == 200 and response_data.get('code') == 1:
+                        return {
+                            'success': True,
+                            'qrcode': response_data.get('qrcode'),
+                            'payurl': response_data.get('payurl'),
+                            'request_data': request_data,
+                            'response_data': response_data,
+                            'device_type': 'pc'
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'message': response_data.get('msg', '支付接口返回异常'),
+                            'request_data': request_data,
+                            'response_data': response_data
+                        }
             else:
                 return {
                     'success': False,
@@ -103,6 +117,10 @@ class PaymentService:
         else:
             raise ValueError('不支持的支付方式')
         
+        # 检测设备类型
+        is_mobile = self._is_mobile_device(order.user_agent)
+        device_type = 'mobile' if is_mobile else 'pc'
+        
         params = {
             'pid': self.config.merchant_id,
             'type': pay_type,
@@ -112,11 +130,25 @@ class PaymentService:
             'name': f'爱心捐赠 - {order.donor_name or "匿名"}',
             'money': str(order.amount),
             'sitename': '爱心捐赠平台',
-            'clientip': order.client_ip or '127.0.0.1',  # 添加客户端IP地址
-            'device': 'pc'  # 设备类型，默认为pc
+            'clientip': order.client_ip or '127.0.0.1',
+            'device': device_type
         }
         
         return params
+    
+    def _is_mobile_device(self, user_agent):
+        """检测是否为移动设备"""
+        if not user_agent:
+            return False
+        
+        user_agent = user_agent.lower()
+        mobile_keywords = [
+            'mobile', 'android', 'iphone', 'ipad', 'ipod', 
+            'blackberry', 'windows phone', 'opera mini',
+            'iemobile', 'mobile safari', 'fennec', 'maemo'
+        ]
+        
+        return any(keyword in user_agent for keyword in mobile_keywords)
     
     def _generate_sign(self, params):
         """生成MD5签名"""
