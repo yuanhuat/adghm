@@ -125,6 +125,12 @@
     100% { transform: rotate(360deg); }
 }
 
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
 .countdown {
     color: #e74c3c;
     font-weight: 600;
@@ -290,6 +296,13 @@
         <div class="countdown" id="countdown">支付剩余时间：15:00</div>
     </div>
     
+    {% if payurl %}
+    <div class="actions" style="margin-bottom: 1rem;" id="directPaySection">
+        <a href="{{ payurl }}" class="btn btn-primary" style="background: #28a745; border-color: #28a745; font-size: 1.1rem; padding: 0.8rem 2rem;">💳 直接支付</a>
+        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #6c757d;">如果二维码无法显示，请点击上方按钮</div>
+    </div>
+    {% endif %}
+    
     <div class="actions">
         <button class="btn btn-primary" onclick="checkPaymentStatus()" id="checkBtn">
             检查支付状态
@@ -350,17 +363,88 @@ function generateQRCode() {
     const qrcodeContainer = document.getElementById('qrcode-container');
     
     if (qrcodeData) {
-        // 使用在线二维码生成API
-        const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrcodeData)}`;
+        // 使用多个备用二维码生成服务，优先使用国内可访问的
+        const qrcodeServices = [
+            {
+                name: '联图二维码',
+                url: `https://qr.liantu.com/api.php?text=${encodeURIComponent(qrcodeData)}`
+            },
+            {
+                name: 'QR码生成器',
+                url: `https://api.isoyu.com/qr/?m=1&e=L&p=20&url=${encodeURIComponent(qrcodeData)}`
+            },
+            {
+                name: 'QR Server',
+                url: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrcodeData)}`
+            }
+        ];
         
-        const img = document.createElement('img');
-        img.src = qrcodeUrl;
-        img.alt = '支付二维码';
-        img.className = 'qrcode-image';
-        img.style.maxWidth = '200px';
-        img.style.height = 'auto';
+        let currentServiceIndex = 0;
         
-        qrcodeContainer.appendChild(img);
+        function tryLoadQRCode() {
+            if (currentServiceIndex >= qrcodeServices.length) {
+                 // 所有服务都失败，显示错误信息和备用方案
+                 qrcodeContainer.innerHTML = `
+                     <div style="color: #e74c3c; padding: 2rem; text-align: center;">
+                         <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
+                         <div>二维码生成服务暂时不可用</div>
+                         <div style="margin-top: 1rem; font-size: 0.9rem; color: #6c757d;">请使用下方的直接支付链接</div>
+                     </div>
+                 `;
+                 
+                 // 突出显示直接支付按钮
+                 const directPaySection = document.getElementById('directPaySection');
+                 if (directPaySection) {
+                     directPaySection.style.border = '2px solid #28a745';
+                     directPaySection.style.borderRadius = '8px';
+                     directPaySection.style.padding = '1rem';
+                     directPaySection.style.background = '#f8fff9';
+                     directPaySection.style.animation = 'pulse 2s infinite';
+                 }
+                 
+                 return;
+             }
+            
+            const service = qrcodeServices[currentServiceIndex];
+            const img = document.createElement('img');
+            img.alt = '支付二维码';
+            img.className = 'qrcode-image';
+            img.style.maxWidth = '200px';
+            img.style.height = 'auto';
+            
+            // 设置加载超时
+            const timeout = setTimeout(() => {
+                console.log(`${service.name} 加载超时，尝试下一个服务...`);
+                currentServiceIndex++;
+                tryLoadQRCode();
+            }, 5000);
+            
+            img.onload = function() {
+                clearTimeout(timeout);
+                qrcodeContainer.innerHTML = '';
+                qrcodeContainer.appendChild(img);
+                console.log(`${service.name} 加载成功`);
+            };
+            
+            img.onerror = function() {
+                clearTimeout(timeout);
+                console.log(`${service.name} 加载失败，尝试下一个服务...`);
+                currentServiceIndex++;
+                tryLoadQRCode();
+            };
+            
+            img.src = service.url;
+        }
+        
+        // 显示加载状态
+        qrcodeContainer.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #6c757d;">
+                <div class="spinner" style="margin: 0 auto 1rem;"></div>
+                <div>正在生成二维码...</div>
+            </div>
+        `;
+        
+        tryLoadQRCode();
     }
 }
 
