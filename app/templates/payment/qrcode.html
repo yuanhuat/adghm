@@ -272,6 +272,19 @@
         </div>
     </div>
     
+    {% if device_type == 'mobile' and order.payment_type.value == 'wxpay' %}
+    <!-- 手机端微信支付：显示直接支付按钮 -->
+    <div class="mobile-payment-section">
+        <div class="payment-icon" style="text-align: center; margin: 2rem 0;">
+            <div style="font-size: 4rem; color: #07c160;">💚</div>
+            <div style="font-size: 1.2rem; color: #333; margin-top: 1rem;">微信支付</div>
+        </div>
+        <div class="mobile-tips" style="text-align: center; color: #666; margin-bottom: 2rem;">
+            点击下方按钮跳转到微信支付页面
+        </div>
+    </div>
+    {% else %}
+    <!-- PC端或支付宝：显示二维码 -->
     <div class="qrcode-section">
         <div class="qrcode-wrapper">
             <div id="qrcode-container"></div>
@@ -287,6 +300,7 @@
             扫描上方二维码完成支付
         </div>
     </div>
+    {% endif %}
     
     <div class="status-section">
         <div class="status-indicator status-waiting" id="statusIndicator">
@@ -298,8 +312,15 @@
     
     {% if payurl %}
     <div class="actions" style="margin-bottom: 1rem;" id="directPaySection">
-        <a href="{{ payurl }}" class="btn btn-primary" style="background: #28a745; border-color: #28a745; font-size: 1.1rem; padding: 0.8rem 2rem;">💳 直接支付</a>
-        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #6c757d;">如果二维码无法显示，请点击上方按钮</div>
+        {% if device_type == 'mobile' and order.payment_type.value == 'wxpay' %}
+            <!-- 手机端微信支付：突出显示支付按钮 -->
+            <a href="{{ payurl }}" class="btn btn-primary" style="background: #07c160; border-color: #07c160; font-size: 1.3rem; padding: 1rem 3rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(7, 193, 96, 0.3);">🚀 立即支付</a>
+            <div style="margin-top: 0.8rem; font-size: 1rem; color: #666; text-align: center;">点击按钮跳转到微信支付</div>
+        {% else %}
+            <!-- PC端或其他：常规显示 -->
+            <a href="{{ payurl }}" class="btn btn-primary" style="background: #28a745; border-color: #28a745; font-size: 1.1rem; padding: 0.8rem 2rem;">💳 直接支付</a>
+            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #6c757d;">如果二维码无法显示，请点击上方按钮</div>
+        {% endif %}
     </div>
     {% endif %}
     

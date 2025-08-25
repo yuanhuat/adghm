@@ -145,12 +145,28 @@ def pay(order_no):
             )
             
             # 根据返回结果处理支付
+            device_type = result.get('device_type', 'pc')
+            
             if 'payurl' in result and result['payurl']:
-                return redirect(result['payurl'])
+                # 如果是手机端微信支付，直接跳转
+                if order.payment_type == PaymentType.WXPAY and device_type == 'mobile':
+                    return redirect(result['payurl'])
+                # 支付宝支付，直接跳转
+                elif order.payment_type == PaymentType.ALIPAY:
+                    return redirect(result['payurl'])
+                # PC端微信支付，显示二维码页面但提供跳转链接
+                else:
+                    return render_template('payment/qrcode.html', 
+                                         order=order, 
+                                         qrcode=result.get('qrcode'),
+                                         payurl=result['payurl'],
+                                         device_type=device_type)
             elif 'qrcode' in result and result['qrcode']:
                 return render_template('payment/qrcode.html', 
                                      order=order, 
-                                     qrcode=result['qrcode'])
+                                     qrcode=result['qrcode'],
+                                     payurl=result.get('payurl'),
+                                     device_type=device_type)
             else:
                 flash('支付接口返回异常', 'error')
                 return redirect(url_for('payment.donate'))
