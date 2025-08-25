@@ -268,7 +268,8 @@
     
     <div class="qrcode-section">
         <div class="qrcode-wrapper">
-            <img src="{{ qrcode }}" alt="支付二维码" class="qrcode-image" id="qrcodeImage">
+            <div id="qrcode-container"></div>
+            <img src="" alt="支付二维码" class="qrcode-image" id="qrcodeImage" style="display: none;">
         </div>
         <div class="qrcode-tips">
             请使用
@@ -337,10 +338,31 @@ let timeLeft = 15 * 60; // 15分钟
 let isPaymentCompleted = false;
 
 // 页面加载完成后开始倒计时和状态检查
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function() {
+    generateQRCode();
     startCountdown();
     startStatusCheck();
 });
+
+// 生成二维码
+function generateQRCode() {
+    const qrcodeData = '{{ qrcode|safe }}';
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    
+    if (qrcodeData) {
+        // 使用在线二维码生成API
+        const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrcodeData)}`;
+        
+        const img = document.createElement('img');
+        img.src = qrcodeUrl;
+        img.alt = '支付二维码';
+        img.className = 'qrcode-image';
+        img.style.maxWidth = '200px';
+        img.style.height = 'auto';
+        
+        qrcodeContainer.appendChild(img);
+    }
+}
 
 // 开始倒计时
 function startCountdown() {

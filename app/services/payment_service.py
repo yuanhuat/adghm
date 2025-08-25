@@ -112,7 +112,8 @@ class PaymentService:
             'name': f'爱心捐赠 - {order.donor_name or "匿名"}',
             'money': str(order.amount),
             'sitename': '爱心捐赠平台',
-            'clientip': order.client_ip or '127.0.0.1'  # 添加客户端IP地址
+            'clientip': order.client_ip or '127.0.0.1',  # 添加客户端IP地址
+            'device': 'pc'  # 设备类型，默认为pc
         }
         
         return params

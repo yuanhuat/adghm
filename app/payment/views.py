@@ -113,8 +113,14 @@ def create_order():
 
 @payment.route('/pay/<order_no>')
 def pay(order_no):
-    """发起支付"""
+    """支付页面"""
+    # 检查订单号是否有效
+    if not order_no or order_no == 'None' or order_no.strip() == '':
+        flash('订单号无效', 'error')
+        return redirect(url_for('payment.donate'))
+    
     order = DonationOrder.get_by_order_no(order_no)
+    
     if not order:
         flash('订单不存在', 'error')
         return redirect(url_for('payment.donate'))
@@ -139,9 +145,9 @@ def pay(order_no):
             )
             
             # 根据返回结果处理支付
-            if 'payurl' in result:
+            if 'payurl' in result and result['payurl']:
                 return redirect(result['payurl'])
-            elif 'qrcode' in result:
+            elif 'qrcode' in result and result['qrcode']:
                 return render_template('payment/qrcode.html', 
                                      order=order, 
                                      qrcode=result['qrcode'])
