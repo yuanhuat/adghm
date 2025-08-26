@@ -16,7 +16,9 @@
                 <a href="{{ url_for('main.clients') }}"><i class="fas fa-desktop"></i> 客户端管理</a>
                 <a href="{{ url_for('main.guide') }}"><i class="fas fa-book"></i> 使用指南</a>
                 <a href="{{ url_for('main.donation') }}"><i class="fas fa-heart"></i> 支持我们</a>
+                {% if donation_config and donation_config.show_ranking %}
                 <a href="{{ url_for('main.donation_ranking') }}"><i class="fas fa-trophy"></i> 捐赠排行榜</a>
+                {% endif %}
                 <a href="http://test.dns.con:5000/dns-test" target="_blank"><i class="fas fa-network-wired"></i> DNS检测</a>
                 <div class="nav-dropdown">
                     <a href="#" class="nav-dropdown-toggle"><i class="fas fa-user-cog"></i> 账户设置 ▼</a>

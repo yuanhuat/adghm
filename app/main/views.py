@@ -64,9 +64,13 @@ def index():
         user_request_count = 0
         total_dns_queries = 0
     
+    # 获取捐赠配置
+    donation_config = DonationConfig.query.first()
+    
     return render_template('main/index.html', 
                          user_request_count=user_request_count,
-                         total_dns_queries=total_dns_queries)
+                         total_dns_queries=total_dns_queries,
+                         donation_config=donation_config)
 
 
 

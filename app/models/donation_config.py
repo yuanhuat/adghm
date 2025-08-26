@@ -19,13 +19,14 @@ class DonationConfig(db.Model):
     min_amount = db.Column(db.Numeric(10, 2), default=1.00, nullable=False, comment='最小捐赠金额')
     max_amount = db.Column(db.Numeric(10, 2), default=1000.00, nullable=False, comment='最大捐赠金额')
     enabled = db.Column(db.Boolean, default=False, nullable=False, comment='是否启用捐赠功能')
+    show_ranking = db.Column(db.Boolean, default=True, nullable=False, comment='是否在首页显示捐赠排行榜入口')
     created_at = db.Column(db.DateTime, default=beijing_time)
     updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
     def __init__(self, merchant_id=None, api_url=None, api_key=None, 
                  notify_url=None, return_url=None, donation_title='支持我们',
                  donation_description=None, min_amount=1.00, max_amount=1000.00,
-                 enabled=False):
+                 enabled=False, show_ranking=True):
         """初始化捐赠配置对象
         
         Args:
@@ -50,6 +51,7 @@ class DonationConfig(db.Model):
         self.min_amount = min_amount
         self.max_amount = max_amount
         self.enabled = enabled
+        self.show_ranking = show_ranking
     
     @classmethod
     def get_config(cls):

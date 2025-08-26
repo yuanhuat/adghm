@@ -1477,6 +1477,7 @@ def donation_config():
             min_amount = float(request.form.get('min_amount', 1.0))
             max_amount = float(request.form.get('max_amount', 10000.0))
             enabled = 'enabled' in request.form
+            show_ranking = 'show_ranking' in request.form
             
             # 更新配置
             config.merchant_id = merchant_id
@@ -1489,6 +1490,7 @@ def donation_config():
             config.min_amount = min_amount
             config.max_amount = max_amount
             config.enabled = enabled
+            config.show_ranking = show_ranking
             
             db.session.commit()
             
@@ -1498,7 +1500,7 @@ def donation_config():
                 operation_type='update_donation_config',
                 target_type='SYSTEM',
                 target_id='donation_config',
-                details=f'更新捐赠配置：启用={enabled}，商户ID={merchant_id}'
+                details=f'更新捐赠配置：启用={enabled}，排行榜显示={show_ranking}，商户ID={merchant_id}'
             )
             db.session.add(log)
             db.session.commit()
@@ -1533,6 +1535,7 @@ def manage_donation_config():
                     'min_amount': config.min_amount,
                     'max_amount': config.max_amount,
                     'enabled': config.enabled,
+                    'show_ranking': config.show_ranking,
                     'is_complete': config.is_configured()
                 }
             })
@@ -1568,6 +1571,8 @@ def manage_donation_config():
                 config.max_amount = float(data['max_amount'])
             if 'enabled' in data:
                 config.enabled = bool(data['enabled'])
+            if 'show_ranking' in data:
+                config.show_ranking = bool(data['show_ranking'])
             
             db.session.commit()
             
@@ -1595,6 +1600,7 @@ def manage_donation_config():
                     'min_amount': config.min_amount,
                     'max_amount': config.max_amount,
                     'enabled': config.enabled,
+                    'show_ranking': config.show_ranking,
                     'is_complete': config.is_configured()
                 }
             })

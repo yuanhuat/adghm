@@ -38,6 +38,15 @@
                             关闭此选项后，用户将无法访问捐赠页面。
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="show_ranking" name="show_ranking" {% if config.show_ranking %}checked{% endif %}>
+                            <label class="form-check-label" for="show_ranking">显示捐赠排行榜入口</label>
+                        </div>
+                        <div class="form-text text-muted">
+                            控制首页head栏是否显示捐赠排行榜入口链接。
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="row mb-3">
