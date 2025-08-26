@@ -76,6 +76,11 @@
             <p>AdGuardHome总查询数量</p>
         </div>
         <div class="dashboard-card small-card">
+            <h2>总拦截数</h2>
+            <p class="dashboard-stat" id="total-blocked-queries">{{ total_blocked_queries or 0 }}</p>
+            <p>AdGuardHome总拦截数量</p>
+        </div>
+        <div class="dashboard-card small-card">
             <h2>账号信息</h2>
             <div class="info-list">
                 <p><strong>用户名：</strong>{{ current_user.username }}</p>
@@ -455,6 +460,12 @@ function updateStats() {
             const totalQueriesElement = document.getElementById('total-dns-queries');
             if (totalQueriesElement) {
                 animateNumber(totalQueriesElement, data.total_dns_queries || 0);
+            }
+            
+            // 更新总拦截数（滚动效果）
+            const totalBlockedElement = document.getElementById('total-blocked-queries');
+            if (totalBlockedElement) {
+                animateNumber(totalBlockedElement, data.total_blocked_queries || 0);
             }
             
             // 更新用户排名信息

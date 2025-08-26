@@ -31,6 +31,7 @@ def index():
     # 获取当前用户的AdGuardHome客户端请求数量和总DNS查询数量
     user_request_count = 0
     total_dns_queries = 0
+    total_blocked_queries = 0
     try:
         adguard_service = AdGuardService()
         
@@ -40,6 +41,14 @@ def index():
         if stats:
             # 获取总DNS查询数量
             total_dns_queries = stats.get('num_dns_queries', 0)
+            
+            # 获取总拦截数量（包括所有类型的拦截）
+            total_blocked_queries = (
+                stats.get('num_blocked_filtering', 0) +
+                stats.get('num_replaced_safebrowsing', 0) +
+                stats.get('num_replaced_safesearch', 0) +
+                stats.get('num_replaced_parental', 0)
+            )
             
             # 获取用户客户端请求数量
             if 'top_clients' in stats:
@@ -63,6 +72,7 @@ def index():
         logging.error(f"获取AdGuardHome统计数据失败: {str(e)}")
         user_request_count = 0
         total_dns_queries = 0
+        total_blocked_queries = 0
     
     # 获取捐赠配置
     donation_config = DonationConfig.query.first()
@@ -70,6 +80,7 @@ def index():
     return render_template('main/index.html', 
                          user_request_count=user_request_count,
                          total_dns_queries=total_dns_queries,
+                         total_blocked_queries=total_blocked_queries,
                          donation_config=donation_config)
 
 
@@ -138,6 +149,7 @@ def api_stats():
     """
     user_request_count = 0
     total_dns_queries = 0
+    total_blocked_queries = 0
     user_ranking = 0
     total_clients = 0
     
@@ -150,6 +162,14 @@ def api_stats():
         if stats:
             # 获取总DNS查询数量
             total_dns_queries = stats.get('num_dns_queries', 0)
+            
+            # 获取总拦截数量（包括所有类型的拦截）
+            total_blocked_queries = (
+                stats.get('num_blocked_filtering', 0) +
+                stats.get('num_replaced_safebrowsing', 0) +
+                stats.get('num_replaced_safesearch', 0) +
+                stats.get('num_replaced_parental', 0)
+            )
             
             # 获取用户客户端请求数量和排名
             if 'top_clients' in stats:
@@ -191,12 +211,14 @@ def api_stats():
         logging.error(f"API获取AdGuardHome统计数据失败: {str(e)}")
         user_request_count = 0
         total_dns_queries = 0
+        total_blocked_queries = 0
         user_ranking = 0
         total_clients = 0
     
     return jsonify({
         'user_request_count': user_request_count,
         'total_dns_queries': total_dns_queries,
+        'total_blocked_queries': total_blocked_queries,
         'user_ranking': user_ranking,
         'total_clients': total_clients
     })
