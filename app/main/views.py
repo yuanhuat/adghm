@@ -1257,6 +1257,10 @@ def donation_ranking():
     
     显示捐赠者排行榜和最近捐赠记录
     """
+    # 获取捐赠配置
+    from app.models.donation_config import DonationConfig
+    config = DonationConfig.get_config()
+    
     # 获取排行榜数据（前20名）
     leaderboard = DonationRecord.get_leaderboard(limit=20)
     
@@ -1271,7 +1275,8 @@ def donation_ranking():
                          leaderboard=leaderboard,
                          recent_donations=recent_donations,
                          total_amount=total_amount,
-                         total_count=total_count)
+                         total_count=total_count,
+                         hide_amount=config.hide_amount if config else False)
 
 
 @main.route('/donation/return', methods=['GET'])

@@ -465,7 +465,7 @@
             <div class="stats-row">
                 <div class="stat-card">
                     <h3>总捐赠金额</h3>
-                    <div class="stat-value">¥{{ "%.2f"|format(total_amount or 0) }}</div>
+                    <div class="stat-value">{% if hide_amount %}***{% else %}¥{{ "%.2f"|format(total_amount or 0) }}{% endif %}</div>
                     <i class="fas fa-coins fa-2x" style="opacity: 0.7;"></i>
                 </div>
                 <div class="stat-card success">
@@ -513,7 +513,7 @@
                                         {% endif %}
                                     </td>
                                     <td><strong>{{ record.donor_name }}</strong></td>
-                                    <td><span class="amount">¥{{ "%.2f"|format(record.total_amount) }}</span></td>
+                                    <td><span class="amount">{% if hide_amount %}***{% else %}¥{{ "%.2f"|format(record.total_amount) }}{% endif %}</span></td>
                                     <td><span class="count-badge">{{ record.donation_count }}</span></td>
                                 </tr>
                                 {% endfor %}
@@ -544,7 +544,7 @@
                             <div class="recent-item">
                                 <div class="recent-info">
                                     <h6>{{ donation.donor_name }}</h6>
-                                    <p class="amount">¥{{ "%.2f"|format(donation.amount) }}</p>
+                                    <p class="amount">{% if hide_amount %}***{% else %}¥{{ "%.2f"|format(donation.amount) }}{% endif %}</p>
                                     <p class="time">
                                         {{ donation.paid_at.strftime('%m-%d %H:%M') if donation.paid_at else donation.created_at.strftime('%m-%d %H:%M') }}
                                     </p>
