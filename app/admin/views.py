@@ -14,6 +14,7 @@ from app.models.adguard_config import AdGuardConfig
 from app.models.dns_config import DnsConfig
 from app.models.system_config import SystemConfig
 from app.models.donation_config import DonationConfig
+from app.models.donation_record import DonationRecord
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -791,43 +792,78 @@ def manage_ai_analysis_config():
                 'success': False,
                 'error': str(e)
             }), 500
+
+
+@admin.route('/api/donation-records/clear', methods=['POST'])
+@login_required
+@admin_required
+def clear_donation_records():
+    """清空所有捐赠记录
     
-    elif request.method == 'POST':
-        try:
-            data = request.get_json()
-            config = AdGuardConfig.get_config()
-            
-            # 更新配置
-            if 'deepseek_api_key' in data:
-                config.deepseek_api_key = data['deepseek_api_key']
-            if 'auto_analysis_enabled' in data:
-                config.auto_analysis_enabled = data['auto_analysis_enabled']
-            if 'analysis_threshold' in data:
-                config.analysis_threshold = float(data['analysis_threshold'])
-            
-            db.session.commit()
-            
-            # 记录操作日志
-            log = OperationLog(
-                user_id=current_user.id,
-                operation_type='update_ai_config',
-                target_type='config',
-                target_id='ai_analysis',
-                details='更新AI分析配置'
-            )
-            db.session.add(log)
-            db.session.commit()
-            
+    管理员可以使用此接口清空所有捐赠记录，用于重置捐赠排行榜。
+    此操作不可逆，请谨慎使用。
+    """
+    try:
+        # 获取要删除的记录数量
+        record_count = DonationRecord.query.count()
+        
+        if record_count == 0:
             return jsonify({
                 'success': True,
-                'message': 'AI分析配置已更新'
+                'message': '没有捐赠记录需要清空',
+                'deleted_count': 0
             })
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({
-                'success': False,
-                'error': str(e)
-            }), 500
+        
+        # 删除所有捐赠记录
+        DonationRecord.query.delete()
+        db.session.commit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='clear_donation_records',
+            target_type='donation_record',
+            target_id='all',
+            details=f'清空所有捐赠记录，共删除 {record_count} 条记录'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'成功清空所有捐赠记录，共删除 {record_count} 条记录',
+            'deleted_count': record_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'清空捐赠记录失败：{str(e)}'
+        }), 500
+
+
+@admin.route('/donation-records')
+@login_required
+@admin_required
+def donation_records():
+    """捐赠记录管理页面
+    
+    显示所有捐赠记录，并提供清空功能
+    """
+    # 获取所有捐赠记录，按创建时间倒序
+    records = DonationRecord.query.order_by(DonationRecord.created_at.desc()).all()
+    
+    # 获取统计信息
+    total_amount = DonationRecord.get_total_amount()
+    total_count = DonationRecord.get_total_count()
+    success_count = DonationRecord.query.filter_by(status='success').count()
+    
+    return render_template('admin/donation_records.html', 
+                         records=records,
+                         total_amount=total_amount,
+                         total_count=total_count,
+                         success_count=success_count)
 
 
 
