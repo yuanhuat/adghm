@@ -1171,7 +1171,7 @@ def create_donation():
             db.session.add(log)
             db.session.commit()
         
-        # 构建支付表单HTML
+        # 构建支付表单HTML（直接调用submit.php接口）
         form_html = f'''
         <!DOCTYPE html>
         <html>
@@ -1191,6 +1191,7 @@ def create_donation():
             <form id="payForm" method="post" action="{config.api_url}">
         '''
         
+        # 直接使用EpayCore期望的参数格式（不需要WID前缀）
         for key, value in pay_params.items():
             form_html += f'<input type="hidden" name="{key}" value="{value}" />\n'
         
