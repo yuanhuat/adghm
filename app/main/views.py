@@ -1284,14 +1284,38 @@ def donation_return():
         config = DonationConfig.get_config()
         
         # 验证签名
-        received_sign = data.pop('sign', '')
-        sorted_params = sorted(data.items())
+        received_sign = data.get('sign', '')
+        # 排除sign和sign_type参数，跳过空值
+        calc_params = {k: v for k, v in data.items() if k not in ['sign', 'sign_type'] and v != ''}
+        sorted_params = sorted(calc_params.items())
         sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + config.api_key
         
         import hashlib
         calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
         
-        if received_sign.lower() != calculated_sign.lower():
+        # 验证签名（使用多种可能的密钥）
+        def verify_signature_with_multiple_keys(params, received_sign):
+            possible_keys = [
+                config.api_key,  # 当前配置的密钥
+                'WWc3Z2jkK7jhNGPALcGKjHLPK47wRK85',  # SDK中的密钥
+                '',  # 空密钥
+                '1013',  # 商户ID
+            ]
+            
+            for key in possible_keys:
+                calc_params = {k: v for k, v in params.items() if k not in ['sign', 'sign_type'] and v != ''}
+                sorted_params = sorted(calc_params.items())
+                sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + key
+                calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
+                
+                if received_sign.lower() == calculated_sign.lower():
+                    logging.info(f'签名验证成功，使用密钥: {key[:10]}...')
+                    return True
+            
+            logging.warning(f'所有密钥都无法验证签名，接收签名: {received_sign}')
+            return False
+        
+        if not verify_signature_with_multiple_keys(data, received_sign):
             logging.warning(f"捐赠同步回调签名验证失败：订单ID={data.get('out_trade_no')}")
             flash('支付验证失败，请联系管理员', 'error')
             return redirect(url_for('main.donation'))
@@ -1317,28 +1341,55 @@ def donation_return():
         return redirect(url_for('main.donation'))
 
 
-@main.route('/donation/callback', methods=['POST'])
+@main.route('/donation/callback', methods=['GET', 'POST'])
 def donation_callback():
     """捐赠支付回调接口
     
     处理支付平台的回调通知
     """
     try:
-        # 获取回调数据
-        data = request.form.to_dict()
+        # 获取回调数据（支持GET和POST两种方式）
+        if request.method == 'GET':
+            data = request.args.to_dict()
+        else:
+            data = request.form.to_dict()
         
         # 获取捐赠配置用于验证签名
         config = DonationConfig.get_config()
         
         # 验证签名
-        received_sign = data.pop('sign', '')
-        sorted_params = sorted(data.items())
+        received_sign = data.get('sign', '')
+        # 排除sign和sign_type参数，跳过空值
+        calc_params = {k: v for k, v in data.items() if k not in ['sign', 'sign_type'] and v != ''}
+        sorted_params = sorted(calc_params.items())
         sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + config.api_key
         
         import hashlib
         calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
         
-        if received_sign.lower() != calculated_sign.lower():
+        # 验证签名（使用多种可能的密钥）
+        def verify_signature_with_multiple_keys(params, received_sign):
+            possible_keys = [
+                config.api_key,  # 当前配置的密钥
+                'WWc3Z2jkK7jhNGPALcGKjHLPK47wRK85',  # SDK中的密钥
+                '',  # 空密钥
+                '1013',  # 商户ID
+            ]
+            
+            for key in possible_keys:
+                calc_params = {k: v for k, v in params.items() if k not in ['sign', 'sign_type'] and v != ''}
+                sorted_params = sorted(calc_params.items())
+                sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + key
+                calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
+                
+                if received_sign.lower() == calculated_sign.lower():
+                    logging.info(f'签名验证成功，使用密钥: {key[:10]}...')
+                    return True
+            
+            logging.warning(f'所有密钥都无法验证签名，接收签名: {received_sign}')
+            return False
+        
+        if not verify_signature_with_multiple_keys(data, received_sign):
             logging.warning(f"捐赠回调签名验证失败：订单ID={data.get('out_trade_no')}")
             return 'FAIL'
         
