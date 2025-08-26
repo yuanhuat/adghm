@@ -25,6 +25,14 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """验证密码"""
         return check_password_hash(self.password_hash, password)
+    
+    def is_vip(self):
+        """检查用户是否为VIP（有成功的捐赠记录）"""
+        from app.models.donation_record import DonationRecord
+        return DonationRecord.query.filter_by(
+            user_id=self.id,
+            status='success'
+        ).first() is not None
 
 @login_manager.user_loader
 def load_user(id):

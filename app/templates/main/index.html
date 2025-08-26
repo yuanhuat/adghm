@@ -85,7 +85,7 @@
             <div class="info-list">
                 <p><strong>用户名：</strong>{{ current_user.username }}</p>
                 <p><strong>注册时间：</strong>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                <p><strong>账号类型：</strong>{% if current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
+                <p><strong>账号类型：</strong>{% if current_user.is_vip() %}VIP用户{% elif current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
             </div>
         </div>
         <div class="dashboard-card">
