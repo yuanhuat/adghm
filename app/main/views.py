@@ -9,6 +9,7 @@ from app.models.announcement import Announcement
 from app.models.feedback import Feedback
 from app.models.dns_config import DnsConfig
 from app.models.donation_config import DonationConfig
+from app.models.donation_record import DonationRecord
 from app.services.adguard_service import AdGuardService
 
 from app.admin.views import admin_required
@@ -1070,12 +1071,23 @@ def donation():
         flash('捐赠功能暂时不可用', 'info')
         return redirect(url_for('main.index'))
     
+    # 获取当前用户的客户端名称作为默认捐赠者姓名
+    default_donor_name = ''
+    if current_user.is_authenticated:
+        try:
+            client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
+            if client_mapping:
+                default_donor_name = client_mapping.client_name
+        except Exception as e:
+            logging.error(f"获取用户客户端名称失败: {str(e)}")
+    
     return render_template('main/donation.html', 
                          config=config,
                          min_amount=float(config.min_amount),
                          max_amount=float(config.max_amount),
                          donation_enabled=True,
-                         donation_description=config.donation_description)
+                         donation_description=config.donation_description,
+                         default_donor_name=default_donor_name)
 
 
 @main.route('/api/donation/create', methods=['POST'])
@@ -1159,6 +1171,17 @@ def create_donation():
         pay_params['sign'] = sign
         pay_params['sign_type'] = 'MD5'
         
+        # 创建捐赠记录
+        donation_record = DonationRecord(
+            order_id=order_id,
+            donor_name=donor_name if donor_name else '匿名捐赠者',
+            amount=amount,
+            payment_type=payment_type,
+            status='pending',
+            user_id=current_user.id if current_user.is_authenticated else None
+        )
+        db.session.add(donation_record)
+        
         # 记录操作日志
         if current_user.is_authenticated:
             log = OperationLog(
@@ -1169,7 +1192,8 @@ def create_donation():
                 details=f'创建捐赠订单：金额={amount}，支付方式={payment_type}，捐赠者={donor_name}'
             )
             db.session.add(log)
-            db.session.commit()
+        
+        db.session.commit()
         
         # 构建支付表单HTML（直接调用submit.php接口）
         form_html = f'''
@@ -1221,6 +1245,29 @@ def donation_success():
     用户支付完成后的跳转页面
     """
     return render_template('main/donation_success.html')
+
+
+@main.route('/donation/ranking')
+def donation_ranking():
+    """捐赠排行榜页面
+    
+    显示捐赠者排行榜和最近捐赠记录
+    """
+    # 获取排行榜数据（前20名）
+    leaderboard = DonationRecord.get_leaderboard(limit=20)
+    
+    # 获取最近捐赠记录（前10条）
+    recent_donations = DonationRecord.get_recent_donations(limit=10)
+    
+    # 获取统计数据
+    total_amount = DonationRecord.get_total_amount()
+    total_count = DonationRecord.get_total_count()
+    
+    return render_template('main/donation_ranking.html', 
+                         leaderboard=leaderboard,
+                         recent_donations=recent_donations,
+                         total_amount=total_amount,
+                         total_count=total_count)
 
 
 @main.route('/donation/return', methods=['GET'])
@@ -1300,11 +1347,24 @@ def donation_callback():
         amount = data.get('money')
         
         if trade_status == 'TRADE_SUCCESS':
-            # 支付成功，记录日志
-            logging.info(f"捐赠支付成功：订单ID={order_id}，金额={amount}")
+            # 支付成功，更新捐赠记录
+            from datetime import datetime
+            donation_record = DonationRecord.query.filter_by(order_id=order_id).first()
+            if donation_record:
+                donation_record.status = 'success'
+                donation_record.trade_no = data.get('trade_no', '')
+                donation_record.paid_at = datetime.utcnow()
+                db.session.commit()
+                logging.info(f"捐赠支付成功：订单ID={order_id}，金额={amount}，捐赠者={donation_record.donor_name}")
+            else:
+                logging.warning(f"未找到捐赠记录：订单ID={order_id}")
             return 'SUCCESS'
         else:
-            # 支付失败或其他状态
+            # 支付失败或其他状态，更新记录状态
+            donation_record = DonationRecord.query.filter_by(order_id=order_id).first()
+            if donation_record:
+                donation_record.status = 'failed'
+                db.session.commit()
             logging.warning(f"捐赠支付状态异常：订单ID={order_id}，状态={trade_status}")
             return 'FAIL'
             
