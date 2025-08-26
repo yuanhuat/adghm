@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.utils.timezone import beijing_time
 
 class QueryLogAnalysis(db.Model):
     """查询日志AI分析结果模型
@@ -16,7 +17,7 @@ class QueryLogAnalysis(db.Model):
     description = db.Column(db.Text)  # AI分析描述
     recommendation = db.Column(db.String(50))  # 推荐操作：block, allow, monitor
     ai_model = db.Column(db.String(50), default='deepseek')  # 使用的AI模型
-    analyzed_at = db.Column(db.DateTime, default=datetime.utcnow)  # 分析时间
+    analyzed_at = db.Column(db.DateTime, default=beijing_time)  # 分析时间
     is_reviewed = db.Column(db.Boolean, default=False)  # 是否已被管理员审核
     admin_action = db.Column(db.String(50))  # 管理员采取的行动
     admin_notes = db.Column(db.Text)  # 管理员备注
@@ -61,7 +62,7 @@ class QueryLogExport(db.Model):
     file_size = db.Column(db.Integer)  # 文件大小（字节）
     record_count = db.Column(db.Integer)  # 导出的记录数
     error_message = db.Column(db.Text)  # 错误信息
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=beijing_time)
     completed_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime)  # 文件过期时间
     

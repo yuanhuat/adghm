@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.utils.timezone import beijing_time
 
 class Feedback(db.Model):
     """用户留言反馈模型"""
@@ -11,8 +12,8 @@ class Feedback(db.Model):
     content = db.Column(db.Text, nullable=False, comment='留言内容')
     status = db.Column(db.String(20), nullable=False, default='open', comment='留言状态：open-待处理，closed-已关闭')
     admin_reply = db.Column(db.Text, comment='管理员回复')
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment='创建时间')
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow, comment='更新时间')
+    created_at = db.Column(db.DateTime, nullable=False, default=beijing_time, comment='创建时间')
+    updated_at = db.Column(db.DateTime, nullable=False, default=beijing_time, onupdate=beijing_time, comment='更新时间')
     closed_at = db.Column(db.DateTime, comment='关闭时间')
     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), comment='关闭人ID')
     
@@ -43,8 +44,8 @@ class Feedback(db.Model):
     def close_feedback(self, admin_user_id, reply=None):
         """关闭留言"""
         self.status = 'closed'
-        self.closed_at = datetime.utcnow()
+        self.closed_at = beijing_time()
         self.closed_by = admin_user_id
         if reply:
             self.admin_reply = reply
-        self.updated_at = datetime.utcnow()
+        self.updated_at = beijing_time()

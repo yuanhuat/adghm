@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from app.services.adguard_service import AdGuardService
+from app.utils.timezone import beijing_time
 from app.models.query_log_analysis import QueryLogExport
 from app import db
 
@@ -162,7 +163,7 @@ class QueryLogService:
             export_record.status = 'completed'
             export_record.file_path = file_path
             export_record.record_count = len(all_logs)
-            export_record.completed_at = datetime.utcnow()
+            export_record.completed_at = beijing_time()
             db.session.commit()
             
             return file_path
@@ -186,7 +187,7 @@ class QueryLogService:
         """
         try:
             # 计算时间范围
-            end_time = datetime.utcnow()
+            end_time = beijing_time()
             if time_range == '1h':
                 start_time = end_time - timedelta(hours=1)
                 interval_minutes = 5
@@ -470,7 +471,7 @@ class QueryLogService:
         export_data = {
             'export_info': {
                 'export_id': export_id,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': beijing_time().isoformat(),
                 'record_count': len(logs)
             },
             'logs': logs

@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.utils.timezone import beijing_time
 
 
 class DonationRecord(db.Model):
@@ -16,7 +17,7 @@ class DonationRecord(db.Model):
     payment_type = db.Column(db.String(20), nullable=False, comment='支付方式')
     trade_no = db.Column(db.String(100), comment='支付平台交易号')
     status = db.Column(db.String(20), default='pending', comment='支付状态')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, comment='创建时间')
+    created_at = db.Column(db.DateTime, default=beijing_time, comment='创建时间')
     paid_at = db.Column(db.DateTime, comment='支付完成时间')
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), comment='用户ID（可选）')
     

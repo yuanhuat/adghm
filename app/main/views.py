@@ -1430,12 +1430,12 @@ def donation_callback():
         
         if trade_status == 'TRADE_SUCCESS':
             # 支付成功，更新捐赠记录
-            from datetime import datetime
+            from app.utils.timezone import beijing_time
             donation_record = DonationRecord.query.filter_by(order_id=order_id).first()
             if donation_record:
                 donation_record.status = 'success'
                 donation_record.trade_no = data.get('trade_no', '')
-                donation_record.paid_at = datetime.utcnow()
+                donation_record.paid_at = beijing_time()
                 db.session.commit()
                 logging.info(f"捐赠支付成功：订单ID={order_id}，金额={amount}，捐赠者={donation_record.donor_name}")
             else:

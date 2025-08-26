@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
+from app.utils.timezone import beijing_time
 from app.models.user import User
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
@@ -358,7 +359,7 @@ def reply_feedback(feedback_id):
         return jsonify({'success': False, 'error': '回复内容不能为空'}), 400
 
     feedback.admin_reply = reply
-    feedback.updated_at = datetime.utcnow()
+    feedback.updated_at = beijing_time()
     db.session.commit()
     return jsonify({'success': True, 'message': '回复成功'})
 

@@ -4,6 +4,7 @@ import logging
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from app import db
+from app.utils.timezone import beijing_time
 from app.models.query_log_analysis import QueryLogAnalysis
 from app.models.adguard_config import AdGuardConfig
 
@@ -48,7 +49,7 @@ class AIAnalysisService:
         # 检查是否已经分析过该域名（24小时内）
         recent_analysis = QueryLogAnalysis.query.filter(
             QueryLogAnalysis.domain == domain,
-            QueryLogAnalysis.analyzed_at > datetime.utcnow() - timedelta(hours=24)
+            QueryLogAnalysis.analyzed_at > beijing_time() - timedelta(hours=24)
         ).first()
         
         if recent_analysis:
@@ -129,7 +130,7 @@ class AIAnalysisService:
             analysis.is_reviewed = True
             analysis.admin_action = admin_action
             analysis.admin_notes = admin_notes
-            analysis.reviewed_at = datetime.utcnow()
+            analysis.reviewed_at = beijing_time()
             analysis.reviewed_by = reviewer_id
             
             db.session.commit()
