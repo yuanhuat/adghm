@@ -13,6 +13,7 @@ from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
 from app.models.dns_config import DnsConfig
 from app.models.system_config import SystemConfig
+from app.models.donation_config import DonationConfig
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -1415,3 +1416,155 @@ def delete_import_source(source_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin.route('/donation-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def donation_config():
+    """捐赠配置管理页面
+    
+    允许管理员配置捐赠相关设置，如商户ID、接口URL、密钥等。
+    """
+    config = DonationConfig.get_config()
+    
+    if request.method == 'POST':
+        try:
+            # 获取表单数据
+            merchant_id = request.form.get('merchant_id', '').strip()
+            api_url = request.form.get('api_url', '').strip()
+            api_key = request.form.get('api_key', '').strip()
+            notify_url = request.form.get('notify_url', '').strip()
+            return_url = request.form.get('return_url', '').strip()
+            donation_title = request.form.get('donation_title', '').strip()
+            donation_description = request.form.get('donation_description', '').strip()
+            min_amount = float(request.form.get('min_amount', 1.0))
+            max_amount = float(request.form.get('max_amount', 10000.0))
+            enabled = 'enabled' in request.form
+            
+            # 更新配置
+            config.merchant_id = merchant_id
+            config.api_url = api_url
+            config.api_key = api_key
+            config.notify_url = notify_url
+            config.return_url = return_url
+            config.donation_title = donation_title
+            config.donation_description = donation_description
+            config.min_amount = min_amount
+            config.max_amount = max_amount
+            config.enabled = enabled
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_donation_config',
+                target_type='SYSTEM',
+                target_id='donation_config',
+                details=f'更新捐赠配置：启用={enabled}，商户ID={merchant_id}'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            flash('捐赠配置已更新', 'success')
+            return redirect(url_for('admin.donation_config'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'更新失败：{str(e)}', 'error')
+    
+    return render_template('admin/donation_config.html', config=config)
+
+
+@admin.route('/api/donation-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_donation_config():
+    """管理捐赠配置API"""
+    if request.method == 'GET':
+        try:
+            config = DonationConfig.get_config()
+            return jsonify({
+                'success': True,
+                'config': {
+                    'merchant_id': config.merchant_id,
+                    'api_url': config.api_url,
+                    'notify_url': config.notify_url,
+                    'return_url': config.return_url,
+                    'donation_title': config.donation_title,
+                    'donation_description': config.donation_description,
+                    'min_amount': config.min_amount,
+                    'max_amount': config.max_amount,
+                    'enabled': config.enabled,
+                    'is_complete': config.is_configured()
+                }
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            config = DonationConfig.get_config()
+            
+            # 更新配置
+            if 'merchant_id' in data:
+                config.merchant_id = data['merchant_id'].strip()
+            if 'api_url' in data:
+                config.api_url = data['api_url'].strip()
+            if 'api_key' in data:
+                config.api_key = data['api_key'].strip()
+            if 'notify_url' in data:
+                config.notify_url = data['notify_url'].strip()
+            if 'return_url' in data:
+                config.return_url = data['return_url'].strip()
+            if 'donation_title' in data:
+                config.donation_title = data['donation_title'].strip()
+            if 'donation_description' in data:
+                config.donation_description = data['donation_description'].strip()
+            if 'min_amount' in data:
+                config.min_amount = float(data['min_amount'])
+            if 'max_amount' in data:
+                config.max_amount = float(data['max_amount'])
+            if 'enabled' in data:
+                config.enabled = bool(data['enabled'])
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_donation_config',
+                target_type='config',
+                target_id='donation',
+                details='更新捐赠配置信息'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': '捐赠配置已更新',
+                'config': {
+                    'merchant_id': config.merchant_id,
+                    'api_url': config.api_url,
+                    'notify_url': config.notify_url,
+                    'return_url': config.return_url,
+                    'donation_title': config.donation_title,
+                    'donation_description': config.donation_description,
+                    'min_amount': config.min_amount,
+                    'max_amount': config.max_amount,
+                    'enabled': config.enabled,
+                    'is_complete': config.is_configured()
+                }
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500

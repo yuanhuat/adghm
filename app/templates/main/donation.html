@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>捐赠支持 - AdGuardHome用户管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+    <style>
+        .donation-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .donation-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        .donation-header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .donation-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .donation-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .amount-btn {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .amount-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .amount-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .payment-method {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .payment-method:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .payment-method.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .payment-method i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .alipay i { color: #1677ff; }
+        .wxpay i { color: #07c160; }
+        .btn-donate {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-donate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-donate:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .donation-info {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+        }
+        .donation-info h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        @media (max-width: 768px) {
+            .donation-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .donation-form {
+                padding: 20px;
+            }
+            .amount-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .payment-methods {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="donation-container">
+            <a href="{{ url_for('main.index') }}" class="back-link">
+                <i class="fas fa-arrow-left"></i> 返回首页
+            </a>
+            
+            <div class="donation-header">
+                <h1><i class="fas fa-heart"></i> 捐赠支持</h1>
+                <p>感谢您对我们项目的支持，您的捐赠将帮助我们更好地维护和改进服务</p>
+            </div>
+
+            {% if not donation_enabled %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i> 捐赠功能暂时关闭，请稍后再试。
+            </div>
+            {% else %}
+            
+            <div class="donation-info">
+                <h3><i class="fas fa-info-circle"></i> 捐赠说明</h3>
+                <p>{{ donation_description or '您的每一份捐赠都将用于服务器维护、功能开发和技术支持，让我们能够为您提供更好的DNS解析服务。' }}</p>
+            </div>
+
+            <form id="donationForm" class="donation-form">
+                <div class="form-group">
+                    <label for="donorName">捐赠者姓名（可选）</label>
+                    <input type="text" id="donorName" name="donor_name" class="form-control" placeholder="请输入您的姓名或昵称">
+                </div>
+
+                <div class="form-group">
+                    <label>选择捐赠金额</label>
+                    <div class="amount-buttons">
+                        <div class="amount-btn" data-amount="10">￥10</div>
+                        <div class="amount-btn" data-amount="20">￥20</div>
+                        <div class="amount-btn" data-amount="50">￥50</div>
+                        <div class="amount-btn" data-amount="100">￥100</div>
+                        <div class="amount-btn" data-amount="200">￥200</div>
+                        <div class="amount-btn" data-amount="custom">自定义</div>
+                    </div>
+                    <input type="number" id="customAmount" name="amount" class="form-control" placeholder="请输入捐赠金额" min="{{ min_amount }}" max="{{ max_amount }}" step="0.01" style="display: none;">
+                </div>
+
+                <div class="form-group">
+                    <label>选择支付方式</label>
+                    <div class="payment-methods">
+                        <div class="payment-method alipay" data-type="alipay">
+                            <i class="fab fa-alipay"></i>
+                            <div>支付宝</div>
+                        </div>
+                        <div class="payment-method wxpay" data-type="wxpay">
+                            <i class="fab fa-weixin"></i>
+                            <div>微信支付</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="donationMessage">留言（可选）</label>
+                    <textarea id="donationMessage" name="message" class="form-control" rows="3" placeholder="想对我们说些什么吗？"></textarea>
+                </div>
+
+                <button type="submit" class="btn-donate" id="submitBtn">
+                    <i class="fas fa-heart"></i> 立即捐赠
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            let selectedAmount = 0;
+            let selectedPaymentType = '';
+
+            // 金额选择
+            $('.amount-btn').click(function() {
+                $('.amount-btn').removeClass('active');
+                $(this).addClass('active');
+                
+                const amount = $(this).data('amount');
+                if (amount === 'custom') {
+                    $('#customAmount').show().focus();
+                    selectedAmount = 0;
+                } else {
+                    $('#customAmount').hide();
+                    selectedAmount = amount;
+                }
+            });
+
+            // 自定义金额输入
+            $('#customAmount').on('input', function() {
+                selectedAmount = parseFloat($(this).val()) || 0;
+            });
+
+            // 支付方式选择
+            $('.payment-method').click(function() {
+                $('.payment-method').removeClass('active');
+                $(this).addClass('active');
+                selectedPaymentType = $(this).data('type');
+            });
+
+            // 表单提交
+            $('#donationForm').submit(function(e) {
+                e.preventDefault();
+                
+                // 验证金额
+                if (selectedAmount <= 0) {
+                    alert('请选择或输入有效的捐赠金额');
+                    return;
+                }
+                
+                if (selectedAmount < {{ min_amount }}) {
+                    alert('捐赠金额不能少于 ￥{{ min_amount }}');
+                    return;
+                }
+                
+                if (selectedAmount > {{ max_amount }}) {
+                    alert('捐赠金额不能超过 ￥{{ max_amount }}');
+                    return;
+                }
+                
+                // 验证支付方式
+                if (!selectedPaymentType) {
+                    alert('请选择支付方式');
+                    return;
+                }
+                
+                // 禁用提交按钮
+                $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 处理中...');
+                
+                // 提交数据
+                $.ajax({
+                    url: '{{ url_for("main.create_donation") }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        donor_name: $('#donorName').val(),
+                        amount: selectedAmount,
+                        payment_type: selectedPaymentType,
+                        message: $('#donationMessage').val()
+                    }),
+                    success: function(response) {
+                        // 检查响应是否为HTML（支付表单）
+                        if (typeof response === 'string' && response.includes('<form')) {
+                            // 在当前页面显示支付表单，让用户跳转到第三方支付平台
+                            document.open();
+                            document.write(response);
+                            document.close();
+                        } else if (response.success) {
+                            // 处理JSON响应（向后兼容）
+                            if (response.payment_url) {
+                                window.location.href = response.payment_url;
+                            } else {
+                                alert('支付链接生成失败，请稍后重试');
+                                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-heart"></i> 立即捐赠');
+                            }
+                        } else {
+                            // 处理错误响应
+                            var errorMsg = response.error || response.message || '创建捐赠订单失败，请稍后重试';
+                            alert(errorMsg);
+                            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-heart"></i> 立即捐赠');
+                        }
+                    },
+                    error: function(xhr) {
+                        // 检查是否为HTML响应（支付表单）
+                        if (xhr.responseText && xhr.responseText.includes('<form')) {
+                            // 在当前页面显示支付表单
+                            document.open();
+                            document.write(xhr.responseText);
+                            document.close();
+                        } else {
+                            alert('网络错误，请稍后重试');
+                            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-heart"></i> 立即捐赠');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

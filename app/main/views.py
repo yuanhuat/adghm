@@ -8,6 +8,7 @@ from app.models.announcement import Announcement
 
 from app.models.feedback import Feedback
 from app.models.dns_config import DnsConfig
+from app.models.donation_config import DonationConfig
 from app.services.adguard_service import AdGuardService
 
 from app.admin.views import admin_required
@@ -1053,3 +1054,250 @@ def dns_test():
     """
     # 能访问到这里就说明DNS重写生效了
     return render_template('main/dns_test.html')
+
+
+@main.route('/donation')
+def donation():
+    """捐赠页面
+    
+    显示捐赠表单，允许用户进行捐赠
+    """
+    # 获取捐赠配置
+    config = DonationConfig.get_config()
+    
+    # 检查捐赠功能是否启用且配置完整
+    if not config.enabled or not config.is_configured():
+        flash('捐赠功能暂时不可用', 'info')
+        return redirect(url_for('main.index'))
+    
+    return render_template('main/donation.html', 
+                         config=config,
+                         min_amount=float(config.min_amount),
+                         max_amount=float(config.max_amount),
+                         donation_enabled=True,
+                         donation_description=config.donation_description)
+
+
+@main.route('/api/donation/create', methods=['POST'])
+def create_donation():
+    """创建捐赠订单API
+    
+    处理用户的捐赠请求，创建支付订单
+    """
+    try:
+        # 获取捐赠配置
+        config = DonationConfig.get_config()
+        
+        # 检查捐赠功能是否启用且配置完整
+        if not config.enabled or not config.is_configured():
+            return jsonify({
+                'success': False,
+                'error': '捐赠功能暂时不可用'
+            }), 400
+        
+        # 获取请求数据
+        data = request.get_json()
+        amount = float(data.get('amount', 0))
+        donor_name = data.get('donor_name', '').strip()
+        payment_type = data.get('payment_type', '').strip()
+        message = data.get('message', '').strip()
+        
+        # 验证捐赠金额
+        if amount < config.min_amount or amount > config.max_amount:
+            return jsonify({
+                'success': False,
+                'error': f'捐赠金额必须在 {config.min_amount} 到 {config.max_amount} 之间'
+            }), 400
+        
+        # 验证支付方式
+        if payment_type not in ['alipay', 'wxpay']:
+            return jsonify({
+                'success': False,
+                'error': '请选择有效的支付方式'
+            }), 400
+        
+        # 生成订单号
+        import uuid
+        import time
+        order_id = f"DONATE_{int(time.time())}_{str(uuid.uuid4())[:8]}"
+        
+        # 构建支付参数
+        import hashlib
+        from urllib.parse import urlencode
+        
+        # 当前域名作为回调地址
+        base_url = request.url_root.rstrip('/')
+        notify_url = f"{base_url}/donation/callback"
+        return_url = f"{base_url}/donation/return"
+        
+        # 支付参数（按照彩虹易支付SDK的参数格式）
+        pay_params = {
+            'pid': config.merchant_id,
+            'type': payment_type,
+            'out_trade_no': order_id,
+            'notify_url': notify_url,
+            'return_url': return_url,
+            'name': f'捐赠支持 - {donor_name}' if donor_name else '捐赠支持',
+            'money': f'{amount:.2f}'
+        }
+        
+        # 生成签名（按照彩虹易支付SDK的签名算法）
+        # 按字典序排序参数（除了sign和sign_type）
+        sorted_params = sorted(pay_params.items())
+        sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params if v != ''])
+        sign_string += config.api_key
+        sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
+        pay_params['sign'] = sign
+        pay_params['sign_type'] = 'MD5'
+        
+        # 记录操作日志
+        if current_user.is_authenticated:
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='create_donation',
+                target_type='donation',
+                target_id=order_id,
+                details=f'创建捐赠订单：金额={amount}，支付方式={payment_type}，捐赠者={donor_name}'
+            )
+            db.session.add(log)
+            db.session.commit()
+        
+        # 构建支付表单HTML
+        form_html = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>正在跳转到支付页面...</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; text-align: center; padding: 50px; }}
+                .loading {{ font-size: 18px; color: #666; }}
+                .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto; }}
+                @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+            </style>
+        </head>
+        <body>
+            <div class="spinner"></div>
+            <div class="loading">正在跳转到支付页面，请稍候...</div>
+            <form id="payForm" method="post" action="{config.api_url}">
+        '''
+        
+        for key, value in pay_params.items():
+            form_html += f'<input type="hidden" name="{key}" value="{value}" />\n'
+        
+        form_html += '''
+            </form>
+            <script>
+                document.getElementById('payForm').submit();
+            </script>
+        </body>
+        </html>
+        '''
+        
+        return form_html
+        
+    except Exception as e:
+        logging.error(f"创建捐赠订单失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'创建捐赠订单失败：{str(e)}'
+        }), 500
+
+
+@main.route('/donation/success')
+def donation_success():
+    """捐赠支付成功页面
+    
+    用户支付完成后的跳转页面
+    """
+    return render_template('main/donation_success.html')
+
+
+@main.route('/donation/return', methods=['GET'])
+def donation_return():
+    """捐赠支付同步回调接口
+    
+    处理支付平台的同步跳转回调，验证支付状态后跳转到相应页面
+    """
+    try:
+        # 获取回调参数
+        data = request.args.to_dict()
+        
+        # 获取捐赠配置用于验证签名
+        config = DonationConfig.get_config()
+        
+        # 验证签名
+        received_sign = data.pop('sign', '')
+        sorted_params = sorted(data.items())
+        sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + config.api_key
+        
+        import hashlib
+        calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
+        
+        if received_sign.lower() != calculated_sign.lower():
+            logging.warning(f"捐赠同步回调签名验证失败：订单ID={data.get('out_trade_no')}")
+            flash('支付验证失败，请联系管理员', 'error')
+            return redirect(url_for('main.donation'))
+        
+        order_id = data.get('out_trade_no')
+        trade_status = data.get('trade_status')
+        amount = data.get('money')
+        
+        if trade_status == 'TRADE_SUCCESS':
+            # 支付成功
+            logging.info(f"捐赠支付成功（同步回调）：订单ID={order_id}，金额={amount}")
+            flash('捐赠支付成功，感谢您的支持！', 'success')
+            return redirect(url_for('main.donation_success'))
+        else:
+            # 支付失败或其他状态
+            logging.warning(f"捐赠支付失败（同步回调）：订单ID={order_id}，状态={trade_status}")
+            flash('支付失败或已取消，请重试', 'error')
+            return redirect(url_for('main.donation'))
+            
+    except Exception as e:
+        logging.error(f"处理捐赠同步回调失败: {str(e)}")
+        flash('支付状态验证失败，请联系管理员', 'error')
+        return redirect(url_for('main.donation'))
+
+
+@main.route('/donation/callback', methods=['POST'])
+def donation_callback():
+    """捐赠支付回调接口
+    
+    处理支付平台的回调通知
+    """
+    try:
+        # 获取回调数据
+        data = request.form.to_dict()
+        
+        # 获取捐赠配置用于验证签名
+        config = DonationConfig.get_config()
+        
+        # 验证签名
+        received_sign = data.pop('sign', '')
+        sorted_params = sorted(data.items())
+        sign_string = '&'.join([f'{k}={v}' for k, v in sorted_params]) + config.api_key
+        
+        import hashlib
+        calculated_sign = hashlib.md5(sign_string.encode('utf-8')).hexdigest()
+        
+        if received_sign.lower() != calculated_sign.lower():
+            logging.warning(f"捐赠回调签名验证失败：订单ID={data.get('out_trade_no')}")
+            return 'FAIL'
+        
+        order_id = data.get('out_trade_no')
+        trade_status = data.get('trade_status')
+        amount = data.get('money')
+        
+        if trade_status == 'TRADE_SUCCESS':
+            # 支付成功，记录日志
+            logging.info(f"捐赠支付成功：订单ID={order_id}，金额={amount}")
+            return 'SUCCESS'
+        else:
+            # 支付失败或其他状态
+            logging.warning(f"捐赠支付状态异常：订单ID={order_id}，状态={trade_status}")
+            return 'FAIL'
+            
+    except Exception as e:
+        logging.error(f"处理捐赠回调失败: {str(e)}")
+        return 'FAIL'

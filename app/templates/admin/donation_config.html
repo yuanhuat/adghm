@@ -1,0 +1,207 @@
+{% extends "admin/base.html" %}
+
+{% block title %}捐赠配置{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">捐赠配置</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">管理后台</a></li>
+        <li class="breadcrumb-item active">捐赠配置</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-heart me-1"></i>
+            捐赠支付配置
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('admin.donation_config') }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enabled" name="enabled" {% if config.enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="enabled">启用捐赠功能</label>
+                        </div>
+                        <div class="form-text text-muted">
+                            关闭此选项后，用户将无法访问捐赠页面。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="merchant_id" class="form-label">商户ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="merchant_id" name="merchant_id" value="{{ config.merchant_id or '' }}" required>
+                        <div class="form-text text-muted">支付平台提供的商户ID</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="api_url" class="form-label">API接口地址 <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="api_url" name="api_url" value="{{ config.api_url or '' }}" required>
+                        <div class="form-text text-muted">支付平台的API接口地址</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="api_key" class="form-label">API密钥 <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="api_key" name="api_key" value="{{ config.api_key or '' }}" required>
+                        <div class="form-text text-muted">支付平台提供的API密钥，用于签名验证</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="notify_url" class="form-label">异步通知地址</label>
+                        <input type="url" class="form-control" id="notify_url" name="notify_url" value="{{ config.notify_url or '' }}">
+                        <div class="form-text text-muted">支付成功后的服务器异步通知地址</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="return_url" class="form-label">同步跳转地址</label>
+                        <input type="url" class="form-control" id="return_url" name="return_url" value="{{ config.return_url or '' }}">
+                        <div class="form-text text-muted">支付成功后的页面跳转地址</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="donation_title" class="form-label">捐赠标题</label>
+                        <input type="text" class="form-control" id="donation_title" name="donation_title" value="{{ config.donation_title or '支持项目发展' }}">
+                        <div class="form-text text-muted">显示在捐赠页面的标题</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="donation_description" class="form-label">捐赠说明</label>
+                        <textarea class="form-control" id="donation_description" name="donation_description" rows="3">{{ config.donation_description or '您的每一份捐赠都将用于服务器维护、功能开发和技术支持，让我们能够为您提供更好的DNS解析服务。' }}</textarea>
+                        <div class="form-text text-muted">显示在捐赠页面的说明文字</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="min_amount" class="form-label">最小捐赠金额</label>
+                        <div class="input-group">
+                            <span class="input-group-text">￥</span>
+                            <input type="number" class="form-control" id="min_amount" name="min_amount" value="{{ config.min_amount or 1.00 }}" min="0.01" step="0.01">
+                        </div>
+                        <div class="form-text text-muted">用户可捐赠的最小金额</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="max_amount" class="form-label">最大捐赠金额</label>
+                        <div class="input-group">
+                            <span class="input-group-text">￥</span>
+                            <input type="number" class="form-control" id="max_amount" name="max_amount" value="{{ config.max_amount or 1000.00 }}" min="0.01" step="0.01">
+                        </div>
+                        <div class="form-text text-muted">用户可捐赠的最大金额</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> 保存配置
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="testConnection()">
+                        <i class="fas fa-plug me-1"></i> 测试连接
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 配置状态卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-info-circle me-1"></i>
+            配置状态
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="h4 mb-0">
+                            {% if config.enabled %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> 已启用</span>
+                            {% else %}
+                                <span class="text-warning"><i class="fas fa-pause-circle"></i> 已禁用</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">功能状态</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="h4 mb-0">
+                            {% if config.is_configured() %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> 完整</span>
+                            {% else %}
+                                <span class="text-danger"><i class="fas fa-exclamation-circle"></i> 不完整</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">配置完整性</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="h4 mb-0">
+                            <span class="text-info">{{ config.updated_at.strftime('%Y-%m-%d') if config.updated_at else '未设置' }}</span>
+                        </div>
+                        <small class="text-muted">最后更新</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="h4 mb-0">
+                            <a href="{{ url_for('main.donation') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt"></i> 预览页面
+                            </a>
+                        </div>
+                        <small class="text-muted">用户页面</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testConnection() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> 测试中...';
+    btn.disabled = true;
+    
+    fetch('{{ url_for("admin.manage_donation_config") }}', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('连接测试成功！配置有效。');
+        } else {
+            alert('连接测试失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        alert('连接测试失败：网络错误');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+</script>
+{% endblock %}
