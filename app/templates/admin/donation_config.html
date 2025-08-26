@@ -65,13 +65,43 @@
                     <div class="col-md-6">
                         <label for="notify_url" class="form-label">异步通知地址</label>
                         <input type="url" class="form-control" id="notify_url" name="notify_url" value="{{ config.notify_url or '' }}">
-                        <div class="form-text text-muted">支付成功后的服务器异步通知地址</div>
+                        <div class="form-text text-muted">
+                            <strong>异步通知地址说明：</strong><br>
+                            • 支付平台在用户支付完成后，会向此地址发送POST请求通知支付结果<br>
+                            • 此地址必须是公网可访问的URL，用于服务器端处理支付结果<br>
+                            • 建议格式：https://yourdomain.com/donation/callback<br>
+                            • 如果留空，系统将使用默认的回调地址
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label for="return_url" class="form-label">同步跳转地址</label>
                         <input type="url" class="form-control" id="return_url" name="return_url" value="{{ config.return_url or '' }}">
-                        <div class="form-text text-muted">支付成功后的页面跳转地址</div>
+                        <div class="form-text text-muted">
+                            <strong>同步跳转地址说明：</strong><br>
+                            • 用户在支付平台完成支付后，会自动跳转到此页面<br>
+                            • 此地址用于向用户展示支付结果（成功或失败）<br>
+                            • 建议格式：https://yourdomain.com/donation/return<br>
+                            • 如果留空，系统将使用默认的返回页面
+                        </div>
                     </div>
+                </div>
+                
+                <!-- 回调地址配置说明 -->
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading"><i class="fas fa-info-circle me-1"></i> 回调地址配置重要说明</h6>
+                    <hr>
+                    <p class="mb-2"><strong>异步通知地址 vs 同步跳转地址的区别：</strong></p>
+                    <ul class="mb-2">
+                        <li><strong>异步通知地址（notify_url）：</strong>支付平台服务器到您的服务器，用于可靠的支付结果通知，不依赖用户浏览器</li>
+                        <li><strong>同步跳转地址（return_url）：</strong>用户浏览器从支付平台跳转回您的网站，用于用户体验，可能因网络问题失败</li>
+                    </ul>
+                    <p class="mb-2"><strong>配置建议：</strong></p>
+                    <ul class="mb-0">
+                        <li>异步通知地址必须配置，确保支付结果能够可靠处理</li>
+                        <li>同步跳转地址建议配置，提升用户支付体验</li>
+                        <li>两个地址都必须是HTTPS协议（生产环境）</li>
+                        <li>确保服务器防火墙允许支付平台访问异步通知地址</li>
+                    </ul>
                 </div>
                 
                 <div class="row mb-3">

@@ -1127,8 +1127,17 @@ def create_donation():
         
         # 当前域名作为回调地址
         base_url = request.url_root.rstrip('/')
-        notify_url = f"{base_url}/donation/callback"
-        return_url = f"{base_url}/donation/return"
+        
+        # 使用配置的回调地址，如果没有配置则使用默认地址
+        if config.notify_url:
+            notify_url = config.notify_url
+        else:
+            notify_url = f"{base_url}/donation/callback"
+            
+        if config.return_url:
+            return_url = config.return_url
+        else:
+            return_url = f"{base_url}/donation/return"
         
         # 支付参数（按照彩虹易支付SDK的参数格式）
         pay_params = {
