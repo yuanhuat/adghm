@@ -45,13 +45,18 @@
                 </svg>
                 <a href="{{ url_for('admin.index') }}">管理后台</a>
             </div>
-            <div class="nav-menu">
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <a href="{{ url_for('admin.users') }}" class="nav-link">用户管理</a>
                 <a href="{{ url_for('admin.announcements') }}" class="nav-link">公告管理</a>
                 <a href="{{ url_for('main.global_blocked_services_page') }}" class="nav-link">全局阻止</a>
                 
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">系统管理</a>
+                    <a href="#" class="nav-link dropdown-toggle">系统管理</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{{ url_for('admin.system_config') }}">系统设置</a>
                         <a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a>
@@ -67,7 +72,7 @@
                 </div>
                 
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">查询日志</a>
+                    <a href="#" class="nav-link dropdown-toggle">查询日志</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{{ url_for('admin.query_log') }}">原版查询日志</a>
                         <a class="dropdown-item" href="{{ url_for('admin.query_log_enhanced') }}">增强查询日志</a>
@@ -94,6 +99,77 @@
 
         {% block page_content %}{% endblock %}
     </div>
+    
+    <script>
+    // 导航菜单控制
+    document.addEventListener('DOMContentLoaded', function() {
+        const navToggle = document.getElementById('navToggle');
+        const navMenu = document.getElementById('navMenu');
+        
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', function() {
+                navToggle.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+            
+            // 处理下拉菜单点击事件（移动端）
+            const dropdownToggles = navMenu.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 在移动端，点击下拉菜单切换显示状态
+                    if (window.innerWidth <= 768) {
+                        const dropdownMenu = this.nextElementSibling;
+                        const isVisible = dropdownMenu.style.display === 'block';
+                        
+                        // 关闭所有其他下拉菜单
+                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                            menu.style.display = 'none';
+                        });
+                        
+                        // 切换当前下拉菜单
+                        dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                    }
+                });
+            });
+            
+            // 点击菜单项后关闭菜单
+            const navLinks = navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle), .dropdown-item');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    // 关闭所有下拉菜单
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                });
+            });
+            
+            // 点击页面其他地方关闭菜单
+            document.addEventListener('click', function(e) {
+                if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    // 关闭所有下拉菜单
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                }
+            });
+            
+            // 窗口大小改变时重置下拉菜单状态
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = '';
+                    });
+                }
+            });
+        }
+    });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

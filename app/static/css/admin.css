@@ -435,6 +435,103 @@ body::before {
     .navbar-nav {
         margin-top: 16px;
     }
+    
+    /* 移动端导航栏样式 */
+    .nav-toggle {
+        display: flex;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: saturate(180%) blur(20px);
+        flex-direction: column;
+        gap: 0;
+        padding: 20px 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .nav-link {
+        font-size: 16px;
+        padding: 16px 20px;
+        width: 100%;
+        text-align: left;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin: 0;
+    }
+    
+    /* 移动端下拉菜单样式 */
+    .nav-dropdown {
+        width: 100%;
+    }
+    
+    .nav-dropdown .dropdown-toggle {
+        width: 100%;
+        text-align: left;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: none;
+        border: none;
+        color: #1d1d1f;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-dropdown .dropdown-toggle:hover {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+    }
+    
+    .nav-dropdown .dropdown-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        background: rgba(240, 240, 240, 0.95);
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        min-width: auto;
+        width: 100%;
+        display: none;
+    }
+    
+    .nav-dropdown:hover .dropdown-menu {
+        display: block;
+    }
+    
+    .nav-dropdown .dropdown-item {
+        color: #1d1d1f;
+        padding: 12px 40px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(240, 240, 240, 0.95);
+        text-shadow: none;
+        font-size: 14px;
+    }
+    
+    .nav-dropdown .dropdown-item:hover {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        transform: none;
+    }
 }
 
 @media (max-width: 480px) {

@@ -18,7 +18,12 @@
                 </svg>
                 <span>AdGuard Home</span>
             </div>
-            <div class="nav-menu">
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <a href="{{ url_for('main.index') }}" class="nav-link">主页</a>
                 <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
                 <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
@@ -510,6 +515,36 @@
             alert('更新客户端失败：' + error);
         });
     }
+    
+    // 导航菜单控制
+    document.addEventListener('DOMContentLoaded', function() {
+        const navToggle = document.getElementById('navToggle');
+        const navMenu = document.getElementById('navMenu');
+        
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', function() {
+                navToggle.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+            
+            // 点击菜单项后关闭菜单
+            const navLinks = navMenu.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                });
+            });
+            
+            // 点击页面其他地方关闭菜单
+            document.addEventListener('click', function(e) {
+                if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                }
+            });
+        }
+    });
 
     </script>
 </body>
