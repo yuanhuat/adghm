@@ -514,7 +514,8 @@ async function bulkDeleteUsers() {
     const errors = [];
     
     // 分批处理，每批最多10个用户
-    const batchSize = 10;
+    const batchSize = 5; // 减少批处理大小，降低并发压力
+    const batchDelay = 60000; // 1分钟延迟
     const batches = [];
     for (let i = 0; i < selectedUsers.length; i += batchSize) {
         batches.push(selectedUsers.slice(i, i + batchSize));
@@ -523,21 +524,32 @@ async function bulkDeleteUsers() {
     // 逐批删除用户
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         const batch = batches[batchIndex];
-        const batchPromises = [];
         
         // 检查是否已取消
          if (isDeletionCancelled) {
              break;
          }
          
-         // 并发处理当前批次的用户
+         // 串行处理当前批次的用户，避免对AdGuardHome造成过大压力
+         const batchResults = [];
          for (const user of batch) {
-             const promise = deleteUserWithRetry(user, 3, deleteAbortController.signal); // 最多重试3次
-             batchPromises.push(promise);
+             // 检查是否已取消
+             if (isDeletionCancelled) {
+                 break;
+             }
+             
+             try {
+                 const result = await deleteUserWithRetry(user, 5, deleteAbortController.signal); // 最多重试5次
+                 batchResults.push({ status: 'fulfilled', value: result });
+             } catch (error) {
+                 batchResults.push({ status: 'rejected', reason: error.message });
+             }
+             
+             // 每个用户删除后短暂延迟
+             if (batch.indexOf(user) < batch.length - 1) {
+                 await new Promise(resolve => setTimeout(resolve, 300));
+             }
          }
-         
-         // 等待当前批次完成
-         const batchResults = await Promise.allSettled(batchPromises);
         
         // 处理批次结果
         batchResults.forEach((result, index) => {
@@ -576,9 +588,9 @@ async function bulkDeleteUsers() {
             }
         });
         
-        // 批次间短暂延迟，避免服务器压力过大
+        // 批次间延迟，避免AdGuardHome压力过大
         if (batchIndex < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, batchDelay)); // 使用1分钟延迟
         }
     }
     
@@ -600,7 +612,21 @@ async function bulkDeleteUsers() {
                  });
                  
                  const data = await response.json();
-                 return data;
+                 
+                 if (data.success) {
+                     return data;
+                 } else {
+                     // 如果是AdGuard Home相关错误，继续重试
+                     if (data.message && (data.message.includes('AdGuard') || data.message.includes('timeout') || data.message.includes('连接'))) {
+                         if (attempt === maxRetries) {
+                             throw new Error(`${data.message} (重试${maxRetries}次后跳过)`);
+                         }
+                         throw new Error(data.message);
+                     } else {
+                         // 其他错误直接抛出
+                         throw new Error(data.message || '删除失败');
+                     }
+                 }
              } catch (error) {
                  if (error.name === 'AbortError' || error.message === '操作已取消') {
                      throw error;
@@ -608,8 +634,10 @@ async function bulkDeleteUsers() {
                  if (attempt === maxRetries) {
                      throw error;
                  }
-                 // 重试前等待
-                 await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                 // 重试前等待，AdGuard Home相关错误等待更长时间
+                 const isAdGuardError = error.message && (error.message.includes('AdGuard') || error.message.includes('timeout') || error.message.includes('连接'));
+                 const waitTime = isAdGuardError ? 5000 * attempt : 2000 * attempt;
+                 await new Promise(resolve => setTimeout(resolve, waitTime));
              }
          }
      }
