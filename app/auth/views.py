@@ -87,7 +87,7 @@ def register():
             return redirect(url_for('auth.login'))
     
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -202,7 +202,7 @@ def register():
                 # 管理员用户不需要立即创建AdGuardHome客户端
                 login_user(user)
                 flash('注册成功！请先在后台配置AdGuardHome设置。', 'success')
-                return redirect(url_for('main.index'))
+                return redirect(url_for('main.dashboard'))
             else:
                 try:
                     # 检查AdGuardHome配置是否已设置并可用
@@ -214,14 +214,14 @@ def register():
                         # 配置格式无效，提示等待管理员配置
                         login_user(user)
                         flash('注册成功！但AdGuardHome配置无效，请等待管理员完成配置后再使用。', 'warning')
-                        return redirect(url_for('main.index'))
+                        return redirect(url_for('main.dashboard'))
                     
                     # 检查连接和认证状态
                     if not adguard.check_connection():
                         # 无法连接或认证失败，提示等待管理员配置
                         login_user(user)
                         flash('注册成功！但无法连接到AdGuardHome服务器，请等待管理员完成配置后再使用。', 'warning')
-                        return redirect(url_for('main.index'))
+                        return redirect(url_for('main.dashboard'))
                     
                     try:
                         # 获取设备平台信息，用作客户端ID
@@ -323,11 +323,11 @@ def register():
                         # 自动登录
                         login_user(user)
                         flash('注册成功！', 'success')
-                        return redirect(url_for('main.index'))
+                        return redirect(url_for('main.dashboard'))
                         db.session.commit()
                         login_user(user)
                         flash('注册成功！', 'success')
-                        return redirect(url_for('main.index'))
+                        return redirect(url_for('main.dashboard'))
                         
                     except Exception as e:
                         # 不回滚用户创建，只回滚客户端映射（如果有）
@@ -345,7 +345,7 @@ def register():
                             flash(f'注册成功！但创建AdGuardHome客户端失败：{error_msg}', 'warning')
                         # 记录详细错误信息到控制台
                         print(f"创建AdGuardHome客户端失败：{error_msg}")
-                        return redirect(url_for('main.index'))
+                        return redirect(url_for('main.dashboard'))
                         
                 except Exception as e:
                     # 如果发生其他错误，完全回滚
@@ -369,7 +369,7 @@ def login():
     登录成功后重定向到主页。
     """
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
     
     # 检查是否为第一个用户，第一个用户始终允许注册
     user_count = User.query.count()
@@ -408,7 +408,7 @@ def login():
         # 重定向到登录前的页面或默认页面
         next_page = request.args.get('next')
         if not next_page or not next_page.startswith('/'):
-            next_page = url_for('main.index')
+            next_page = url_for('main.dashboard')
         return redirect(next_page)
     
     return render_template('auth/login.html', allow_registration=allow_registration, is_first_user=is_first_user)
@@ -420,7 +420,7 @@ def forgot_password():
     处理忘记密码请求，发送重置密码的验证码到用户邮箱。
     """
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -460,7 +460,7 @@ def reset_password():
     处理重置密码请求，验证验证码并更新用户密码。
     """
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
         
     email = request.args.get('email') or request.form.get('email')
     if not email:
@@ -590,7 +590,7 @@ def change_password():
         db.session.commit()
         
         flash('密码修改成功', 'success')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
         
     return render_template('auth/change_password.html')
 
@@ -642,7 +642,7 @@ def change_email():
         db.session.commit()
         
         flash('邮箱修改成功', 'success')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
         
     return render_template('auth/change_email.html')
 

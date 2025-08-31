@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>价格方案 - AdGuard Home Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007aff;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #1d1d1f;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #007aff;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #007aff;
+            border: 2px solid #007aff;
+        }
+
+        .btn-outline:hover {
+            background: #007aff;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* 主要内容 */
+        .main-content {
+            margin-top: 80px;
+            padding: 4rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.2s forwards;
+        }
+
+        /* 价格卡片 */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .pricing-card:nth-child(1) { animation-delay: 0.1s; }
+        .pricing-card:nth-child(2) { animation-delay: 0.2s; }
+        .pricing-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.featured {
+            border: 3px solid #007aff;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: '推荐';
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #007aff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0 20px 0 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1d1d1f;
+        }
+
+        .plan-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .plan-price {
+            margin-bottom: 2rem;
+        }
+
+        .price-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #007aff;
+        }
+
+        .price-period {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .plan-features li i {
+            color: #34c759;
+            width: 16px;
+        }
+
+        .plan-features li.unavailable {
+            color: #999;
+        }
+
+        .plan-features li.unavailable i {
+            color: #ccc;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .plan-button.primary {
+            background: #007aff;
+            color: white;
+        }
+
+        .plan-button.primary:hover {
+            background: #0056b3;
+        }
+
+        .plan-button.secondary {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border: 2px solid #d1d1d6;
+        }
+
+        .plan-button.secondary:hover {
+            background: #e5e5e7;
+        }
+
+        /* 企业方案 */
+        .enterprise-section {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.4s forwards;
+        }
+
+        .enterprise-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #1d1d1f;
+        }
+
+        .enterprise-section p {
+            color: #666;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* FAQ 部分 */
+        .faq-section {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1d1d1f;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e5e5e7;
+            padding: 1.5rem 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1d1d1f;
+        }
+
+        .faq-answer {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 2rem 0;
+            text-align: center;
+            color: white;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.landing') }}" class="logo">
+                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.landing') }}">首页</a></li>
+                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
+                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
+                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
+                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1>选择适合您的方案</h1>
+                <p>从个人用户到企业级部署，我们为每种需求提供完美的解决方案</p>
+            </div>
+
+            <!-- 价格方案 -->
+            <div class="pricing-grid">
+                <!-- 基础版 -->
+                <div class="pricing-card">
+                    <div class="plan-name">基础版</div>
+                    <div class="plan-description">适合个人用户和小型家庭网络</div>
+                    <div class="plan-price">
+                        <span class="price-amount">免费</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> 最多5个设备</li>
+                        <li><i class="fas fa-check"></i> 基础DNS过滤</li>
+                        <li><i class="fas fa-check"></i> 广告拦截</li>
+                        <li><i class="fas fa-check"></i> 基础统计报告</li>
+                        <li><i class="fas fa-check"></i> 社区支持</li>
+                        <li class="unavailable"><i class="fas fa-times"></i> 高级过滤规则</li>
+                        <li class="unavailable"><i class="fas fa-times"></i> 自定义DNS服务器</li>
+                        <li class="unavailable"><i class="fas fa-times"></i> 优先技术支持</li>
+                    </ul>
+                    <button class="plan-button secondary">开始使用</button>
+                </div>
+
+                <!-- 专业版 -->
+                <div class="pricing-card featured">
+                    <div class="plan-name">专业版</div>
+                    <div class="plan-description">适合中小企业和高级用户</div>
+                    <div class="plan-price">
+                        <span class="price-amount">¥99</span>
+                        <span class="price-period">/月</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> 无限设备数量</li>
+                        <li><i class="fas fa-check"></i> 高级DNS过滤</li>
+                        <li><i class="fas fa-check"></i> 恶意软件防护</li>
+                        <li><i class="fas fa-check"></i> 详细统计分析</li>
+                        <li><i class="fas fa-check"></i> 自定义过滤规则</li>
+                        <li><i class="fas fa-check"></i> 多DNS服务器支持</li>
+                        <li><i class="fas fa-check"></i> API访问</li>
+                        <li><i class="fas fa-check"></i> 优先技术支持</li>
+                    </ul>
+                    <button class="plan-button primary">立即订阅</button>
+                </div>
+
+                <!-- 企业版 -->
+                <div class="pricing-card">
+                    <div class="plan-name">企业版</div>
+                    <div class="plan-description">适合大型企业和组织</div>
+                    <div class="plan-price">
+                        <span class="price-amount">¥299</span>
+                        <span class="price-period">/月</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> 无限设备和用户</li>
+                        <li><i class="fas fa-check"></i> 企业级安全防护</li>
+                        <li><i class="fas fa-check"></i> 高级威胁检测</li>
+                        <li><i class="fas fa-check"></i> 实时监控面板</li>
+                        <li><i class="fas fa-check"></i> 自定义品牌</li>
+                        <li><i class="fas fa-check"></i> 多地域部署</li>
+                        <li><i class="fas fa-check"></i> 专属客户经理</li>
+                        <li><i class="fas fa-check"></i> 24/7技术支持</li>
+                    </ul>
+                    <button class="plan-button secondary">联系销售</button>
+                </div>
+            </div>
+
+            <!-- 企业定制方案 -->
+            <div class="enterprise-section">
+                <h2>需要定制方案？</h2>
+                <p>我们为大型企业和特殊需求客户提供完全定制的解决方案，包括私有部署、专属功能开发和全方位技术支持。</p>
+                <a href="#contact" class="btn btn-primary">联系我们</a>
+            </div>
+
+            <!-- FAQ -->
+            <div class="faq-section">
+                <h2>常见问题</h2>
+                <div class="faq-item">
+                    <div class="faq-question">可以随时升级或降级方案吗？</div>
+                    <div class="faq-answer">是的，您可以随时在用户面板中升级或降级您的订阅方案。升级立即生效，降级将在下个计费周期生效。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">支持哪些支付方式？</div>
+                    <div class="faq-answer">我们支持支付宝、微信支付、银行卡支付等多种支付方式，企业用户还可以申请发票。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">有免费试用期吗？</div>
+                    <div class="faq-answer">专业版和企业版都提供7天免费试用，无需信用卡，试用期结束后可选择继续订阅或降级到免费版。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">数据安全如何保障？</div>
+                    <div class="faq-answer">我们采用企业级加密技术保护您的数据，所有数据传输都使用SSL加密，服务器部署在安全的数据中心。</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 AdGuard Home Manager. 保护您的网络安全。</p>
+        </div>
+    </footer>
+
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // 观察所有需要动画的元素
+        document.querySelectorAll('.pricing-card, .enterprise-section, .faq-section').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

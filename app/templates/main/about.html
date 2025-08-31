@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我们 - AdGuard Home Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #0071e3;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0071e3;
+            border: 1px solid #0071e3;
+        }
+
+        .btn-secondary:hover {
+            background: #0071e3;
+            color: white;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .page-header p {
+            font-size: 21px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 公司介绍 */
+        .company-intro {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .intro-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .intro-text h2 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #1d1d1f;
+        }
+
+        .intro-text p {
+            font-size: 18px;
+            color: #86868b;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .intro-image {
+            text-align: center;
+        }
+
+        .intro-svg {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+        }
+
+        /* 团队介绍 */
+        .team-section {
+            padding: 100px 20px;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .team-member {
+            text-align: center;
+            background: #f5f5f7;
+            border-radius: 18px;
+            padding: 40px 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .team-member:hover {
+            transform: translateY(-5px);
+        }
+
+        .member-avatar {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        .member-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1d1d1f;
+        }
+
+        .member-role {
+            font-size: 16px;
+            color: #0071e3;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .member-bio {
+            font-size: 15px;
+            color: #86868b;
+            line-height: 1.5;
+        }
+
+        /* 公司愿景 */
+        .vision-section {
+            padding: 100px 20px;
+            background: #1d1d1f;
+            color: white;
+            text-align: center;
+        }
+
+        .vision-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .vision-section h2 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .vision-section p {
+            font-size: 21px;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        /* 联系信息 */
+        .contact-section {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .contact-item {
+            text-align: center;
+            padding: 40px 30px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #0071e3 0%, #005bb5 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+        }
+
+        .contact-item h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .contact-item p {
+            font-size: 17px;
+            color: #86868b;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1d1d1f;
+            padding: 60px 20px 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #a1a1a6;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #0071e3;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            color: #86868b;
+            font-size: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .intro-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .team-grid,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .animate-delay-1 {
+            animation-delay: 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .animate-delay-2 {
+            animation-delay: 0.4s;
+            animation-fill-mode: both;
+        }
+
+        .animate-delay-3 {
+            animation-delay: 0.6s;
+            animation-fill-mode: both;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.landing') }}" class="logo">
+                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.landing') }}">首页</a></li>
+                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
+                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
+                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
+                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <section class="page-header">
+            <div class="container">
+                <h1 class="animate-fade-in">关于我们</h1>
+                <p class="animate-fade-in animate-delay-1">
+                    致力于为全球用户提供最安全、最可靠的DNS管理解决方案
+                </p>
+            </div>
+        </section>
+
+        <!-- 公司介绍 -->
+        <section class="company-intro">
+            <div class="container">
+                <div class="intro-content">
+                    <div class="intro-text animate-fade-in">
+                        <h2>我们的故事</h2>
+                        <p>
+                            AdGuard Home Manager 诞生于对网络安全和用户隐私保护的深度关注。
+                            我们的团队由来自网络安全、软件开发和用户体验设计领域的专家组成，
+                            共同致力于创造一个更安全、更纯净的网络环境。
+                        </p>
+                        <p>
+                            自成立以来，我们始终坚持技术创新和用户至上的原则，
+                            不断完善产品功能，提升服务质量。我们相信，
+                            每个人都有权享受安全、私密的网络体验。
+                        </p>
+                        <p>
+                            通过先进的DNS过滤技术和智能分析算法，
+                            我们为用户构建了一道坚实的网络安全防线，
+                            让您在享受互联网便利的同时，远离广告骚扰和恶意威胁。
+                        </p>
+                    </div>
+                    <div class="intro-image animate-fade-in animate-delay-1">
+                        <svg class="intro-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#0071e3;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#005bb5;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            
+                            <!-- 背景圆圈 -->
+                            <circle cx="200" cy="150" r="120" fill="url(#gradient1)" opacity="0.1"/>
+                            
+                            <!-- 中心盾牌 -->
+                            <path d="M200 80 L160 100 L160 180 Q160 200 200 220 Q240 200 240 180 L240 100 Z" fill="url(#gradient1)"/>
+                            
+                            <!-- 盾牌内的对勾 -->
+                            <path d="M180 150 L195 165 L220 130" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            
+                            <!-- 环绕的小图标 -->
+                            <circle cx="120" cy="120" r="15" fill="url(#gradient2)"/>
+                            <text x="120" y="127" text-anchor="middle" fill="white" font-size="12">🔒</text>
+                            
+                            <circle cx="280" cy="120" r="15" fill="url(#gradient2)"/>
+                            <text x="280" y="127" text-anchor="middle" fill="white" font-size="12">🛡️</text>
+                            
+                            <circle cx="120" cy="180" r="15" fill="url(#gradient2)"/>
+                            <text x="120" y="187" text-anchor="middle" fill="white" font-size="12">⚡</text>
+                            
+                            <circle cx="280" cy="180" r="15" fill="url(#gradient2)"/>
+                            <text x="280" y="187" text-anchor="middle" fill="white" font-size="12">🌐</text>
+                            
+                            <!-- 连接线 -->
+                            <line x1="135" y1="120" x2="165" y2="135" stroke="url(#gradient2)" stroke-width="2" opacity="0.5"/>
+                            <line x1="265" y1="120" x2="235" y2="135" stroke="url(#gradient2)" stroke-width="2" opacity="0.5"/>
+                            <line x1="135" y1="180" x2="165" y2="165" stroke="url(#gradient2)" stroke-width="2" opacity="0.5"/>
+                            <line x1="265" y1="180" x2="235" y2="165" stroke="url(#gradient2)" stroke-width="2" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 团队介绍 -->
+        <section class="team-section">
+            <div class="container">
+                <h2 class="section-title">我们的团队</h2>
+                <p class="section-subtitle">
+                    由经验丰富的专业人士组成的团队，致力于为您提供最优质的服务
+                </p>
+                
+                <div class="team-grid">
+                    <div class="team-member animate-fade-in">
+                        <div class="member-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h3 class="member-name">李明</h3>
+                        <p class="member-role">首席技术官</p>
+                        <p class="member-bio">
+                            拥有15年网络安全经验，曾在多家知名科技公司担任技术负责人，
+                            专注于DNS安全和网络防护技术研发。
+                        </p>
+                    </div>
+                    
+                    <div class="team-member animate-fade-in animate-delay-1">
+                        <div class="member-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3 class="member-name">王芳</h3>
+                        <p class="member-role">产品总监</p>
+                        <p class="member-bio">
+                            产品设计和用户体验专家，致力于将复杂的技术转化为简单易用的产品，
+                            让每个用户都能轻松享受安全的网络体验。
+                        </p>
+                    </div>
+                    
+                    <div class="team-member animate-fade-in animate-delay-2">
+                        <div class="member-avatar">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <h3 class="member-name">张伟</h3>
+                        <p class="member-role">运维总监</p>
+                        <p class="member-bio">
+                            基础设施和运维专家，确保服务的高可用性和稳定性，
+                            为用户提供7x24小时不间断的优质服务。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 公司愿景 -->
+        <section class="vision-section">
+            <div class="container">
+                <div class="vision-content">
+                    <h2 class="animate-fade-in">我们的愿景</h2>
+                    <p class="animate-fade-in animate-delay-1">
+                        成为全球领先的DNS安全服务提供商，
+                        让每个人都能享受安全、纯净、高效的网络体验。
+                    </p>
+                    <p class="animate-fade-in animate-delay-2">
+                        我们相信技术应该服务于人，保护隐私，提升生活品质。
+                        通过不断的创新和优化，我们致力于构建一个更加安全的数字世界。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 联系信息 -->
+        <section class="contact-section">
+            <div class="container">
+                <h2 class="section-title">联系我们</h2>
+                <p class="section-subtitle">
+                    我们随时准备为您提供帮助和支持
+                </p>
+                
+                <div class="contact-grid">
+                    <div class="contact-item animate-fade-in">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h3>邮箱联系</h3>
+                        <p>support@adguard-manager.com<br>business@adguard-manager.com</p>
+                    </div>
+                    
+                    <div class="contact-item animate-fade-in animate-delay-1">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <h3>电话支持</h3>
+                        <p>400-888-9999<br>工作日 9:00-18:00</p>
+                    </div>
+                    
+                    <div class="contact-item animate-fade-in animate-delay-2">
+                        <div class="contact-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3>在线客服</h3>
+                        <p>7x24小时在线支持<br>即时响应您的问题</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="{{ url_for('main.landing') }}">首页</a>
+                <a href="{{ url_for('main.about') }}">关于我们</a>
+                <a href="{{ url_for('main.features') }}">功能特性</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <a href="#">隐私政策</a>
+                <a href="#">服务条款</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // 观察所有动画元素
+        document.querySelectorAll('.animate-fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

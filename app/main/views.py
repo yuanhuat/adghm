@@ -19,15 +19,13 @@ import os
 
 
 
-@main.route('/')
+@main.route('/dashboard')
 @login_required
-def index():
+def dashboard():
     """用户主页
     
     显示用户的客户端列表和基本信息，以及域名映射信息
     """
-
-    
     # 获取当前用户的AdGuardHome客户端请求数量和总DNS查询数量
     user_request_count = 0
     total_dns_queries = 0
@@ -74,19 +72,50 @@ def index():
         total_dns_queries = 0
         total_blocked_queries = 0
     
-    # 获取捐赠配置
-    donation_config = DonationConfig.query.first()
-    
-    return render_template('main/index.html', 
+    return render_template('main/dashboard.html', 
                          user_request_count=user_request_count,
                          total_dns_queries=total_dns_queries,
-                         total_blocked_queries=total_blocked_queries,
-                         donation_config=donation_config)
+                         total_blocked_queries=total_blocked_queries)
 
+@main.route('/')
+def landing():
+    """宣传页面首页
+    
+    显示产品介绍和功能特性
+    """
+    return render_template('main/landing.html')
 
+@main.route('/about')
+def about():
+    """关于我们页面
+    
+    显示公司介绍、团队信息和联系方式
+    """
+    return render_template('main/about.html')
 
+@main.route('/features')
+def features():
+    """功能特性页面
+    
+    详细展示产品功能和技术优势
+    """
+    return render_template('main/features.html')
 
+@main.route('/guide')
+def guide():
+    """使用指南页面
+    
+    提供产品使用教程和帮助文档
+    """
+    return render_template('main/guide.html')
 
+@main.route('/pricing')
+def pricing():
+    """价格方案页面
+    
+    展示不同服务套餐和定价信息
+    """
+    return render_template('main/pricing.html')
 
 @main.route('/clients')
 @login_required
@@ -97,27 +126,7 @@ def clients():
     """
     return render_template('main/clients.html')
 
-@main.route('/guide')
-@login_required
-def guide():
-    """AdGuardHome使用指南页面
-    
-    显示AdGuardHome的使用指南和帮助文档
-    """
-    # 获取DNS配置信息
-    dns_config = DnsConfig.query.first()
-    
-    # 获取当前用户的客户端ID
-    user_client_id = None
-    try:
-        user_clients = ClientMapping.query.filter_by(user_id=current_user.id).first()
-        if user_clients and user_clients.client_ids:
-            # 使用第一个客户端ID
-            user_client_id = user_clients.client_ids[0]
-    except Exception as e:
-        logging.error(f"获取用户客户端ID失败: {str(e)}")
-    
-    return render_template('main/guide.html', dns_config=dns_config, user_client_id=user_client_id)
+
 
 @main.route('/settings/change-password')
 @login_required
@@ -1095,7 +1104,7 @@ def donation():
     # 检查捐赠功能是否启用且配置完整
     if not config.enabled or not config.is_configured():
         flash('捐赠功能暂时不可用', 'info')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.landing'))
     
     # 获取当前用户的客户端名称作为默认捐赠者姓名
     default_donor_name = ''

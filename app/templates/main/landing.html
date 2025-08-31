@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdGuard Home Manager - 智能DNS管理平台</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #0071e3;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0071e3;
+            border: 1px solid #0071e3;
+        }
+
+        .btn-secondary:hover {
+            background: #0071e3;
+            color: white;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        /* 英雄区域 */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><radialGradient id="a" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23ffffff" stop-opacity="0.1"/><stop offset="100%" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="200" cy="200" r="100" fill="url(%23a)"/><circle cx="800" cy="300" r="150" fill="url(%23a)"/><circle cx="400" cy="700" r="120" fill="url(%23a)"/></svg>') no-repeat center center;
+            background-size: cover;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .hero .subtitle {
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .hero .description {
+            font-size: 21px;
+            margin-bottom: 40px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 19px;
+            border-radius: 25px;
+        }
+
+        /* 功能特性区域 */
+        .features {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 18px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+        }
+
+        .feature-card h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .feature-card p {
+            font-size: 17px;
+            color: #86868b;
+            line-height: 1.5;
+        }
+
+        /* 统计数据区域 */
+        .stats {
+            padding: 100px 20px;
+            background: #1d1d1f;
+            color: white;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-item h3 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0071e3;
+        }
+
+        .stat-item p {
+            font-size: 17px;
+            color: #a1a1a6;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #f5f5f7;
+            padding: 60px 20px 40px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #0071e3;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #d2d2d7;
+            padding-top: 20px;
+            color: #86868b;
+            font-size: 15px;
+        }
+
+        /* 技术优势样式 */
+        .tech-advantages {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .advantages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .advantage-item {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .advantage-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+        }
+
+        .advantage-item h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .advantage-item p {
+            font-size: 17px;
+            color: #86868b;
+            line-height: 1.6;
+        }
+
+        /* 用户案例样式 */
+        .user-cases {
+            padding: 100px 20px;
+            background: white;
+        }
+
+        .cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .case-card {
+            background: #f5f5f7;
+            border-radius: 18px;
+            padding: 40px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .case-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .case-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .case-info h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 5px;
+        }
+
+        .case-info p {
+            font-size: 15px;
+            color: #86868b;
+        }
+
+        .case-content {
+            font-size: 16px;
+            color: #1d1d1f;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .case-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .case-stats span {
+            font-size: 14px;
+            color: #0071e3;
+            font-weight: 500;
+        }
+
+        .case-stats i {
+            margin-right: 5px;
+        }
+
+        /* 安全保障样式 */
+        .security-guarantee {
+            padding: 100px 20px;
+            background: #1d1d1f;
+            color: white;
+        }
+
+        .guarantee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .guarantee-item {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .guarantee-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #0071e3 0%, #005bb5 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+        }
+
+        .guarantee-item h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .guarantee-item p {
+            font-size: 17px;
+            color: #a1a1a6;
+            line-height: 1.6;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 40px;
+            }
+
+            .hero .subtitle {
+                font-size: 24px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .advantages-grid,
+            .cases-grid,
+            .guarantee-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .case-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .case-avatar {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .case-stats {
+                justify-content: center;
+            }
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .animate-delay-1 {
+            animation-delay: 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .animate-delay-2 {
+            animation-delay: 0.4s;
+            animation-fill-mode: both;
+        }
+
+        .animate-delay-3 {
+            animation-delay: 0.6s;
+            animation-fill-mode: both;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">功能特性</a></li>
+                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
+                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
+                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
+                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
+                <li><a href="#stats">数据统计</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- 英雄区域 -->
+        <section class="hero">
+            <div class="hero-content animate-fade-in">
+                <h1>智能DNS管理</h1>
+                <p class="subtitle animate-fade-in animate-delay-1">新一代网络安全体验</p>
+                <p class="description animate-fade-in animate-delay-2">
+                    AdGuard Home Manager 是一款专业的DNS管理平台，集成了先进的网络安全技术。
+                    我们为个人用户、家庭和企业提供全方位的DNS解决方案，
+                    包括广告拦截、恶意软件防护、家长控制、DNS加密等功能。
+                    让您的网络体验更安全、更纯净、更高效。
+                </p>
+                <div class="cta-buttons animate-fade-in animate-delay-3">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">立即开始</a>
+                    <a href="#features" class="btn btn-secondary btn-large">了解更多</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能特性 -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title">强大功能</h2>
+                <p class="section-subtitle">
+                    集成先进的DNS过滤技术，为您提供全方位的网络保护
+                </p>
+                
+                <div class="features-grid">
+                    <div class="feature-card animate-fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>智能拦截</h3>
+                        <p>自动识别并拦截广告、跟踪器和恶意软件，保护您的隐私安全，提升浏览体验。</p>
+                    </div>
+                    
+                    <div class="feature-card animate-fade-in animate-delay-1">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>家长控制</h3>
+                        <p>为不同设备设置个性化过滤规则，保护儿童免受不良内容影响，营造健康网络环境。</p>
+                    </div>
+                    
+                    <div class="feature-card animate-fade-in animate-delay-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>实时监控</h3>
+                        <p>详细的查询日志和统计数据，让您清楚了解网络活动，掌控每一个DNS请求。</p>
+                    </div>
+                    
+                    <div class="feature-card animate-fade-in">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>多设备支持</h3>
+                        <p>支持手机、电脑、路由器等多种设备，一次配置，全网保护，简单便捷。</p>
+                    </div>
+                    
+                    <div class="feature-card animate-fade-in animate-delay-1">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>加密DNS</h3>
+                        <p>支持DNS-over-HTTPS和DNS-over-TLS，确保DNS查询的安全性和隐私性。</p>
+                    </div>
+                    
+                    <div class="feature-card animate-fade-in animate-delay-2">
+                        <div class="feature-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h3>灵活配置</h3>
+                        <p>丰富的自定义选项，满足不同用户的个性化需求，打造专属的网络防护方案。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技术优势 -->
+        <section class="tech-advantages">
+            <div class="container">
+                <h2 class="section-title">技术优势</h2>
+                <p class="section-subtitle">
+                    基于最新的网络安全技术，为您提供企业级的DNS防护服务
+                </p>
+                
+                <div class="advantages-grid">
+                    <div class="advantage-item animate-fade-in">
+                        <div class="advantage-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>高性能架构</h3>
+                        <p>采用分布式架构设计，支持高并发DNS查询，响应时间低至10ms，确保网络访问流畅无阻。</p>
+                    </div>
+                    
+                    <div class="advantage-item animate-fade-in animate-delay-1">
+                        <div class="advantage-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>智能规则库</h3>
+                        <p>集成全球最新的恶意域名数据库，实时更新拦截规则，识别率高达99.9%，保护您免受网络威胁。</p>
+                    </div>
+                    
+                    <div class="advantage-item animate-fade-in animate-delay-2">
+                        <div class="advantage-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>AI智能分析</h3>
+                        <p>运用机器学习算法分析网络行为模式，主动识别新型威胁，提供预测性安全防护。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 用户案例 -->
+        <section class="user-cases">
+            <div class="container">
+                <h2 class="section-title">用户案例</h2>
+                <p class="section-subtitle">
+                    看看其他用户如何通过我们的服务改善网络体验
+                </p>
+                
+                <div class="cases-grid">
+                    <div class="case-card animate-fade-in">
+                        <div class="case-header">
+                            <div class="case-avatar">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="case-info">
+                                <h4>家庭用户</h4>
+                                <p>张先生的智能家居</p>
+                            </div>
+                        </div>
+                        <p class="case-content">
+                            "自从使用AdGuard Home Manager后，家里的网络环境变得非常干净。
+                            孩子们再也不会看到不合适的广告，而且网页加载速度明显提升了。
+                            家长控制功能让我可以放心让孩子们上网学习。"
+                        </p>
+                        <div class="case-stats">
+                            <span><i class="fas fa-shield-alt"></i> 每日拦截 2,000+ 请求</span>
+                            <span><i class="fas fa-clock"></i> 节省浏览时间 30%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="case-card animate-fade-in animate-delay-1">
+                        <div class="case-header">
+                            <div class="case-avatar">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="case-info">
+                                <h4>企业用户</h4>
+                                <p>科技公司IT部门</p>
+                            </div>
+                        </div>
+                        <p class="case-content">
+                            "我们公司有200多名员工，网络安全一直是我们关注的重点。
+                            AdGuard Home Manager帮助我们建立了强大的DNS防护体系，
+                            有效防止了恶意软件入侵，保护了公司的数据安全。"
+                        </p>
+                        <div class="case-stats">
+                            <span><i class="fas fa-users"></i> 保护 200+ 设备</span>
+                            <span><i class="fas fa-bug"></i> 拦截恶意软件 99.8%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 安全保障 -->
+        <section class="security-guarantee">
+            <div class="container">
+                <h2 class="section-title" style="color: white;">安全保障</h2>
+                <p class="section-subtitle" style="color: #a1a1a6;">
+                    我们承诺为您提供最高级别的网络安全保护
+                </p>
+                
+                <div class="guarantee-grid">
+                    <div class="guarantee-item animate-fade-in">
+                        <div class="guarantee-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <h3>ISO 27001认证</h3>
+                        <p>通过国际信息安全管理体系认证，确保数据处理的安全性和合规性。</p>
+                    </div>
+                    
+                    <div class="guarantee-item animate-fade-in animate-delay-1">
+                        <div class="guarantee-icon">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <h3>隐私保护</h3>
+                        <p>严格遵循隐私保护原则，不记录用户个人信息，所有查询数据本地处理。</p>
+                    </div>
+                    
+                    <div class="guarantee-item animate-fade-in animate-delay-2">
+                        <div class="guarantee-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h3>24/7技术支持</h3>
+                        <p>专业技术团队全天候在线，随时为您解决技术问题和使用疑问。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 统计数据 -->
+        <section id="stats" class="stats">
+            <div class="container">
+                <h2 class="section-title" style="color: white; margin-bottom: 60px;">数据说话</h2>
+                <div class="stats-grid">
+                    <div class="stat-item animate-fade-in">
+                        <h3>99.9%</h3>
+                        <p>服务可用性</p>
+                    </div>
+                    <div class="stat-item animate-fade-in animate-delay-1">
+                        <h3>10M+</h3>
+                        <p>每日拦截请求</p>
+                    </div>
+                    <div class="stat-item animate-fade-in animate-delay-2">
+                        <h3>50ms</h3>
+                        <p>平均响应时间</p>
+                    </div>
+                    <div class="stat-item animate-fade-in animate-delay-3">
+                        <h3>24/7</h3>
+                        <p>全天候保护</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer id="about" class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">使用条款</a>
+                <a href="#">隐私政策</a>
+                <a href="#">帮助中心</a>
+                <a href="#">联系我们</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // 观察所有动画元素
+        document.querySelectorAll('.animate-fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
