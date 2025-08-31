@@ -191,6 +191,10 @@ body::before {
     color: var(--text-primary);
 }
 
+.form-check-label {
+    color: var(--text-primary) !important;
+}
+
 /* 卡片样式 */
 .card {
     background: rgba(28, 28, 30, 0.8);
