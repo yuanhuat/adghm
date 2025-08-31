@@ -25,6 +25,9 @@
                     <button type="button" class="btn btn-secondary ms-2" onclick="clearFilter()" id="clearFilterBtn" style="display: none;">
                         <i class="fas fa-times"></i> 清除筛选
                     </button>
+                    <button type="button" class="btn btn-success ms-2" onclick="showAdGuardClientsModal()" id="adguardClientsBtn">
+                        <i class="fas fa-network-wired"></i> 查询AdGuard客户端
+                    </button>
                     <span class="ms-2 text-muted" id="selectedCount">已选择 0 个用户</span>
                     <span class="ms-2 text-info" id="filterStatus" style="display: none;"></span>
                 </div>
@@ -782,5 +785,374 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteAbortController = null;
     });
 });
+
+// 显示AdGuard客户端查询模态框
+function showAdGuardClientsModal() {
+    const modal = new bootstrap.Modal(document.getElementById('adguardClientsModal'));
+    modal.show();
+    
+    // 清空之前的数据
+    document.getElementById('clientsTableBody').innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在加载...</td></tr>';
+    document.getElementById('clientsStats').innerHTML = '';
+    
+    // 获取AdGuard客户端数据
+    fetch('/admin/adguard-clients')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayAdGuardClients(data);
+            } else {
+                document.getElementById('clientsTableBody').innerHTML = `<tr><td colspan="6" class="text-center text-danger">错误: ${data.error}</td></tr>`;
+            }
+        })
+        .catch(error => {
+            console.error('获取AdGuard客户端失败:', error);
+            document.getElementById('clientsTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">网络错误，请重试</td></tr>';
+        });
+}
+
+// 显示AdGuard客户端数据
+function displayAdGuardClients(data) {
+    const tbody = document.getElementById('clientsTableBody');
+    const statsDiv = document.getElementById('clientsStats');
+    
+    // 显示统计信息
+    statsDiv.innerHTML = `
+        <div class="row mb-3">
+            <div class="col-md-2">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.total_count}</h5>
+                        <small>总计</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.manual_count}</h5>
+                        <small>手动配置</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.auto_count}</h5>
+                        <small>自动发现</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.matched_count}</h5>
+                        <small>已匹配</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.unmatched_clients.length}</h5>
+                        <small>未匹配</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-dark text-white">
+                    <div class="card-body text-center">
+                        <h5>${data.unmatched_allowed_ids.length}</h5>
+                        <small>孤立ID</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 显示未匹配提示
+    if (data.has_unmatched) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning mt-3';
+        alertDiv.innerHTML = `
+            <h5><i class="fas fa-exclamation-triangle"></i> 发现未匹配的客户端</h5>
+            <p>检测到 ${data.unmatched_clients.length} 个未匹配的客户端和 ${data.unmatched_allowed_ids.length} 个孤立的允许客户端ID。</p>
+            <button type="button" class="btn btn-warning" onclick="showUnmatchedClients(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                <i class="fas fa-list"></i> 查看详情
+            </button>
+            <button type="button" class="btn btn-danger ms-2" onclick="confirmDeleteUnmatched(${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                <i class="fas fa-trash"></i> 删除未匹配项
+            </button>
+        `;
+        statsDiv.appendChild(alertDiv);
+    }
+    
+    // 显示客户端列表
+    if (data.clients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">暂无客户端</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    data.clients.forEach(client => {
+        const row = document.createElement('tr');
+        
+        // 处理客户端ID列表
+        const idsHtml = client.ids.map(id => `<span class="badge bg-secondary me-1">${id}</span>`).join('');
+        
+        // 处理匹配状态
+        const matchedBadge = client.matched ? 
+            '<span class="badge bg-success"><i class="fas fa-check"></i> 已匹配</span>' : 
+            '<span class="badge bg-danger"><i class="fas fa-times"></i> 未匹配</span>';
+        
+        // 处理标签
+        const tagsHtml = client.tags ? client.tags.map(tag => `<span class="badge bg-info me-1">${tag}</span>`).join('') : '';
+        
+        // 处理被阻止的服务
+        const blockedServicesHtml = client.blocked_services ? client.blocked_services.slice(0, 3).map(service => `<span class="badge bg-warning me-1">${service}</span>`).join('') : '';
+        const moreServices = client.blocked_services && client.blocked_services.length > 3 ? `<span class="text-muted">+${client.blocked_services.length - 3}更多</span>` : '';
+        
+        row.innerHTML = `
+            <td>${client.name || '<span class="text-muted">未命名</span>'}</td>
+            <td>${idsHtml}</td>
+            <td><span class="badge ${client.type === '手动配置' ? 'bg-success' : 'bg-info'}">${client.type}</span></td>
+            <td>${matchedBadge}</td>
+            <td>
+                ${client.filtering_enabled ? '<i class="fas fa-check text-success" title="过滤已启用"></i>' : '<i class="fas fa-times text-danger" title="过滤已禁用"></i>'}
+                ${client.parental_enabled ? '<i class="fas fa-child text-warning ms-1" title="家长控制已启用"></i>' : ''}
+                ${client.safebrowsing_enabled ? '<i class="fas fa-shield-alt text-primary ms-1" title="安全浏览已启用"></i>' : ''}
+            </td>
+            <td>${tagsHtml}</td>
+            <td>${blockedServicesHtml}${moreServices}</td>
+        `;
+        
+        // 为未匹配的行添加特殊样式
+        if (!client.matched) {
+            row.classList.add('table-warning');
+        }
+        
+        tbody.appendChild(row);
+    });
+}
+
+function showUnmatchedClients(data) {
+    let content = '<h5>未匹配的客户端:</h5>';
+    if (data.unmatched_clients.length > 0) {
+        content += '<ul>';
+        data.unmatched_clients.forEach(client => {
+            content += `<li><strong>${client.name}</strong> (${client.type}) - IDs: ${client.ids.join(', ')}</li>`;
+        });
+        content += '</ul>';
+    } else {
+        content += '<p>无未匹配的客户端</p>';
+    }
+    
+    content += '<h5>孤立的允许客户端ID:</h5>';
+    if (data.unmatched_allowed_ids.length > 0) {
+        content += '<ul>';
+        data.unmatched_allowed_ids.forEach(id => {
+            content += `<li><code>${id}</code></li>`;
+        });
+        content += '</ul>';
+    } else {
+        content += '<p>无孤立的允许客户端ID</p>';
+    }
+    
+    // 创建详情模态框
+    const detailModal = `
+        <div class="modal fade" id="unmatchedDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">未匹配项详情</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${content}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的模态框
+    const existingModal = document.getElementById('unmatchedDetailsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 添加新模态框
+    document.body.insertAdjacentHTML('beforeend', detailModal);
+    const modal = new bootstrap.Modal(document.getElementById('unmatchedDetailsModal'));
+    modal.show();
+}
+
+function confirmDeleteUnmatched(data) {
+    if (data.unmatched_clients.length === 0 && data.unmatched_allowed_ids.length === 0) {
+        alert('没有需要删除的未匹配项');
+        return;
+    }
+    
+    let message = '确定要删除以下未匹配项吗？\n\n';
+    
+    if (data.unmatched_clients.length > 0) {
+        message += `客户端 (${data.unmatched_clients.length}个):\n`;
+        data.unmatched_clients.forEach(client => {
+            message += `- ${client.name} (${client.type})\n`;
+        });
+        message += '\n';
+    }
+    
+    if (data.unmatched_allowed_ids.length > 0) {
+        message += `允许客户端ID (${data.unmatched_allowed_ids.length}个):\n`;
+        data.unmatched_allowed_ids.forEach(id => {
+            message += `- ${id}\n`;
+        });
+    }
+    
+    message += '\n此操作不可撤销！';
+    
+    if (confirm(message)) {
+        deleteUnmatchedClients(data);
+    }
+}
+
+function deleteUnmatchedClients(data) {
+    // 显示删除进度
+    const progressModal = `
+        <div class="modal fade" id="deleteProgressModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">删除未匹配项</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%" id="deleteProgress"></div>
+                        </div>
+                        <div id="deleteStatus">正在准备删除...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除已存在的进度模态框
+    const existingProgressModal = document.getElementById('deleteProgressModal');
+    if (existingProgressModal) {
+        existingProgressModal.remove();
+    }
+    
+    // 添加进度模态框
+    document.body.insertAdjacentHTML('beforeend', progressModal);
+    const modal = new bootstrap.Modal(document.getElementById('deleteProgressModal'));
+    modal.show();
+    
+    // 发送删除请求
+    fetch('/admin/delete-unmatched-clients', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            unmatched_clients: data.unmatched_clients,
+            unmatched_allowed_ids: data.unmatched_allowed_ids
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        const progressBar = document.getElementById('deleteProgress');
+        const statusDiv = document.getElementById('deleteStatus');
+        
+        if (result.success) {
+            progressBar.style.width = '100%';
+            progressBar.classList.add('bg-success');
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h6>删除完成！</h6>
+                    <p>成功删除 ${result.deleted_clients} 个客户端和 ${result.deleted_allowed_ids} 个允许ID</p>
+                    ${result.errors.length > 0 ? `<p class="text-warning">部分删除失败：${result.errors.join(', ')}</p>` : ''}
+                </div>
+                <button type="button" class="btn btn-success" onclick="location.reload()">刷新页面</button>
+            `;
+        } else {
+            progressBar.style.width = '100%';
+            progressBar.classList.add('bg-danger');
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h6>删除失败</h6>
+                    <p>${result.message}</p>
+                </div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            `;
+        }
+    })
+    .catch(error => {
+        const progressBar = document.getElementById('deleteProgress');
+        const statusDiv = document.getElementById('deleteStatus');
+        
+        progressBar.style.width = '100%';
+        progressBar.classList.add('bg-danger');
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <h6>网络错误</h6>
+                <p>无法连接到服务器：${error.message}</p>
+            </div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        `;
+    });
+}
 </script>
-{% endblock page_content %}
+
+<!-- AdGuard客户端查询模态框 -->
+<div class="modal fade" id="adguardClientsModal" tabindex="-1" aria-labelledby="adguardClientsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adguardClientsModalLabel">
+                    <i class="fas fa-network-wired"></i> AdGuard Home 客户端列表
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 统计信息 -->
+                <div id="clientsStats"></div>
+                
+                <!-- 客户端列表 -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>客户端名称</th>
+                                <th>IP/ID</th>
+                                <th>类型</th>
+                                <th>匹配状态</th>
+                                <th>状态</th>
+                                <th>标签</th>
+                                <th>被阻止的服务</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <i class="fas fa-spinner fa-spin"></i> 正在加载...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="showAdGuardClientsModal()">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

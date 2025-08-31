@@ -562,6 +562,236 @@ def bulk_delete_users_optimized():
                 'message': f'删除数据库记录失败：{str(e)}'
             }), 500
         
+        # 返回成功结果
+        return jsonify({
+            'success': True,
+            'message': f'成功删除 {success_count} 个用户',
+            'deleted_count': success_count,
+            'client_errors': client_delete_errors if client_delete_errors else None
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'批量删除用户失败：{str(e)}'
+        }), 500
+
+@admin.route('/adguard-clients')
+@login_required
+@admin_required
+def adguard_clients():
+    """查询所有AdGuard Home客户端并匹配现有用户"""
+    try:
+        adguard_service = AdGuardService()
+        
+        # 获取所有客户端信息
+        clients_data = adguard_service._make_request('GET', '/clients')
+        
+        # 获取所有用户的客户端映射
+        all_user_mappings = ClientMapping.query.all()
+        user_client_names = {mapping.client_name for mapping in all_user_mappings}
+        user_client_ids = set()
+        for mapping in all_user_mappings:
+            user_client_ids.update(mapping.client_ids)
+        
+        # 获取允许的客户端ID列表
+        try:
+            access_list = adguard_service._make_request('GET', '/access/list')
+            allowed_client_ids = set(access_list.get('allowed_clients', []))
+        except Exception:
+            allowed_client_ids = set()
+        
+        # 格式化客户端数据并进行匹配
+        all_clients = []
+        matched_clients = set()
+        unmatched_clients = []
+        
+        # 处理手动配置的客户端
+        if 'clients' in clients_data:
+            for client in clients_data['clients']:
+                client_name = client.get('name', '')
+                client_ids = client.get('ids', [])
+                
+                # 检查是否匹配现有用户
+                is_matched = client_name in user_client_names
+                if is_matched:
+                    matched_clients.add(client_name)
+                
+                client_info = {
+                    'name': client_name,
+                    'ids': client_ids,
+                    'type': '手动配置',
+                    'matched': is_matched,
+                    'filtering_enabled': client.get('filtering_enabled', False),
+                    'parental_enabled': client.get('parental_enabled', False),
+                    'safebrowsing_enabled': client.get('safebrowsing_enabled', False),
+                    'use_global_settings': client.get('use_global_settings', True),
+                    'blocked_services': client.get('blocked_services', []),
+                    'upstreams': client.get('upstreams', []),
+                    'tags': client.get('tags', [])
+                }
+                all_clients.append(client_info)
+                
+                if not is_matched:
+                    unmatched_clients.append({
+                        'name': client_name,
+                        'ids': client_ids,
+                        'type': '手动配置'
+                    })
+        
+        # 处理自动发现的客户端
+        if 'auto_clients' in clients_data:
+            for auto_client in clients_data['auto_clients']:
+                client_name = auto_client.get('name', '')
+                client_ip = auto_client.get('ip', '')
+                
+                # 检查是否匹配现有用户
+                is_matched = client_name in user_client_names
+                if is_matched:
+                    matched_clients.add(client_name)
+                
+                client_info = {
+                    'name': client_name,
+                    'ids': [client_ip],
+                    'type': '自动发现',
+                    'matched': is_matched,
+                    'source': auto_client.get('source', ''),
+                    'whois_info': auto_client.get('whois_info', {})
+                }
+                all_clients.append(client_info)
+                
+                if not is_matched:
+                    unmatched_clients.append({
+                        'name': client_name,
+                        'ids': [client_ip],
+                        'type': '自动发现'
+                    })
+        
+        # 查找未匹配的允许客户端ID
+        unmatched_allowed_ids = allowed_client_ids - user_client_ids
+        
+        return jsonify({
+            'success': True,
+            'clients': all_clients,
+            'total_count': len(all_clients),
+            'manual_count': len(clients_data.get('clients', [])),
+            'auto_count': len(clients_data.get('auto_clients', [])),
+            'matched_count': len(matched_clients),
+            'unmatched_clients': unmatched_clients,
+            'unmatched_allowed_ids': list(unmatched_allowed_ids),
+            'has_unmatched': len(unmatched_clients) > 0 or len(unmatched_allowed_ids) > 0
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'获取AdGuard Home客户端失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/delete-unmatched-clients', methods=['POST'])
+@login_required
+@admin_required
+def delete_unmatched_clients():
+    """删除未匹配的AdGuard客户端和允许ID"""
+    try:
+        if not request.is_json:
+            return jsonify({'success': False, 'message': '请求格式错误'}), 400
+        
+        data = request.get_json()
+        unmatched_clients = data.get('unmatched_clients', [])
+        unmatched_allowed_ids = data.get('unmatched_allowed_ids', [])
+        
+        if not unmatched_clients and not unmatched_allowed_ids:
+            return jsonify({'success': False, 'message': '没有需要删除的项目'}), 400
+        
+        # 获取AdGuard服务
+        adguard_service = AdGuardService()
+        
+        deleted_clients = 0
+        deleted_allowed_ids = 0
+        errors = []
+        
+        # 删除未匹配的客户端
+        for client in unmatched_clients:
+            try:
+                client_name = client.get('name')
+                if client_name:
+                    # 删除客户端
+                    response = adguard_service._make_request('POST', '/clients/delete', {
+                        'name': client_name
+                    })
+                    
+                    if response is not None:  # 成功删除
+                        deleted_clients += 1
+                    else:
+                        errors.append(f"删除客户端 {client_name} 失败")
+                        
+            except Exception as e:
+                errors.append(f"删除客户端 {client.get('name', 'unknown')} 时出错: {str(e)}")
+        
+        # 删除未匹配的允许ID
+        if unmatched_allowed_ids:
+            try:
+                # 获取当前访问设置
+                access_data = adguard_service._make_request('GET', '/access/list')
+                
+                if access_data:
+                    current_allowed_clients = access_data.get('allowed_clients', [])
+                    
+                    # 过滤掉未匹配的ID
+                    new_allowed_clients = [client for client in current_allowed_clients 
+                                         if client not in unmatched_allowed_ids]
+                    
+                    # 更新访问设置
+                    update_data = {
+                        'allowed_clients': new_allowed_clients,
+                        'disallowed_clients': access_data.get('disallowed_clients', []),
+                        'blocked_hosts': access_data.get('blocked_hosts', [])
+                    }
+                    
+                    update_response = adguard_service._make_request('POST', '/access/set', update_data)
+                    
+                    if update_response is not None:
+                        deleted_allowed_ids = len(unmatched_allowed_ids)
+                    else:
+                        errors.append("更新允许客户端列表失败")
+                else:
+                    errors.append("获取访问设置失败")
+                    
+            except Exception as e:
+                errors.append(f"删除允许ID时出错: {str(e)}")
+        
+        # 记录操作日志
+        try:
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='delete_unmatched_clients',
+                target_type='AdGuard',
+                target_id='unmatched',
+                details=f'删除未匹配项：{deleted_clients}个客户端，{deleted_allowed_ids}个允许ID'
+            )
+            db.session.add(log)
+            db.session.commit()
+        except Exception as e:
+            # 日志记录失败不影响主要操作
+            pass
+        
+        return jsonify({
+            'success': True,
+            'deleted_clients': deleted_clients,
+            'deleted_allowed_ids': deleted_allowed_ids,
+            'errors': errors,
+            'message': f'删除完成: {deleted_clients}个客户端, {deleted_allowed_ids}个允许ID'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'删除操作失败: {str(e)}'
+        }), 500
+        
         # 记录批量操作日志
         try:
             log = OperationLog(
