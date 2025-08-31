@@ -112,15 +112,16 @@
                 navMenu.classList.toggle('active');
             });
             
-            // 处理下拉菜单点击事件（移动端）
+            // 处理下拉菜单点击事件
             const dropdownToggles = navMenu.querySelectorAll('.dropdown-toggle');
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     
-                    // 在移动端，点击下拉菜单切换显示状态
+                    const dropdownMenu = this.nextElementSibling;
+                    
                     if (window.innerWidth <= 768) {
-                        const dropdownMenu = this.nextElementSibling;
+                        // 移动端：切换显示状态
                         const isVisible = dropdownMenu.style.display === 'block';
                         
                         // 关闭所有其他下拉菜单
@@ -130,6 +131,25 @@
                         
                         // 切换当前下拉菜单
                         dropdownMenu.style.display = isVisible ? 'none' : 'block';
+                    } else {
+                        // 桌面端：切换显示状态
+                        const isVisible = dropdownMenu.style.display === 'block' || 
+                                        getComputedStyle(dropdownMenu).visibility === 'visible';
+                        
+                        // 关闭所有其他下拉菜单
+                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                            menu.style.display = 'none';
+                            menu.style.opacity = '0';
+                            menu.style.visibility = 'hidden';
+                        });
+                        
+                        // 切换当前下拉菜单
+                        if (!isVisible) {
+                            dropdownMenu.style.display = 'block';
+                            dropdownMenu.style.opacity = '1';
+                            dropdownMenu.style.visibility = 'visible';
+                            dropdownMenu.style.transform = 'translateY(0)';
+                        }
                     }
                 });
             });
