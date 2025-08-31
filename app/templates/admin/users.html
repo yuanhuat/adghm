@@ -481,6 +481,7 @@ function getSelectedUsers() {
 // 全局变量用于控制删除操作
 let deleteAbortController = null;
 let isDeletionCancelled = false;
+let isMinimized = false; // 标记是否为最小化操作
 
 // 批量删除用户（优化的批处理方式）
 async function bulkDeleteUsers() {
@@ -745,6 +746,7 @@ function cancelDeletion() {
 function minimizeDeleteModal() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal'));
     if (modal) {
+        isMinimized = true; // 标记为最小化操作
         modal.hide();
         // 显示状态按钮
         document.getElementById('deleteStatusBtn').style.display = 'block';
@@ -756,6 +758,7 @@ function showDeleteStatus() {
     // 隐藏状态按钮
     document.getElementById('deleteStatusBtn').style.display = 'none';
     // 重新显示模态框
+    isMinimized = false; // 重新打开，不是最小化状态
     const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
     modal.show();
 }
@@ -769,8 +772,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('deleteUsersBtn').disabled = !this.checked;
     });
     
-    // 监听模态框关闭事件，重置状态
+    // 监听模态框关闭事件，只有在非最小化情况下才重置状态
     document.getElementById('bulkDeleteModal').addEventListener('hidden.bs.modal', function() {
+        // 如果是最小化操作，不重置状态
+        if (isMinimized) {
+            isMinimized = false; // 重置标志
+            return;
+        }
+        
         // 重置进度显示
         document.getElementById('deleteProgress').style.display = 'none';
         document.getElementById('confirmSection').style.display = 'block';
