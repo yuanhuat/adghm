@@ -447,6 +447,58 @@ body::before {
     animation: fadeInUp 0.6s ease-out;
 }
 
+/* 表格样式 - 高对比度优化 */
+.table {
+    background: rgba(28, 28, 30, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    margin-bottom: 0;
+    color: var(--text-primary);
+}
+
+.table th {
+    background: rgba(44, 44, 46, 0.95) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-color);
+    border-color: var(--border-color);
+    padding: 16px;
+    border-top: none;
+}
+
+.table td {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    border-color: var(--border-color);
+    border-top: none;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+     background: rgba(28, 28, 30, 0.8) !important;
+     transition: all 0.3s ease;
+ }
+ 
+ .table tbody tr:hover {
+     background: rgba(255, 255, 255, 0.08) !important;
+     transform: translateY(-1px);
+ }
+ 
+ .table tbody tr:nth-child(even) {
+     background: rgba(28, 28, 30, 0.8) !important;
+ }
+ 
+ .table tbody tr:nth-child(even):hover {
+     background: rgba(255, 255, 255, 0.08) !important;
+ }
+
 /* 深色模式优化 */
 @media (prefers-color-scheme: dark) {
     :root {
