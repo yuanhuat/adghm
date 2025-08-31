@@ -545,9 +545,9 @@ async function bulkDeleteUsers() {
                  batchResults.push({ status: 'rejected', reason: error.message });
              }
              
-             // 每个用户删除后短暂延迟
+             // 每个用户删除后延迟1分钟
              if (batch.indexOf(user) < batch.length - 1) {
-                 await new Promise(resolve => setTimeout(resolve, 300));
+                 await new Promise(resolve => setTimeout(resolve, 60000));
              }
          }
         
