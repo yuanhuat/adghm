@@ -558,9 +558,15 @@ async function bulkDeleteUsers() {
                  batchResults.push({ status: 'rejected', reason: error.message });
              }
              
-             // 每个用户删除后延迟1分钟
-             if (batch.indexOf(user) < batch.length - 1) {
-                 await new Promise(resolve => setTimeout(resolve, 60000));
+             // 每个用户删除后延迟1分钟，但要检查取消状态
+             if (batch.indexOf(user) < batch.length - 1 && !isDeletionCancelled) {
+                 // 分段延迟，每秒检查一次取消状态
+                 for (let i = 0; i < 60; i++) {
+                     if (isDeletionCancelled) {
+                         break;
+                     }
+                     await new Promise(resolve => setTimeout(resolve, 1000));
+                 }
              }
          }
         
@@ -601,9 +607,16 @@ async function bulkDeleteUsers() {
             }
         });
         
-        // 批次间延迟，避免AdGuardHome压力过大
-        if (batchIndex < batches.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, batchDelay)); // 使用1分钟延迟
+        // 批次间延迟，避免AdGuardHome压力过大，但要检查取消状态
+        if (batchIndex < batches.length - 1 && !isDeletionCancelled) {
+            // 分段延迟，每秒检查一次取消状态
+            const delaySeconds = batchDelay / 1000; // 转换为秒
+            for (let i = 0; i < delaySeconds; i++) {
+                if (isDeletionCancelled) {
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
     }
     
