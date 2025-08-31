@@ -78,6 +78,18 @@ def dashboard():
                          total_blocked_queries=total_blocked_queries)
 
 @main.route('/')
+def index():
+    """主页
+    
+    根据用户登录状态显示不同内容：
+    - 已登录用户：重定向到仪表板
+    - 未登录用户：显示宣传页面
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('main.dashboard'))
+    return render_template('main/landing.html')
+
+@main.route('/landing')
 def landing():
     """宣传页面首页
     
