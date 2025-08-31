@@ -1,0 +1,40 @@
+<!-- SEO Meta Tags Template -->
+{% if seo_config %}
+<!-- 基础 Meta 标签 -->
+<meta name="description" content="{{ seo_config.description }}">
+<meta name="keywords" content="{{ seo_config.keywords }}">
+<meta name="author" content="{{ seo_config.author }}">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph Meta 标签 -->
+<meta property="og:title" content="{{ seo_config.title }}">
+<meta property="og:description" content="{{ seo_config.description }}">
+<meta property="og:type" content="{{ seo_config.og_type }}">
+<meta property="og:site_name" content="{{ seo_config.site_name }}">
+<meta property="og:locale" content="zh_CN">
+
+<!-- Twitter Card Meta 标签 -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ seo_config.title }}">
+<meta name="twitter:description" content="{{ seo_config.description }}">
+
+<!-- 移动端优化 -->
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="{{ seo_config.site_name }}">
+
+<!-- 结构化数据 -->
+{% if structured_data %}
+<script type="application/ld+json">
+{{ structured_data | tojson | safe }}
+</script>
+{% endif %}
+
+{% else %}
+<!-- 默认 Meta 标签 -->
+<meta name="description" content="AdGuard Home Manager - 智能DNS管理平台，提供AdGuard Home的可视化管理界面">
+<meta name="keywords" content="AdGuard Home,DNS管理,广告拦截,网络安全">
+<meta name="author" content="AdGuard Home Manager Team">
+<meta name="robots" content="index, follow">
+{% endif %}

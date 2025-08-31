@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+Allow: /landing
+Allow: /about
+Allow: /features
+Allow: /guide
+Allow: /pricing
+
+# Disallow private areas
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /clients
+Disallow: /settings/
+
+# Allow static resources
+Allow: /static/
+Allow: *.css
+Allow: *.js
+Allow: *.png
+Allow: *.jpg
+Allow: *.jpeg
+Allow: *.gif
+Allow: *.svg
+Allow: *.ico
+
+# Sitemap location
+Sitemap: https://your-domain.com/static/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

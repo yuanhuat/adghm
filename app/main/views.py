@@ -1,5 +1,5 @@
 import logging
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, send_from_directory, Response
 from flask_login import login_required, current_user
 from app import db
 from app.models.client_mapping import ClientMapping
@@ -11,6 +11,7 @@ from app.models.dns_config import DnsConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
 from app.services.adguard_service import AdGuardService
+from app.utils.seo_config import get_page_seo, get_structured_data
 
 from app.admin.views import admin_required
 from . import main
@@ -72,10 +73,14 @@ def dashboard():
         total_dns_queries = 0
         total_blocked_queries = 0
     
+    seo_config = get_page_seo('dashboard')
+    structured_data = get_structured_data('dashboard')
     return render_template('main/dashboard.html', 
                          user_request_count=user_request_count,
                          total_dns_queries=total_dns_queries,
-                         total_blocked_queries=total_blocked_queries)
+                         total_blocked_queries=total_blocked_queries,
+                         seo_config=seo_config,
+                         structured_data=structured_data)
 
 @main.route('/')
 def index():
@@ -87,7 +92,11 @@ def index():
     """
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
-    return render_template('main/landing.html')
+    seo_config = get_page_seo('landing')
+    structured_data = get_structured_data('landing')
+    return render_template('main/landing.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/landing')
 def landing():
@@ -95,7 +104,11 @@ def landing():
     
     显示产品介绍和功能特性
     """
-    return render_template('main/landing.html')
+    seo_config = get_page_seo('landing')
+    structured_data = get_structured_data('landing')
+    return render_template('main/landing.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/about')
 def about():
@@ -103,7 +116,11 @@ def about():
     
     显示公司介绍、团队信息和联系方式
     """
-    return render_template('main/about.html')
+    seo_config = get_page_seo('about')
+    structured_data = get_structured_data('about')
+    return render_template('main/about.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/features')
 def features():
@@ -111,7 +128,11 @@ def features():
     
     详细展示产品功能和技术优势
     """
-    return render_template('main/features.html')
+    seo_config = get_page_seo('features')
+    structured_data = get_structured_data('features')
+    return render_template('main/features.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/guide')
 def guide():
@@ -121,7 +142,12 @@ def guide():
     """
     # 获取捐赠配置（用于显示排行榜链接）
     donation_config = DonationConfig.get_config()
-    return render_template('main/guide.html', donation_config=donation_config)
+    seo_config = get_page_seo('guide')
+    structured_data = get_structured_data('guide')
+    return render_template('main/guide.html', 
+                         donation_config=donation_config,
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/pricing')
 def pricing():
@@ -129,7 +155,11 @@ def pricing():
     
     展示不同服务套餐和定价信息
     """
-    return render_template('main/pricing.html')
+    seo_config = get_page_seo('pricing')
+    structured_data = get_structured_data('pricing')
+    return render_template('main/pricing.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 @main.route('/clients')
 @login_required
@@ -138,7 +168,11 @@ def clients():
     
     显示用户的所有客户端及其详细信息
     """
-    return render_template('main/clients.html')
+    seo_config = get_page_seo('clients')
+    structured_data = get_structured_data('clients')
+    return render_template('main/clients.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
 
 
 
@@ -1476,3 +1510,21 @@ def donation_callback():
     except Exception as e:
         logging.error(f"处理捐赠回调失败: {str(e)}")
         return 'FAIL'
+
+
+@main.route('/sitemap.xml')
+def sitemap():
+    """提供XML网站地图"""
+    try:
+        return send_from_directory('static', 'sitemap.xml', mimetype='application/xml')
+    except FileNotFoundError:
+        return Response('Sitemap not found', status=404)
+
+
+@main.route('/robots.txt')
+def robots():
+    """提供robots.txt文件"""
+    try:
+        return send_from_directory('static', 'robots.txt', mimetype='text/plain')
+    except FileNotFoundError:
+        return Response('Robots.txt not found', status=404)

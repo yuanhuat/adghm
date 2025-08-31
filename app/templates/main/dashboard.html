@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主页 - AdGuardHome用户管理系统</title>
+    <title>{{ seo_config.title if seo_config else '主页 - AdGuardHome用户管理系统' }}</title>
+    
+    <!-- SEO Meta Tags -->
+    {% include 'components/seo_meta.html' %}
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
