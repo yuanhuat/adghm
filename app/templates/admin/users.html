@@ -483,7 +483,7 @@ let deleteAbortController = null;
 let isDeletionCancelled = false;
 let isMinimized = false; // 标记是否为最小化操作
 
-// 批量删除用户（优化的批处理方式）
+// 批量删除用户（使用优化API）
 async function bulkDeleteUsers() {
     const selectedUsers = getSelectedUsers();
     const userIds = selectedUsers.map(user => user.id);
@@ -522,103 +522,77 @@ async function bulkDeleteUsers() {
     const progressText = document.getElementById('progressText');
     const currentUserSpan = document.getElementById('currentUser');
     
-    let successCount = 0;
-    let failedCount = 0;
-    const results = [];
-    const errors = [];
-    
-    // 分批处理，每批最多10个用户
-    const batchSize = 5; // 减少批处理大小，降低并发压力
-    const batchDelay = 60000; // 1分钟延迟
-    const batches = [];
-    for (let i = 0; i < selectedUsers.length; i += batchSize) {
-        batches.push(selectedUsers.slice(i, i + batchSize));
-    }
-    
-    // 逐批删除用户
-    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
-        
-        // 检查是否已取消
-         if (isDeletionCancelled) {
-             break;
-         }
-         
-         // 串行处理当前批次的用户，避免对AdGuardHome造成过大压力
-         const batchResults = [];
-         for (const user of batch) {
-             // 检查是否已取消
-             if (isDeletionCancelled) {
-                 break;
-             }
-             
-             try {
-                 const result = await deleteUserWithRetry(user, 5, deleteAbortController.signal); // 最多重试5次
-                 batchResults.push({ status: 'fulfilled', value: result });
-             } catch (error) {
-                 batchResults.push({ status: 'rejected', reason: error.message });
-             }
-             
-             // 每个用户删除后延迟1分钟，但要检查取消状态
-             if (batch.indexOf(user) < batch.length - 1 && !isDeletionCancelled) {
-                 // 分段延迟，每秒检查一次取消状态
-                 for (let i = 0; i < 60; i++) {
-                     if (isDeletionCancelled) {
-                         break;
-                     }
-                     await new Promise(resolve => setTimeout(resolve, 1000));
-                 }
-             }
-         }
-        
-        // 处理批次结果
-        batchResults.forEach((result, index) => {
-            const user = batch[index];
-            const processedIndex = batchIndex * batchSize + index + 1;
-            const progress = (processedIndex / selectedUsers.length * 100).toFixed(1);
-            
-            // 更新进度显示
-            progressText.textContent = `${processedIndex}/${selectedUsers.length} (${progress}%)`;
-            currentUserSpan.textContent = user.username;
-            progressBar.style.width = progress + '%';
-            
-            if (result.status === 'fulfilled' && result.value.success) {
-                successCount++;
-                results.push({
-                    username: user.username,
-                    success: true,
-                    errors: result.value.errors || []
-                });
-                
-                // 如果有警告信息，添加到错误列表
-                if (result.value.errors && result.value.errors.length > 0) {
-                    errors.push(`用户${user.username}：${result.value.errors.join(', ')}`);
-                }
-            } else {
-                failedCount++;
-                const errorMsg = result.status === 'fulfilled' ? 
-                    (result.value.message || '删除失败') : 
-                    `网络错误：${result.reason}`;
-                results.push({
-                    username: user.username,
-                    success: false,
-                    errors: [errorMsg]
-                });
-                errors.push(`用户${user.username}：${errorMsg}`);
-            }
-        });
-        
-        // 批次间延迟，避免AdGuardHome压力过大，但要检查取消状态
-        if (batchIndex < batches.length - 1 && !isDeletionCancelled) {
-            // 分段延迟，每秒检查一次取消状态
-            const delaySeconds = batchDelay / 1000; // 转换为秒
-            for (let i = 0; i < delaySeconds; i++) {
-                if (isDeletionCancelled) {
-                    break;
-                }
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+    try {
+        // 更新进度显示
+        progressBar.style.width = '10%';
+        progressText.textContent = '正在准备批量删除...';
+        currentUserSpan.textContent = '-';
+
+        if (isDeletionCancelled) {
+            progressText.textContent = '删除已取消';
+            return;
         }
+
+        // 更新进度
+        progressBar.style.width = '30%';
+        progressText.textContent = '正在执行批量删除...';
+
+        // 调用优化的批量删除API
+         const response = await fetch('/admin/bulk-delete-users-optimized', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+                 'X-Requested-With': 'XMLHttpRequest'
+             },
+             body: JSON.stringify({
+                 user_ids: userIds
+             }),
+             signal: deleteAbortController.signal
+         });
+
+        if (isDeletionCancelled) {
+            progressText.textContent = '删除已取消';
+            return;
+        }
+
+        // 更新进度
+        progressBar.style.width = '80%';
+        progressText.textContent = '正在处理删除结果...';
+
+        const result = await response.json();
+
+        // 更新进度到完成
+        progressBar.style.width = '100%';
+        progressText.textContent = '删除完成';
+        currentUserSpan.textContent = '-';
+
+        // 显示结果
+        let resultMessage = result.message;
+        if (result.errors && result.errors.length > 0) {
+            resultMessage += `\n\n错误详情:\n${result.errors.join('\n')}`;
+        }
+
+        if (result.success) {
+            alert(resultMessage);
+            // 刷新页面
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            alert('批量删除失败: ' + resultMessage);
+        }
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            progressText.textContent = '删除已取消';
+            currentUserSpan.textContent = '-';
+            return;
+        }
+        
+        console.error('批量删除过程中发生错误:', error);
+        progressText.textContent = '删除过程中发生错误';
+        currentUserSpan.textContent = '-';
+        alert('批量删除过程中发生错误: ' + error.message);
     }
     
     // 删除用户的辅助函数，支持重试和取消
@@ -661,9 +635,9 @@ async function bulkDeleteUsers() {
                  if (attempt === maxRetries) {
                      throw error;
                  }
-                 // 重试前等待，AdGuard Home相关错误等待更长时间
+                 // 重试前等待，AdGuard Home相关错误等待适中时间
                  const isAdGuardError = error.message && (error.message.includes('AdGuard') || error.message.includes('timeout') || error.message.includes('连接'));
-                 const waitTime = isAdGuardError ? 5000 * attempt : 2000 * attempt;
+                 const waitTime = isAdGuardError ? 2000 * attempt : 1000 * attempt;
                  await new Promise(resolve => setTimeout(resolve, waitTime));
              }
          }

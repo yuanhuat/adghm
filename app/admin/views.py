@@ -36,7 +36,7 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_admin:
             flash('您没有权限访问该页面', 'error')
-            return redirect(url_for('main.landing'))
+            return redirect(url_for('main.index'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -418,6 +418,175 @@ def bulk_delete_users():
             'failed_count': failed_count,
             'errors': errors,
             'results': results,
+            'total_processed': len(valid_users)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'批量删除用户失败：{str(e)}'
+        }), 500
+
+
+@admin.route('/bulk-delete-users-optimized', methods=['POST'])
+@login_required
+@admin_required
+def bulk_delete_users_optimized():
+    """批量删除用户（优化版本）
+    
+    使用批量操作优化的删除方式，提供更好的性能
+    """
+    try:
+        # 验证AJAX请求
+        if not request.is_json:
+            return jsonify({'success': False, 'message': '请求格式错误'}), 400
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': '请求数据格式错误'}), 400
+        
+        user_ids = data.get('user_ids', [])
+        
+        # 验证必填字段
+        if not user_ids:
+            return jsonify({'success': False, 'message': '请选择要删除的用户'}), 400
+        
+        # 获取选中的用户
+        users = User.query.filter(User.id.in_(user_ids)).all()
+        if not users:
+            return jsonify({'success': False, 'message': '未找到选中的用户'}), 400
+        
+        # 检查是否包含当前用户或管理员
+        invalid_users = []
+        valid_users = []
+        for user in users:
+            if user.id == current_user.id:
+                invalid_users.append(f'用户{user.username}：不能删除当前登录的管理员账号')
+            elif user.is_admin:
+                invalid_users.append(f'用户{user.username}：不能删除其他管理员账号')
+            else:
+                valid_users.append(user)
+        
+        if invalid_users and not valid_users:
+            return jsonify({
+                'success': False, 
+                'message': '包含无法删除的用户：\n' + '\n'.join(invalid_users)
+            }), 400
+        
+        # 初始化统计
+        success_count = 0
+        failed_count = 0
+        errors = []
+        
+        # 如果有无效用户，添加到错误列表
+        if invalid_users:
+            errors.extend(invalid_users)
+            failed_count += len(invalid_users)
+        
+        if not valid_users:
+            return jsonify({
+                'success': False,
+                'message': '没有可删除的有效用户',
+                'errors': errors
+            }), 400
+        
+        adguard = AdGuardService()
+        
+        # 收集所有需要删除的客户端名称
+        all_client_names = []
+        for user in valid_users:
+            for mapping in user.client_mappings:
+                all_client_names.append(mapping.client_name)
+        
+        # 批量删除AdGuard Home客户端
+        client_delete_errors = []
+        if all_client_names:
+            try:
+                # 使用批量删除API
+                result = adguard.batch_delete_clients(all_client_names, skip_missing=True)
+                if result.get('errors'):
+                    client_delete_errors.extend(result['errors'])
+            except Exception as e:
+                client_delete_errors.append(f"批量删除AdGuard客户端失败：{str(e)}")
+        
+        # 从AdGuardHome的允许客户端列表中移除所有客户端ID
+        try:
+            access_list = adguard._make_request('GET', '/access/list')
+            allowed_clients = access_list.get('allowed_clients', [])
+            
+            clients_to_remove = []
+            for user in valid_users:
+                for mapping in user.client_mappings:
+                    for client_id in mapping.client_ids:
+                        if client_id in allowed_clients:
+                            allowed_clients.remove(client_id)
+                            clients_to_remove.append(client_id)
+            
+            if clients_to_remove:
+                access_data = {
+                    'allowed_clients': allowed_clients,
+                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                }
+                adguard._make_request('POST', '/access/set', json=access_data)
+        except Exception as e:
+            client_delete_errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
+        
+        # 批量删除数据库记录
+        try:
+            # 删除所有关联的客户端映射记录
+            for user in valid_users:
+                for mapping in user.client_mappings:
+                    db.session.delete(mapping)
+            
+            # 删除所有关联的反馈记录
+            from app.models.feedback import Feedback
+            for user in valid_users:
+                feedbacks = Feedback.query.filter_by(user_id=user.id).all()
+                for feedback in feedbacks:
+                    db.session.delete(feedback)
+            
+            # 删除用户记录
+            for user in valid_users:
+                db.session.delete(user)
+            
+            # 提交所有更改
+            db.session.commit()
+            success_count = len(valid_users)
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'message': f'删除数据库记录失败：{str(e)}'
+            }), 500
+        
+        # 记录批量操作日志
+        try:
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='bulk_delete_users_optimized',
+                target_type='User',
+                target_id='bulk',
+                details=f'批量删除用户（优化版）：成功{success_count}个，失败{failed_count}个'
+            )
+            db.session.add(log)
+            db.session.commit()
+        except Exception as e:
+            # 日志记录失败不影响主要操作
+            pass
+        
+        # 合并所有错误信息
+        if client_delete_errors:
+            errors.extend(client_delete_errors)
+        
+        return jsonify({
+            'success': True,
+            'message': f'批量删除完成：成功{success_count}个，失败{failed_count}个',
+            'success_count': success_count,
+            'failed_count': failed_count,
+            'errors': errors,
             'total_processed': len(valid_users)
         })
         

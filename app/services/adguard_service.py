@@ -472,11 +472,12 @@ class AdGuardService:
         
         return self._make_request('POST', '/clients/update', json=request_body)
     
-    def delete_client(self, name: str) -> Dict:
+    def delete_client(self, name: str, check_exists: bool = True) -> Dict:
         """删除AdGuardHome客户端
         
         Args:
             name: 要删除的客户端名称
+            check_exists: 是否检查客户端是否存在，默认为True
             
         Returns:
             删除操作的响应数据
@@ -484,13 +485,61 @@ class AdGuardService:
         Raises:
             Exception: 当客户端不存在时抛出异常
         """
-        # 先检查客户端是否存在
-        client = self.find_client(name)
-        if client is None:
-            raise Exception(f"客户端 {name} 不存在，无法删除")
+        # 可选择性检查客户端是否存在（批量删除时可跳过以提高性能）
+        if check_exists:
+            client = self.find_client(name)
+            if client is None:
+                raise Exception(f"客户端 {name} 不存在，无法删除")
             
         data = {"name": name}
         return self._make_request('POST', '/clients/delete', json=data)
+    
+    def batch_delete_clients(self, names: List[str], skip_missing: bool = True) -> Dict:
+        """批量删除AdGuardHome客户端
+        
+        Args:
+            names: 要删除的客户端名称列表
+            skip_missing: 是否跳过不存在的客户端，默认为True
+            
+        Returns:
+            批量删除操作的结果统计
+        """
+        results = {
+            'success_count': 0,
+            'failed_count': 0,
+            'errors': [],
+            'details': []
+        }
+        
+        for name in names:
+            try:
+                # 批量删除时跳过存在性检查以提高性能
+                self.delete_client(name, check_exists=False)
+                results['success_count'] += 1
+                results['details'].append({
+                    'name': name,
+                    'status': 'success'
+                })
+            except Exception as e:
+                error_msg = str(e)
+                # 如果跳过缺失的客户端且错误是客户端不存在
+                if skip_missing and ('not found' in error_msg.lower() or '不存在' in error_msg):
+                    results['success_count'] += 1
+                    results['details'].append({
+                        'name': name,
+                        'status': 'skipped',
+                        'reason': 'client_not_found'
+                    })
+                else:
+                    results['failed_count'] += 1
+                    results['errors'].append(f"客户端 {name}: {error_msg}")
+                    results['details'].append({
+                        'name': name,
+                        'status': 'failed',
+                        'error': error_msg
+                    })
+        
+        return results
     
     def search_clients(
         self,
