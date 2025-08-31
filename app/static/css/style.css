@@ -51,12 +51,13 @@ body {
 .form-group input[type="password"],
 .form-group input[type="number"],
 .form-group input[type="email"] {
-    width: 100%;
+    width: 79%;
     padding: 12px;
     border: 1px solid #ced4da;
     border-radius: 4px;
     font-size: 16px;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: content-box;
 }
 
 .form-group input[type="text"]:focus,
@@ -84,7 +85,7 @@ body {
 }
 
 .form-group button {
-    width: 100%;
+    width: 40%;
     padding: 12px;
     background-color: #007bff; /* 蓝色按钮 */
     color: #fff;
@@ -109,10 +110,12 @@ body {
 
 .verification-input button {
     width: auto;
-    padding: 12px 20px;
+    padding: 10px 16px;
     white-space: nowrap;
-    font-size: 14px;
-    min-width: 120px;
+    font-size: 13px;
+    min-width: 100px;
+    height: fit-content;
+    align-self: flex-start;
 }
 
 .verification-input button:disabled {
@@ -903,7 +906,7 @@ tr:hover {
 
 .feedback-form input[type="text"],
 .feedback-form textarea {
-    width: 100%;
+    width: 79%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
