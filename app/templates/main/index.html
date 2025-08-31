@@ -9,42 +9,83 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
 </head>
 <body>
-    <div class="main-container">
-        <header class="main-header">
-            <h1>欢迎，{{ current_user.username }}</h1>
-            <nav class="main-nav">
-                <a href="{{ url_for('main.clients') }}"><i class="fas fa-desktop"></i> 客户端管理</a>
-                <a href="{{ url_for('main.guide') }}"><i class="fas fa-book"></i> 使用指南</a>
-                <a href="{{ url_for('main.donation') }}"><i class="fas fa-heart"></i> 支持我们</a>
+    <!-- 导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <div class="nav-menu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
                 {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}"><i class="fas fa-trophy"></i> 捐赠排行榜</a>
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
                 {% endif %}
-                <a href="http://test.dns.con:5000/dns-test" target="_blank"><i class="fas fa-network-wired"></i> DNS检测</a>
+                <a href="http://test.dns.con:5000/dns-test" target="_blank" class="nav-link">DNS检测</a>
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-dropdown-toggle"><i class="fas fa-user-cog"></i> 账户设置 ▼</a>
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
                     <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.change_password_page') }}"><i class="fas fa-key"></i> 修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}"><i class="fas fa-envelope"></i> 修改邮箱</a>
-                        <a href="{{ url_for('auth.delete_account') }}" style="color: #dc3545;"><i class="fas fa-user-times"></i> 注销账户</a>
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
                     </div>
                 </div>
-                {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.index') }}"><i class="fas fa-cog"></i> 管理员后台</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
-            </nav>
-        </header>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
         
-        <!-- 系统公告横幅 - 在header下方，main-content上方 -->
+        <!-- 系统公告横幅 -->
         <div class="announcement-banner" id="announcement-banner" style="display: none;">
             <div class="announcement-banner-content">
-                <i class="fas fa-bullhorn"></i>
+                <svg class="announcement-icon" viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
                 <div class="announcement-text" id="banner-announcement-text">暂无公告</div>
                 <button class="announcement-close" onclick="closeAnnouncementBanner()">
-                    <i class="fas fa-times"></i>
+                    <svg viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
                 </button>
             </div>
         </div>
+        
+        <!-- 英雄区域 -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="hero-greeting">欢迎回来</span>
+                    <span class="hero-name">{{ current_user.username }}</span>
+                </h1>
+                <p class="hero-subtitle">强大的DNS管理，融入超薄、超轻、超便携的设计之中</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="stat-number" id="user-request-count">{{ user_request_count or 0 }}</span>
+                        <span class="stat-label">我的DNS请求</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="stat-number" id="total-dns-queries">{{ total_dns_queries or 0 }}</span>
+                        <span class="stat-label">总查询数</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="stat-number" id="total-blocked-queries">{{ total_blocked_queries or 0 }}</span>
+                        <span class="stat-label">总拦截数</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <img src="{{ url_for('static', filename='images/hero-graphic.svg') }}" alt="DNS服务图示" class="hero-graphic" style="width: 400px; height: 300px; object-fit: contain;">
+            </div>
+        </section>
         
         <main class="main-content">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -55,83 +96,123 @@
                 {% endif %}
             {% endwith %}
             
-            <div class="dashboard">
-    <div class="dashboard-row">
-        <div class="dashboard-card small-card">
-            <h2>我的客户端</h2>
-            <p class="dashboard-stat">{{ current_user.client_mappings|length }}</p>
-            <a href="{{ url_for('main.clients') }}" class="btn btn-primary">管理客户端</a>
-        </div>
-        <div class="dashboard-card small-card">
-            <h2>我的DNS请求数</h2>
-            <p class="dashboard-stat" id="user-request-count">{{ user_request_count or 0 }}</p>
-            <p>您的客户端总求数量</p>
-            <div class="ranking-info" id="user-ranking-info">
-                <p>排行榜排名：<span id="user-ranking">-</span> / <span id="total-clients">-</span></p>
-            </div>
-        </div>
-        <div class="dashboard-card small-card">
-            <h2>总DNS查询数</h2>
-            <p class="dashboard-stat" id="total-dns-queries">{{ total_dns_queries or 0 }}</p>
-            <p>AdGuardHome总查询数量</p>
-        </div>
-        <div class="dashboard-card small-card">
-            <h2>总拦截数</h2>
-            <p class="dashboard-stat" id="total-blocked-queries">{{ total_blocked_queries or 0 }}</p>
-            <p>AdGuardHome总拦截数量</p>
-        </div>
-        <div class="dashboard-card small-card">
-            <h2>账号信息</h2>
-            <div class="info-list">
-                <p><strong>用户名：</strong>{{ current_user.username }}</p>
-                <p><strong>注册时间：</strong>{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                <p><strong>账号类型：</strong>{% if current_user.is_vip() %}VIP用户{% elif current_user.is_admin %}管理员{% else %}普通用户{% endif %}</p>
-            </div>
-        </div>
-        <div class="dashboard-card">
-            <h2 id="dns-config-title">DNS配置信息</h2>
-            <div class="dns-config-content" id="dns-config-content">
-                <p>加载中...</p>
-            </div>
-        </div>
+            <!-- 功能卡片网格 -->
+            <section class="features-grid">
+                <!-- 客户端管理卡片 -->
+                <div class="feature-card primary-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" width="32" height="32">
+                            <path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                        </svg>
+                        <h3>我的客户端</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="big-number">{{ current_user.client_mappings|length }}</div>
+                        <p class="card-description">管理您的DNS客户端设备</p>
+                        <div class="ranking-info" id="user-ranking-info" style="display: none;">
+                            <p>排名：<span id="user-ranking">-</span> / <span id="total-clients">-</span></p>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <a href="{{ url_for('main.clients') }}" class="btn-modern">管理客户端</a>
+                    </div>
+                </div>
 
-        <div class="dashboard-card">
-            <h2><i class="fas fa-mobile-alt" style="color: #007bff;"></i> 苹果设备配置</h2>
-            <p class="config-description">为您的iPhone、iPad或Mac设备快速配置DNS设置</p>
-            <div class="apple-config-content" id="apple-config-content">
-                <p>加载中...</p>
-            </div>
-        </div>
-    </div>
-    <div class="dashboard-row">
-        <div class="dashboard-card large-card">
-            <h2>客户端排行榜</h2>
-            <div class="ranking-list" id="client-ranking">
-                <p>加载中...</p>
-            </div>
-        </div>
-        <div class="dashboard-card large-card">
-            <h2>需求留言</h2>
-            <form id="feedback-form" class="feedback-form">
-                <div class="form-group">
-                    <label for="feedback-title">标题：</label>
-                    <input type="text" id="feedback-title" name="title" required maxlength="100" placeholder="请输入留言标题">
+                <!-- 账号信息卡片 -->
+                <div class="feature-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" width="32" height="32">
+                            <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                        <h3>账号信息</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">用户名</span>
+                                <span class="info-value">{{ current_user.username }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">注册时间</span>
+                                <span class="info-value">{{ current_user.created_at.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">账号类型</span>
+                                <span class="info-value account-type">{% if current_user.is_vip() %}VIP用户{% elif current_user.is_admin %}管理员{% else %}普通用户{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="feedback-content">内容：</label>
-                    <textarea id="feedback-content" name="content" required maxlength="1000" rows="4" placeholder="请详细描述您的需求或问题"></textarea>
+
+                <!-- DNS配置卡片 -->
+                <div class="feature-card wide-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='images/dns-icon.svg') }}" alt="DNS配置" class="card-icon">
+                        <h3 id="dns-config-title">DNS配置信息</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="dns-config-content" id="dns-config-content">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">提交留言</button>
-            </form>
-            <div class="feedback-list" id="feedback-list">
-                <h3>我的留言</h3>
-                <div id="feedback-items">
-                    <p>加载中...</p>
+
+                <!-- 苹果设备配置卡片 -->
+                <div class="feature-card wide-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='images/apple-icon.svg') }}" alt="苹果配置" class="card-icon">
+                        <h3>苹果设备配置</h3>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-description">为您的iPhone、iPad或Mac设备快速配置DNS设置</p>
+                        <div class="apple-config-content" id="apple-config-content">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
+
+                <!-- 客户端排行榜卡片 -->
+                <div class="feature-card wide-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='images/ranking-icon.svg') }}" alt="排行榜" class="card-icon">
+                        <h3>客户端排行榜</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="ranking-list" id="client-ranking">
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 需求留言卡片 -->
+                <div class="feature-card wide-card">
+                    <div class="card-header">
+                        <img src="{{ url_for('static', filename='images/feedback-icon.svg') }}" alt="留言" class="card-icon">
+                        <h3>需求留言</h3>
+                    </div>
+                    <div class="card-content">
+                        <form id="feedback-form" class="modern-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <input type="text" id="feedback-title" name="title" required maxlength="100" placeholder="留言标题">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <textarea id="feedback-content" name="content" required maxlength="1000" rows="3" placeholder="详细描述您的需求或问题"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-modern primary">提交留言</button>
+                        </form>
+                        <div class="feedback-list" id="feedback-list">
+                            <h4>我的留言</h4>
+                            <div id="feedback-items">
+                                <p>加载中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             
 
         </main>

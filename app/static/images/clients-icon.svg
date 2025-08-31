@@ -1,0 +1,40 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="clientsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34C759" />
+      <stop offset="100%" style="stop-color:#30D158" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 设备图标 -->
+  <g fill="url(#clientsGradient)">
+    <!-- 手机 -->
+    <rect x="6" y="8" width="6" height="10" rx="2" stroke="url(#clientsGradient)" stroke-width="1" fill="none"/>
+    <rect x="7.5" y="9.5" width="3" height="5" rx="0.5" fill="url(#clientsGradient)" opacity="0.3"/>
+    <circle cx="9" cy="16" r="0.5" fill="url(#clientsGradient)"/>
+    
+    <!-- 笔记本 -->
+    <rect x="14" y="12" width="8" height="5" rx="1" stroke="url(#clientsGradient)" stroke-width="1" fill="none"/>
+    <rect x="15" y="13" width="6" height="3" rx="0.5" fill="url(#clientsGradient)" opacity="0.3"/>
+    <rect x="14" y="17" width="8" height="1" rx="0.5" fill="url(#clientsGradient)"/>
+    
+    <!-- 平板 -->
+    <rect x="24" y="10" width="5" height="7" rx="1.5" stroke="url(#clientsGradient)" stroke-width="1" fill="none"/>
+    <rect x="25" y="11" width="3" height="4" rx="0.5" fill="url(#clientsGradient)" opacity="0.3"/>
+    <circle cx="26.5" cy="16" r="0.5" fill="url(#clientsGradient)"/>
+  </g>
+  
+  <!-- 连接线 -->
+  <g stroke="url(#clientsGradient)" stroke-width="1" fill="none" opacity="0.6">
+    <path d="M12 13 Q16 11 18 13" stroke-dasharray="2,2"/>
+    <path d="M22 14 Q23 13 24 14" stroke-dasharray="2,2"/>
+  </g>
+  
+  <!-- 信号指示 -->
+  <g fill="url(#clientsGradient)" opacity="0.8">
+    <circle cx="16" cy="6" r="1">
+      <animate attributeName="r" values="1;3;1" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

@@ -1,0 +1,79 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#5856D6;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#AF52DE;stop-opacity:0.4" />
+    </linearGradient>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34C759;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#30D158;stop-opacity:0.7" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="200" cy="150" r="120" fill="url(#heroGradient)" opacity="0.3"/>
+  <circle cx="150" cy="100" r="80" fill="url(#cardGradient)" opacity="0.2"/>
+  <circle cx="280" cy="200" r="60" fill="#FF9500" opacity="0.2"/>
+  
+  <!-- 主要图形 - DNS服务器 -->
+  <rect x="160" y="120" width="80" height="60" rx="8" fill="#ffffff" stroke="#007AFF" stroke-width="2" filter="url(#glow)"/>
+  
+  <!-- 服务器指示灯 -->
+  <circle cx="175" cy="135" r="3" fill="#34C759"/>
+  <circle cx="185" cy="135" r="3" fill="#34C759"/>
+  <circle cx="195" cy="135" r="3" fill="#FF9500"/>
+  
+  <!-- DNS文字 -->
+  <text x="200" y="160" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#007AFF">DNS</text>
+  
+  <!-- 连接线和节点 -->
+  <g stroke="#007AFF" stroke-width="2" fill="none" opacity="0.6">
+    <!-- 左侧连接 -->
+    <line x1="120" y1="150" x2="160" y2="150"/>
+    <circle cx="110" cy="150" r="8" fill="#ffffff" stroke="#007AFF" stroke-width="2"/>
+    <circle cx="105" cy="150" r="2" fill="#34C759"/>
+    
+    <!-- 右侧连接 -->
+    <line x1="240" y1="150" x2="280" y2="150"/>
+    <circle cx="290" cy="150" r="8" fill="#ffffff" stroke="#007AFF" stroke-width="2"/>
+    <circle cx="295" cy="150" r="2" fill="#34C759"/>
+    
+    <!-- 上方连接 -->
+    <line x1="200" y1="80" x2="200" y2="120"/>
+    <circle cx="200" cy="70" r="8" fill="#ffffff" stroke="#007AFF" stroke-width="2"/>
+    <circle cx="200" cy="75" r="2" fill="#34C759"/>
+    
+    <!-- 下方连接 -->
+    <line x1="200" y1="180" x2="200" y2="220"/>
+    <circle cx="200" cy="230" r="8" fill="#ffffff" stroke="#007AFF" stroke-width="2"/>
+    <circle cx="200" cy="235" r="2" fill="#34C759"/>
+  </g>
+  
+  <!-- 数据流动效果 -->
+  <g opacity="0.4">
+    <circle cx="130" cy="150" r="2" fill="#007AFF">
+      <animate attributeName="cx" values="130;160;130" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="270" cy="150" r="2" fill="#007AFF">
+      <animate attributeName="cx" values="270;240;270" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- 装饰性元素 -->
+  <g opacity="0.3">
+    <circle cx="80" cy="80" r="4" fill="#FF9500"/>
+    <circle cx="320" cy="80" r="3" fill="#5856D6"/>
+    <circle cx="60" cy="220" r="5" fill="#34C759"/>
+    <circle cx="340" cy="240" r="4" fill="#AF52DE"/>
+  </g>
+</svg>

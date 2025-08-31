@@ -1,0 +1,26 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dashboardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF" />
+      <stop offset="100%" style="stop-color:#5856D6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 仪表盘背景 -->
+  <rect x="4" y="4" width="24" height="24" rx="6" fill="url(#dashboardGradient)" opacity="0.1"/>
+  
+  <!-- 图表元素 -->
+  <rect x="8" y="20" width="3" height="6" rx="1.5" fill="url(#dashboardGradient)"/>
+  <rect x="13" y="16" width="3" height="10" rx="1.5" fill="url(#dashboardGradient)"/>
+  <rect x="18" y="12" width="3" height="14" rx="1.5" fill="url(#dashboardGradient)"/>
+  <rect x="23" y="18" width="3" height="8" rx="1.5" fill="url(#dashboardGradient)"/>
+  
+  <!-- 趋势线 -->
+  <path d="M8 18 L13 14 L18 10 L23 16" stroke="url(#dashboardGradient)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- 数据点 -->
+  <circle cx="9.5" cy="18" r="2" fill="#ffffff" stroke="url(#dashboardGradient)" stroke-width="1.5"/>
+  <circle cx="14.5" cy="14" r="2" fill="#ffffff" stroke="url(#dashboardGradient)" stroke-width="1.5"/>
+  <circle cx="19.5" cy="10" r="2" fill="#ffffff" stroke="url(#dashboardGradient)" stroke-width="1.5"/>
+  <circle cx="24.5" cy="16" r="2" fill="#ffffff" stroke="url(#dashboardGradient)" stroke-width="1.5"/>
+</svg>

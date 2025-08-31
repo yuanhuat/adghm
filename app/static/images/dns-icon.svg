@@ -1,0 +1,55 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dnsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9500" />
+      <stop offset="100%" style="stop-color:#FF6B35" />
+    </linearGradient>
+  </defs>
+  
+  <!-- DNS服务器 -->
+  <rect x="12" y="10" width="8" height="12" rx="2" fill="url(#dnsGradient)" opacity="0.1"/>
+  <rect x="12" y="10" width="8" height="12" rx="2" stroke="url(#dnsGradient)" stroke-width="1.5" fill="none"/>
+  
+  <!-- 服务器指示灯 -->
+  <circle cx="14" cy="13" r="1" fill="url(#dnsGradient)"/>
+  <circle cx="16" cy="13" r="1" fill="url(#dnsGradient)"/>
+  <circle cx="18" cy="13" r="1" fill="#34C759"/>
+  
+  <!-- DNS标识 -->
+  <text x="16" y="18" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="6" font-weight="600" fill="url(#dnsGradient)">DNS</text>
+  
+  <!-- 网络连接 -->
+  <g stroke="url(#dnsGradient)" stroke-width="1.5" fill="none">
+    <!-- 左侧连接 -->
+    <line x1="6" y1="16" x2="12" y2="16"/>
+    <circle cx="4" cy="16" r="2" stroke="url(#dnsGradient)" stroke-width="1" fill="none"/>
+    <circle cx="4" cy="16" r="0.5" fill="url(#dnsGradient)"/>
+    
+    <!-- 右侧连接 -->
+    <line x1="20" y1="16" x2="26" y2="16"/>
+    <circle cx="28" cy="16" r="2" stroke="url(#dnsGradient)" stroke-width="1" fill="none"/>
+    <circle cx="28" cy="16" r="0.5" fill="url(#dnsGradient)"/>
+    
+    <!-- 上方连接 -->
+    <line x1="16" y1="6" x2="16" y2="10"/>
+    <circle cx="16" cy="4" r="2" stroke="url(#dnsGradient)" stroke-width="1" fill="none"/>
+    <circle cx="16" cy="4" r="0.5" fill="url(#dnsGradient)"/>
+    
+    <!-- 下方连接 -->
+    <line x1="16" y1="22" x2="16" y2="26"/>
+    <circle cx="16" cy="28" r="2" stroke="url(#dnsGradient)" stroke-width="1" fill="none"/>
+    <circle cx="16" cy="28" r="0.5" fill="url(#dnsGradient)"/>
+  </g>
+  
+  <!-- 数据流动效果 -->
+  <g opacity="0.6">
+    <circle cx="8" cy="16" r="1" fill="url(#dnsGradient)">
+      <animate attributeName="cx" values="8;12;8" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="24" cy="16" r="1" fill="url(#dnsGradient)">
+      <animate attributeName="cx" values="24;20;24" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>
