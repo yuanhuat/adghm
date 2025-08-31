@@ -176,6 +176,21 @@ body::before {
     padding: 0 20px;
 }
 
+/* 表单控件样式 */
+.form-control {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--input-border-focus);
+    background-color: var(--input-bg);
+    box-shadow: 0 0 0 0.25rem rgba(0, 122, 255, 0.25);
+    color: var(--text-primary);
+}
+
 /* 卡片样式 */
 .card {
     background: rgba(28, 28, 30, 0.8);
