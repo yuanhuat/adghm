@@ -169,6 +169,380 @@ def delete_user(user_id):
         db.session.rollback()
         return jsonify({'error': f'删除用户失败：{str(e)}'}), 500
 
+@admin.route('/delete-user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_single_user(user_id):
+    """删除单个用户
+    
+    删除指定用户及其关联的AdGuardHome客户端和映射记录
+    """
+    try:
+        # 获取用户
+        user = User.query.get_or_404(user_id)
+        
+        # 检查是否为当前用户或管理员
+        if user.id == current_user.id:
+            return jsonify({
+                'success': False, 
+                'message': f'用户{user.username}：不能删除当前登录的管理员账号'
+            }), 400
+        elif user.is_admin:
+            return jsonify({
+                'success': False, 
+                'message': f'用户{user.username}：不能删除其他管理员账号'
+            }), 400
+        
+        errors = []
+        adguard = AdGuardService()
+        
+        # 删除用户的AdGuardHome客户端
+        for mapping in user.client_mappings:
+            try:
+                adguard.delete_client(mapping.client_name)
+            except Exception as e:
+                errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
+        
+        # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+        try:
+            access_list = adguard._make_request('GET', '/access/list')
+            allowed_clients = access_list.get('allowed_clients', [])
+            
+            clients_to_remove = []
+            for mapping in user.client_mappings:
+                for client_id in mapping.client_ids:
+                    if client_id in allowed_clients:
+                        allowed_clients.remove(client_id)
+                        clients_to_remove.append(client_id)
+            
+            if clients_to_remove:
+                access_data = {
+                    'allowed_clients': allowed_clients,
+                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                }
+                adguard._make_request('POST', '/access/set', json=access_data)
+        except Exception as e:
+            errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
+        
+        # 删除所有关联的客户端映射记录
+        for mapping in user.client_mappings:
+            db.session.delete(mapping)
+        
+        # 处理用户的反馈记录
+        from app.models.feedback import Feedback
+        feedbacks = Feedback.query.filter_by(user_id=user.id).all()
+        for feedback in feedbacks:
+            db.session.delete(feedback)
+        
+        # 删除用户记录
+        db.session.delete(user)
+        db.session.commit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='delete_user',
+            target_type='User',
+            target_id=str(user_id),
+            details=f'删除用户：{user.username}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'用户{user.username}删除成功',
+            'errors': errors
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'删除用户失败：{str(e)}'
+        }), 500
+
+@admin.route('/bulk-delete-users', methods=['POST'])
+@login_required
+@admin_required
+def bulk_delete_users():
+    """批量删除用户（逐个删除方式）
+    
+    逐个删除选中的用户，提供详细的删除进度和结果
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': '请求数据格式错误'}), 400
+        
+        user_ids = data.get('user_ids', [])
+        
+        # 验证必填字段
+        if not user_ids:
+            return jsonify({'success': False, 'message': '请选择要删除的用户'}), 400
+        
+        # 获取选中的用户
+        users = User.query.filter(User.id.in_(user_ids)).all()
+        if not users:
+            return jsonify({'success': False, 'message': '未找到选中的用户'}), 400
+        
+        # 检查是否包含当前用户或管理员
+        invalid_users = []
+        valid_users = []
+        for user in users:
+            if user.id == current_user.id:
+                invalid_users.append(f'用户{user.username}：不能删除当前登录的管理员账号')
+            elif user.is_admin:
+                invalid_users.append(f'用户{user.username}：不能删除其他管理员账号')
+            else:
+                valid_users.append(user)
+        
+        if invalid_users and not valid_users:
+            return jsonify({
+                'success': False, 
+                'message': '包含无法删除的用户：\n' + '\n'.join(invalid_users)
+            }), 400
+        
+        # 初始化统计
+        success_count = 0
+        failed_count = 0
+        errors = []
+        results = []
+        
+        # 如果有无效用户，添加到错误列表
+        if invalid_users:
+            errors.extend(invalid_users)
+            failed_count += len(invalid_users)
+        
+        adguard = AdGuardService()
+        
+        # 逐个删除用户
+        for i, user in enumerate(valid_users, 1):
+            user_result = {
+                'username': user.username,
+                'success': False,
+                'errors': []
+            }
+            
+            try:
+                client_delete_errors = []
+                
+                # 删除用户的AdGuardHome客户端
+                for mapping in user.client_mappings:
+                    try:
+                        adguard.delete_client(mapping.client_name)
+                    except Exception as e:
+                        client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
+                
+                # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+                try:
+                    access_list = adguard._make_request('GET', '/access/list')
+                    allowed_clients = access_list.get('allowed_clients', [])
+                    
+                    clients_to_remove = []
+                    for mapping in user.client_mappings:
+                        for client_id in mapping.client_ids:
+                            if client_id in allowed_clients:
+                                allowed_clients.remove(client_id)
+                                clients_to_remove.append(client_id)
+                    
+                    if clients_to_remove:
+                        access_data = {
+                            'allowed_clients': allowed_clients,
+                            'disallowed_clients': access_list.get('disallowed_clients', []),
+                            'blocked_hosts': access_list.get('blocked_hosts', [])
+                        }
+                        adguard._make_request('POST', '/access/set', json=access_data)
+                except Exception as e:
+                    client_delete_errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
+                
+                # 删除所有关联的客户端映射记录
+                for mapping in user.client_mappings:
+                    db.session.delete(mapping)
+                
+                # 处理用户的反馈记录
+                from app.models.feedback import Feedback
+                feedbacks = Feedback.query.filter_by(user_id=user.id).all()
+                for feedback in feedbacks:
+                    db.session.delete(feedback)
+                
+                # 删除用户记录
+                db.session.delete(user)
+                db.session.commit()  # 每个用户单独提交
+                
+                success_count += 1
+                user_result['success'] = True
+                
+                # 如果有客户端删除失败，记录警告
+                if client_delete_errors:
+                    user_result['errors'] = client_delete_errors
+                    errors.extend([f'用户{user.username}：' + error for error in client_delete_errors])
+                
+                # 记录单个用户的操作日志
+                log = OperationLog(
+                    user_id=current_user.id,
+                    operation_type='delete_user',
+                    target_type='User',
+                    target_id=str(user.id),
+                    details=f'删除用户：{user.username}（批量删除第{i}个）'
+                )
+                db.session.add(log)
+                db.session.commit()
+                
+            except Exception as e:
+                db.session.rollback()  # 回滚当前用户的操作
+                failed_count += 1
+                error_msg = f'用户{user.username}删除失败：{str(e)}'
+                errors.append(error_msg)
+                user_result['errors'] = [str(e)]
+                # 继续处理下一个用户
+            
+            results.append(user_result)
+        
+        # 记录批量操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='bulk_delete_users',
+            target_type='User',
+            target_id='bulk',
+            details=f'批量删除用户：成功{success_count}个，失败{failed_count}个'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'批量删除完成：成功{success_count}个，失败{failed_count}个',
+            'success_count': success_count,
+            'failed_count': failed_count,
+            'errors': errors,
+            'results': results,
+            'total_processed': len(valid_users)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'批量删除用户失败：{str(e)}'
+        }), 500
+
+
+@admin.route('/delete-user-progressive/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user_progressive(user_id):
+    """逐个删除用户的API端点
+    
+    用于支持前端实时显示删除进度
+    """
+    try:
+        # 获取用户
+        user = User.query.get_or_404(user_id)
+        
+        # 检查是否为当前用户或管理员
+        if user.id == current_user.id:
+            return jsonify({
+                'success': False, 
+                'message': '不能删除当前登录的管理员账号',
+                'username': user.username
+            }), 200  # 改为200状态码，避免前端认为是服务器错误
+        elif user.is_admin:
+            return jsonify({
+                'success': False, 
+                'message': f'不能删除管理员账号：{user.username}',
+                'username': user.username
+            }), 200  # 改为200状态码，避免前端认为是服务器错误
+        
+        user_result = {
+            'username': user.username,
+            'success': False,
+            'errors': []
+        }
+        
+        client_delete_errors = []
+        
+        # 优化AdGuardHome操作，增加超时处理
+        try:
+            adguard = AdGuardService()
+            
+            # 删除用户的AdGuardHome客户端（增加超时处理）
+            for mapping in user.client_mappings:
+                try:
+                    # 设置较短的超时时间，避免长时间等待
+                    adguard.delete_client(mapping.client_name)
+                except Exception as e:
+                    # 记录错误但不阻止删除流程
+                    client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
+            
+            # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+            try:
+                access_list = adguard._make_request('GET', '/access/list')
+                allowed_clients = access_list.get('allowed_clients', [])
+                
+                clients_to_remove = []
+                for mapping in user.client_mappings:
+                    for client_id in mapping.client_ids:
+                        if client_id in allowed_clients:
+                            allowed_clients.remove(client_id)
+                            clients_to_remove.append(client_id)
+                
+                if clients_to_remove:
+                    access_data = {
+                        'allowed_clients': allowed_clients,
+                        'disallowed_clients': access_list.get('disallowed_clients', []),
+                        'blocked_hosts': access_list.get('blocked_hosts', [])
+                    }
+                    adguard._make_request('POST', '/access/set', json=access_data)
+            except Exception as e:
+                client_delete_errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
+        except Exception as e:
+            # AdGuardHome服务完全不可用时，记录错误但继续删除用户
+            client_delete_errors.append(f"AdGuardHome服务不可用：{str(e)}")
+        
+        # 删除所有关联的客户端映射记录
+        for mapping in user.client_mappings:
+            db.session.delete(mapping)
+        
+        # 处理用户的反馈记录
+        from app.models.feedback import Feedback
+        feedbacks = Feedback.query.filter_by(user_id=user.id).all()
+        for feedback in feedbacks:
+            db.session.delete(feedback)
+        
+        # 删除用户记录
+        db.session.delete(user)
+        db.session.commit()
+        
+        user_result['success'] = True
+        
+        # 如果有客户端删除失败，记录警告
+        if client_delete_errors:
+            user_result['errors'] = client_delete_errors
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='delete_user',
+            target_type='User',
+            target_id=str(user.id),
+            details=f'删除用户：{user.username}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify(user_result)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'删除用户失败：{str(e)}',
+            'username': user.username if 'user' in locals() else 'Unknown',
+            'errors': [str(e)]
+        }), 200  # 改为200状态码，让前端正常处理错误
+
 @admin.route('/users/<int:user_id>/clients')
 @login_required
 @admin_required

@@ -95,7 +95,7 @@ class AdGuardService:
                 headers=self.headers,
                 json=json,
                 params=params,
-                timeout=10  # 设置超时时间
+                timeout=5  # 减少超时时间，避免批量操作时长时间等待
             )
 
             # 静默处理响应，不输出日志

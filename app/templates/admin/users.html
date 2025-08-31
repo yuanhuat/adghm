@@ -11,7 +11,17 @@
                     <button type="button" class="btn btn-primary" onclick="showBulkEmailModal()" id="bulkEmailBtn" disabled>
                         <i class="fas fa-envelope"></i> 批量发送邮件
                     </button>
+                    <button type="button" class="btn btn-danger ms-2" onclick="showBulkDeleteModal()" id="bulkDeleteBtn" disabled>
+                         <i class="fas fa-trash"></i> 删除用户（逐个）
+                     </button>
+                    <button type="button" class="btn btn-warning ms-2" onclick="filterZeroDnsUsers()" id="filterZeroDnsBtn">
+                        <i class="fas fa-filter"></i> 筛选DNS请求数为0的用户
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="clearFilter()" id="clearFilterBtn" style="display: none;">
+                        <i class="fas fa-times"></i> 清除筛选
+                    </button>
                     <span class="ms-2 text-muted" id="selectedCount">已选择 0 个用户</span>
+                    <span class="ms-2 text-info" id="filterStatus" style="display: none;"></span>
                 </div>
                 
                 <table class="table table-striped table-hover">
@@ -124,6 +134,71 @@
     </div>
 </div>
 
+<!-- 批量删除用户模态框 -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkDeleteModalLabel">删除用户（逐个删除）</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>警告：</strong>此操作将永久删除选中的用户及其所有关联数据，包括：
+                    <ul class="mt-2 mb-0">
+                        <li>用户账号信息</li>
+                        <li>AdGuardHome客户端配置</li>
+                        <li>客户端映射记录</li>
+                        <li>用户反馈记录</li>
+                    </ul>
+                    <strong>此操作不可撤销，请谨慎操作！</strong>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>删除方式：</strong>系统将逐个删除选中的用户，每个用户独立处理。即使某个用户删除失败，其他用户的删除操作仍会继续进行。
+                </div>
+                
+                <p id="deleteInfo">将删除 434 个用户</p>
+                 
+                 <!-- 删除进度显示区域 -->
+                 <div id="deleteProgress" style="display: none;">
+                     <div class="alert alert-info">
+                         <div class="d-flex align-items-center">
+                             <div class="spinner-border spinner-border-sm me-2" role="status">
+                                 <span class="visually-hidden">Loading...</span>
+                             </div>
+                             <div>
+                                 <strong>删除进度：</strong><span id="progressText">准备开始...</span><br>
+                                 <small class="text-muted">当前正在删除：<span id="currentUser">-</span></small>
+                             </div>
+                         </div>
+                         <div class="progress mt-2">
+                             <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
+                         </div>
+                         <div class="text-center mt-3">
+                             <button type="button" id="cancelDeleteBtn" class="btn btn-secondary btn-sm">取消删除</button>
+                         </div>
+                     </div>
+                 </div>
+                 
+                 <div class="form-check" id="confirmSection">
+                     <input class="form-check-input" type="checkbox" id="confirmDelete">
+                     <label class="form-check-label" for="confirmDelete">
+                         我确认要逐个删除这些用户，并了解此操作不可撤销
+                     </label>
+                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" onclick="bulkDeleteUsers()" id="deleteUsersBtn" disabled>
+                    <i class="fas fa-trash"></i> 逐个删除用户
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function deleteUser(userId) {
     if (!confirm('确定要删除该用户吗？这将同时删除用户的所有客户端。')) {
@@ -158,7 +233,16 @@ function deleteUser(userId) {
 // 全选/取消全选功能
 function toggleSelectAll() {
     const selectAllCheckbox = document.getElementById('selectAll');
-    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    // 只选择可见行中的复选框
+    const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
+    const userCheckboxes = [];
+    
+    visibleRows.forEach(row => {
+        const checkbox = row.querySelector('.user-checkbox');
+        if (checkbox) {
+            userCheckboxes.push(checkbox);
+        }
+    });
     
     userCheckboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
@@ -174,15 +258,26 @@ function updateSelectedCount() {
     
     document.getElementById('selectedCount').textContent = `已选择 ${count} 个用户`;
     document.getElementById('bulkEmailBtn').disabled = count === 0;
+    document.getElementById('bulkDeleteBtn').disabled = count === 0;
     
-    // 更新全选复选框状态
-    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    // 更新全选复选框状态 - 只考虑可见的复选框
+    const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
+    const visibleCheckboxes = [];
+    
+    visibleRows.forEach(row => {
+        const checkbox = row.querySelector('.user-checkbox');
+        if (checkbox) {
+            visibleCheckboxes.push(checkbox);
+        }
+    });
+    
+    const visibleSelectedCount = visibleCheckboxes.filter(cb => cb.checked).length;
     const selectAllCheckbox = document.getElementById('selectAll');
     
-    if (count === 0) {
+    if (visibleSelectedCount === 0) {
         selectAllCheckbox.indeterminate = false;
         selectAllCheckbox.checked = false;
-    } else if (count === allCheckboxes.length) {
+    } else if (visibleSelectedCount === visibleCheckboxes.length) {
         selectAllCheckbox.indeterminate = false;
         selectAllCheckbox.checked = true;
     } else {
@@ -281,9 +376,347 @@ function sendBulkEmail() {
     });
 }
 
+// 筛选DNS请求数为0的用户
+function filterZeroDnsUsers() {
+    const rows = document.querySelectorAll('tbody tr');
+    let hiddenCount = 0;
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const dnsRequestCell = row.querySelector('td:nth-child(7) .badge');
+        if (dnsRequestCell) {
+            const dnsRequestCount = parseInt(dnsRequestCell.textContent.trim());
+            if (dnsRequestCount === 0) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+                hiddenCount++;
+            }
+        }
+    });
+    
+    // 显示筛选状态
+    document.getElementById('filterStatus').textContent = `显示 ${visibleCount} 个DNS请求数为0的用户，隐藏 ${hiddenCount} 个用户`;
+    document.getElementById('filterStatus').style.display = 'inline';
+    document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    document.getElementById('filterZeroDnsBtn').disabled = true;
+    
+    // 清除所有选择
+    document.querySelectorAll('.user-checkbox:checked').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateSelectedCount();
+}
+
+// 清除筛选
+function clearFilter() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        row.style.display = '';
+    });
+    
+    // 隐藏筛选状态
+    document.getElementById('filterStatus').style.display = 'none';
+    document.getElementById('clearFilterBtn').style.display = 'none';
+    document.getElementById('filterZeroDnsBtn').disabled = false;
+    
+    // 清除所有选择
+    document.querySelectorAll('.user-checkbox:checked').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateSelectedCount();
+}
+
+// 显示批量删除模态框
+function showBulkDeleteModal() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    
+    if (count === 0) {
+        alert('请先选择要删除的用户');
+        return;
+    }
+    
+    document.getElementById('deleteInfo').textContent = `将删除 ${count} 个用户`;
+    
+    // 重置确认复选框
+    document.getElementById('confirmDelete').checked = false;
+    document.getElementById('deleteUsersBtn').disabled = true;
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
+    modal.show();
+}
+
+// 获取选中的用户信息
+function getSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const users = [];
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const userId = checkbox.value;
+        const username = row.querySelector('td:nth-child(3)').textContent.trim();
+        const email = checkbox.dataset.email;
+        
+        users.push({
+            id: userId,
+            username: username,
+            email: email
+        });
+    });
+    
+    return users;
+}
+
+// 全局变量用于控制删除操作
+let deleteAbortController = null;
+let isDeletionCancelled = false;
+
+// 批量删除用户（优化的批处理方式）
+async function bulkDeleteUsers() {
+    const selectedUsers = getSelectedUsers();
+    const userIds = selectedUsers.map(user => user.id);
+    
+    if (userIds.length === 0) {
+        alert('请先选择要删除的用户');
+        return;
+    }
+    
+    if (!document.getElementById('confirmDelete').checked) {
+        alert('请确认删除操作');
+        return;
+    }
+    
+    // 重置取消状态
+    isDeletionCancelled = false;
+    deleteAbortController = new AbortController();
+    
+    // 显示进度区域，隐藏确认区域
+    document.getElementById('confirmSection').style.display = 'none';
+    document.getElementById('deleteProgress').style.display = 'block';
+    
+    // 禁用删除按钮，启用取消按钮
+    const deleteBtn = document.getElementById('deleteUsersBtn');
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在删除中...';
+    cancelBtn.disabled = false;
+    cancelBtn.onclick = cancelDeletion;
+    
+    // 初始化进度
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const currentUserSpan = document.getElementById('currentUser');
+    
+    let successCount = 0;
+    let failedCount = 0;
+    const results = [];
+    const errors = [];
+    
+    // 分批处理，每批最多10个用户
+    const batchSize = 10;
+    const batches = [];
+    for (let i = 0; i < selectedUsers.length; i += batchSize) {
+        batches.push(selectedUsers.slice(i, i + batchSize));
+    }
+    
+    // 逐批删除用户
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        const batchPromises = [];
+        
+        // 检查是否已取消
+         if (isDeletionCancelled) {
+             break;
+         }
+         
+         // 并发处理当前批次的用户
+         for (const user of batch) {
+             const promise = deleteUserWithRetry(user, 3, deleteAbortController.signal); // 最多重试3次
+             batchPromises.push(promise);
+         }
+         
+         // 等待当前批次完成
+         const batchResults = await Promise.allSettled(batchPromises);
+        
+        // 处理批次结果
+        batchResults.forEach((result, index) => {
+            const user = batch[index];
+            const processedIndex = batchIndex * batchSize + index + 1;
+            const progress = (processedIndex / selectedUsers.length * 100).toFixed(1);
+            
+            // 更新进度显示
+            progressText.textContent = `${processedIndex}/${selectedUsers.length} (${progress}%)`;
+            currentUserSpan.textContent = user.username;
+            progressBar.style.width = progress + '%';
+            
+            if (result.status === 'fulfilled' && result.value.success) {
+                successCount++;
+                results.push({
+                    username: user.username,
+                    success: true,
+                    errors: result.value.errors || []
+                });
+                
+                // 如果有警告信息，添加到错误列表
+                if (result.value.errors && result.value.errors.length > 0) {
+                    errors.push(`用户${user.username}：${result.value.errors.join(', ')}`);
+                }
+            } else {
+                failedCount++;
+                const errorMsg = result.status === 'fulfilled' ? 
+                    (result.value.message || '删除失败') : 
+                    `网络错误：${result.reason}`;
+                results.push({
+                    username: user.username,
+                    success: false,
+                    errors: [errorMsg]
+                });
+                errors.push(`用户${user.username}：${errorMsg}`);
+            }
+        });
+        
+        // 批次间短暂延迟，避免服务器压力过大
+        if (batchIndex < batches.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+    }
+    
+    // 删除用户的辅助函数，支持重试和取消
+     async function deleteUserWithRetry(user, maxRetries, abortSignal) {
+         for (let attempt = 1; attempt <= maxRetries; attempt++) {
+             try {
+                 // 检查是否已取消
+                 if (abortSignal.aborted) {
+                     throw new Error('操作已取消');
+                 }
+                 
+                 const response = await fetch(`/admin/delete-user-progressive/${user.id}`, {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                     signal: abortSignal // 使用统一的取消信号
+                 });
+                 
+                 const data = await response.json();
+                 return data;
+             } catch (error) {
+                 if (error.name === 'AbortError' || error.message === '操作已取消') {
+                     throw error;
+                 }
+                 if (attempt === maxRetries) {
+                     throw error;
+                 }
+                 // 重试前等待
+                 await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+             }
+         }
+     }
+    
+    // 完成后显示结果
+    if (isDeletionCancelled) {
+        progressText.textContent = '删除已取消';
+        currentUserSpan.textContent = '-';
+    } else {
+        progressText.textContent = '删除完成';
+        currentUserSpan.textContent = '-';
+    }
+    
+    // 禁用取消按钮
+    const cancelBtnEnd = document.getElementById('cancelDeleteBtn');
+    cancelBtnEnd.disabled = true;
+    
+    // 构建详细的结果报告
+    let resultMessage;
+    if (isDeletionCancelled) {
+        resultMessage = `删除操作已取消！\n\n已处理：${successCount + failedCount} 个用户\n成功删除：${successCount} 个用户\n失败：${failedCount} 个用户\n未处理：${selectedUsers.length - successCount - failedCount} 个用户`;
+    } else {
+        resultMessage = `删除操作完成！\n\n总计处理：${selectedUsers.length} 个用户\n成功删除：${successCount} 个用户\n失败：${failedCount} 个用户`;
+    }
+    
+    // 显示每个用户的删除状态
+    if (results.length > 0) {
+        resultMessage += '\n\n详细结果：';
+        results.forEach((result, index) => {
+            const status = result.success ? '✓ 成功' : '✗ 失败';
+            resultMessage += `\n${index + 1}. ${result.username}: ${status}`;
+            if (result.errors && result.errors.length > 0) {
+                resultMessage += ` (${result.errors.join(', ')})`;
+            }
+        });
+    }
+    
+    // 如果有错误信息
+    if (errors.length > 0) {
+        resultMessage += '\n\n警告信息：\n' + errors.join('\n');
+    }
+    
+    alert(resultMessage);
+    
+    // 关闭模态框
+    const modal = bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal'));
+    modal.hide();
+    
+    // 刷新页面
+    location.reload();
+}
+
+// 取消删除操作
+function cancelDeletion() {
+    if (deleteAbortController) {
+        isDeletionCancelled = true;
+        deleteAbortController.abort();
+        
+        // 更新UI
+        const cancelBtnCancel = document.getElementById('cancelDeleteBtn');
+        cancelBtnCancel.disabled = true;
+        cancelBtnCancel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在取消...';
+        
+        // 更新进度显示
+        document.getElementById('progressText').textContent = '正在取消删除操作...';
+        document.getElementById('currentUser').textContent = '-';
+    }
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     updateSelectedCount();
+    
+    // 监听确认删除复选框变化
+    document.getElementById('confirmDelete').addEventListener('change', function() {
+        document.getElementById('deleteUsersBtn').disabled = !this.checked;
+    });
+    
+    // 监听模态框关闭事件，重置状态
+    document.getElementById('bulkDeleteModal').addEventListener('hidden.bs.modal', function() {
+        // 重置进度显示
+        document.getElementById('deleteProgress').style.display = 'none';
+        document.getElementById('confirmSection').style.display = 'block';
+        
+        // 重置进度条
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').textContent = '准备开始...';
+        document.getElementById('currentUser').textContent = '-';
+        
+        // 重置删除按钮
+        const deleteBtn = document.getElementById('deleteUsersBtn');
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '逐个删除用户';
+        
+        // 重置取消按钮
+        const cancelBtnReset = document.getElementById('cancelDeleteBtn');
+        cancelBtnReset.disabled = true;
+        cancelBtnReset.innerHTML = '取消删除';
+        cancelBtnReset.onclick = null;
+        
+        // 重置确认复选框
+        document.getElementById('confirmDelete').checked = false;
+        
+        // 重置全局变量
+        isDeletionCancelled = false;
+        deleteAbortController = null;
+    });
 });
 </script>
 {% endblock page_content %}
