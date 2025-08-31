@@ -1,0 +1,54 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5856D6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#AF52DE;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1ED5A9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00D4AA;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 外圆背景 -->
+  <circle cx="32" cy="32" r="30" fill="url(#logoGradient)" filter="url(#glow)"/>
+  
+  <!-- 内圆装饰 -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  
+  <!-- 盾牌形状 -->
+  <path d="M32 12 L24 16 L24 28 C24 36 28 42 32 44 C36 42 40 36 40 28 L40 16 Z" 
+        fill="url(#shieldGradient)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  
+  <!-- 检查标记 -->
+  <path d="M28 28 L30.5 30.5 L36 25" 
+        stroke="white" stroke-width="2.5" fill="none" 
+        stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- DNS文字 -->
+  <text x="32" y="54" text-anchor="middle" 
+        font-family="SF Pro Display, -apple-system, sans-serif" 
+        font-size="8" font-weight="600" fill="white">DNS</text>
+  
+  <!-- 装饰点 -->
+  <circle cx="20" cy="20" r="1.5" fill="rgba(255,255,255,0.6)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="44" cy="20" r="1.5" fill="rgba(255,255,255,0.6)">
+    <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="20" cy="44" r="1.5" fill="rgba(255,255,255,0.6)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle cx="44" cy="44" r="1.5" fill="rgba(255,255,255,0.6)">
+    <animate attributeName="opacity" values="1;0.6;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+</svg>

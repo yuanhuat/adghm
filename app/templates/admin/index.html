@@ -1,45 +1,91 @@
 {% extends "admin/base.html" %}
 
 {% block page_content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body text-center">
-                    <h2 class="card-title">欢迎回来，{{ current_user.username }}</h2>
-                    <p class="card-text">请从上方导航栏选择要管理的内容。</p>
-                    <div class="row mt-4">
-                        <div class="col-md-4">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">用户管理</h5>
-                                    <p class="card-text">管理系统用户和客户端</p>
-                                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary">进入</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">AdGuardHome配置</h5>
-                                    <p class="card-text">设置AdGuardHome连接信息</p>
-                                    <a href="{{ url_for('admin.adguard_config') }}" class="btn btn-primary">进入</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title">操作日志</h5>
-                                    <p class="card-text">查看系统操作记录</p>
-                                    <a href="{{ url_for('admin.operation_logs') }}" class="btn btn-primary">进入</a>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+<div class="container fade-in-up">
+    <!-- 欢迎头部 -->
+    <div class="welcome-header">
+        <h2>欢迎回来，{{ current_user.username }}</h2>
+        <p>通过下方的管理面板，您可以轻松管理系统的各个方面</p>
+    </div>
+    
+    <!-- 管理功能网格 -->
+    <div class="admin-grid">
+        <!-- 用户管理 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-users"></i>
             </div>
+            <h5>用户管理</h5>
+            <p>管理系统用户和客户端，控制访问权限</p>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                进入管理
+            </a>
+        </div>
+        
+        <!-- AdGuardHome配置 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h5>AdGuardHome配置</h5>
+            <p>设置AdGuardHome连接信息和安全策略</p>
+            <a href="{{ url_for('admin.adguard_config') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                进入配置
+            </a>
+        </div>
+        
+        <!-- 系统设置 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-cog"></i>
+            </div>
+            <h5>系统设置</h5>
+            <p>配置系统参数和全局设置选项</p>
+            <a href="{{ url_for('admin.system_config') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                进入设置
+            </a>
+        </div>
+        
+        <!-- 操作日志 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <h5>操作日志</h5>
+            <p>查看系统操作记录和安全审计</p>
+            <a href="{{ url_for('admin.operation_logs') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                查看日志
+            </a>
+        </div>
+        
+        <!-- 公告管理 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-bullhorn"></i>
+            </div>
+            <h5>公告管理</h5>
+            <p>发布和管理系统公告信息</p>
+            <a href="{{ url_for('admin.announcements') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                管理公告
+            </a>
+        </div>
+        
+        <!-- 查询日志 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h5>查询日志</h5>
+            <p>查看DNS查询记录和流量分析</p>
+            <a href="{{ url_for('admin.query_log_enhanced') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                查看查询
+            </a>
         </div>
     </div>
 </div>

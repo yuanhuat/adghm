@@ -1,8 +1,27 @@
-/* 客户端设置页面样式 */
+/* 客户端设置页面样式 - Apple风格高对比度 */
+
+/* CSS变量定义 */
+:root {
+    --primary-blue: #007AFF;
+    --primary-blue-hover: #0056CC;
+    --background-primary: #000000;
+    --background-secondary: #1C1C1E;
+    --background-tertiary: #2C2C2E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #F2F2F7;
+    --text-tertiary: #D1D1D6;
+    --text-muted: #8E8E93;
+    --border-color: #48484A;
+    --input-border: #636366;
+    --input-border-focus: #007AFF;
+    --input-bg: rgba(44, 44, 46, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
 
 /* 容器样式 */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     transition: all 0.3s ease;
 }
 
@@ -12,11 +31,13 @@
 .blocked-services-container,
 .upstream-dns-container,
 .logs-stats-container {
-    border: 1px solid #dee2e6; /* 扁平化边框 */
-    border-radius: 8px;
-    padding: 25px;
-    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 32px;
+    background: rgba(28, 28, 30, 0.8);
+    backdrop-filter: blur(20px);
     transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .global-settings-container:hover,
@@ -25,39 +46,67 @@
 .blocked-services-container:hover,
 .upstream-dns-container:hover,
 .logs-stats-container:hover {
-    border-color: #80bdff;
+    border-color: var(--glass-border);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* 标题样式 */
+/* 标题样式 - 高对比度优化 */
 .form-group h4 {
-    color: #007bff; /* 蓝色标题 */
-    font-size: 20px;
+    color: var(--text-primary);
+    font-size: 24px;
     margin-top: 0;
-    margin-bottom: 20px;
-    font-weight: 500;
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 10px;
+    margin-bottom: 24px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 16px;
+    letter-spacing: -0.5px;
 }
 
-/* 选项样式 */
+/* 选项样式 - 高对比度优化 */
 .form-group label {
-    font-weight: 500;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     cursor: pointer;
+    color: var(--text-primary);
+    font-size: 16px;
 }
 
 .form-group input[type="checkbox"] {
-    margin-right: 8px;
+    margin-right: 12px;
     cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    appearance: none;
+    transition: all 0.3s ease;
 }
 
-/* 帮助文本样式 */
+.form-group input[type="checkbox"]:checked {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.form-group input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: -16px;
+    margin-top: 2px;
+}
+
+/* 帮助文本样式 - 高对比度优化 */
 .help-text {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 5px;
-    line-height: 1.4;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.5;
+    font-weight: 500;
 }
 
 /* 安全搜索选项 */
@@ -73,78 +122,97 @@
     padding-left: 5px;
 }
 
-/* 阻止服务选择框 */
+/* 阻止服务选择框 - 高对比度优化 */
 #blockedServices {
     width: 100%;
     height: 150px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 8px;
+    border: 2px solid var(--input-border);
+    border-radius: 12px;
+    padding: 16px;
     font-family: inherit;
-    background-color: #fff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 #blockedServices:focus {
-    border-color: #80bdff;
+    border-color: var(--input-border-focus);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    background: rgba(44, 44, 46, 0.95);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 上游DNS文本框 */
+/* 上游DNS文本框 - 高对比度优化 */
 #customUpstreams {
     width: 100%;
     height: 80px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 8px;
-    font-family: monospace;
+    border: 2px solid var(--input-border);
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
     resize: vertical;
-    background-color: #fff;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 #customUpstreams:focus {
-    border-color: #80bdff;
+    border-color: var(--input-border-focus);
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    background: rgba(44, 44, 46, 0.95);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 保存按钮 */
+/* 保存按钮 - Apple风格高对比度 */
 .btn-primary {
-    background-color: #007bff;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-hover));
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 16px 32px;
     font-size: 16px;
-    font-weight: 500;
-    border-radius: 4px;
+    font-weight: 600;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+    letter-spacing: -0.3px;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
+    background: linear-gradient(135deg, var(--primary-blue-hover), #004499);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
 }
 
 .btn-primary:active {
-    transform: translateY(1px);
+    transform: translateY(0);
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
 }
 
-/* 取消按钮 */
+/* 取消按钮 - Apple风格高对比度 */
 .btn-secondary {
-    padding: 12px 20px;
-    margin-left: 10px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    padding: 16px 24px;
+    margin-left: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: -0.3px;
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--glass-border);
+    transform: translateY(-2px);
 }
 
 /* 响应式设计 */

@@ -1,0 +1,44 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="usersGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF" />
+      <stop offset="100%" style="stop-color:#5856D6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 主用户 -->
+  <g fill="url(#usersGradient)">
+    <!-- 头部 -->
+    <circle cx="16" cy="10" r="4" fill="none" stroke="url(#usersGradient)" stroke-width="1.5"/>
+    <circle cx="16" cy="10" r="2.5" fill="url(#usersGradient)" opacity="0.3"/>
+    
+    <!-- 身体 -->
+    <path d="M8 26 C8 20 11 18 16 18 C21 18 24 20 24 26" 
+          fill="none" stroke="url(#usersGradient)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M9 24 C9 21 12 20 16 20 C20 20 23 21 23 24" 
+          fill="url(#usersGradient)" opacity="0.3"/>
+  </g>
+  
+  <!-- 辅助用户1 -->
+  <g fill="url(#usersGradient)" opacity="0.6">
+    <circle cx="8" cy="8" r="2.5" fill="none" stroke="url(#usersGradient)" stroke-width="1"/>
+    <circle cx="8" cy="8" r="1.5" fill="url(#usersGradient)" opacity="0.4"/>
+    <path d="M3 18 C3 15 5 14 8 14 C10 14 12 15 12 16" 
+          fill="none" stroke="url(#usersGradient)" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- 辅助用户2 -->
+  <g fill="url(#usersGradient)" opacity="0.6">
+    <circle cx="24" cy="8" r="2.5" fill="none" stroke="url(#usersGradient)" stroke-width="1"/>
+    <circle cx="24" cy="8" r="1.5" fill="url(#usersGradient)" opacity="0.4"/>
+    <path d="M20 16 C20 15 22 14 24 14 C27 14 29 15 29 18" 
+          fill="none" stroke="url(#usersGradient)" stroke-width="1" stroke-linecap="round"/>
+  </g>
+  
+  <!-- 连接点 -->
+  <g fill="url(#usersGradient)" opacity="0.4">
+    <circle cx="12" cy="12" r="1"/>
+    <circle cx="20" cy="12" r="1"/>
+    <circle cx="16" cy="22" r="1"/>
+  </g>
+</svg>

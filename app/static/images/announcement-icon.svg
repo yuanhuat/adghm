@@ -1,0 +1,43 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="announcementGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9500" />
+      <stop offset="100%" style="stop-color:#FF6B35" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 扩音器主体 -->
+  <path d="M8 12 L14 8 L20 8 C22 8 24 10 24 12 L24 20 C24 22 22 24 20 24 L14 24 L8 20 Z" 
+        fill="url(#announcementGradient)" opacity="0.1" stroke="url(#announcementGradient)" stroke-width="1.5"/>
+  
+  <!-- 扩音器喇叭口 -->
+  <path d="M20 8 L26 6 C27 6 28 7 28 8 L28 24 C28 25 27 26 26 26 L20 24" 
+        fill="url(#announcementGradient)" opacity="0.3" stroke="url(#announcementGradient)" stroke-width="1.5"/>
+  
+  <!-- 扩音器手柄 -->
+  <rect x="6" y="14" width="4" height="4" rx="2" fill="url(#announcementGradient)" opacity="0.6"/>
+  
+  <!-- 声波 -->
+  <g stroke="url(#announcementGradient)" stroke-width="1.5" fill="none" opacity="0.6">
+    <path d="M28 12 C30 14 30 18 28 20" stroke-linecap="round"/>
+    <path d="M30 10 C33 13 33 19 30 22" stroke-linecap="round"/>
+    <path d="M32 8 C36 12 36 20 32 24" stroke-linecap="round" opacity="0.4"/>
+  </g>
+  
+  <!-- 音符装饰 -->
+  <g fill="url(#announcementGradient)" opacity="0.4">
+    <circle cx="4" cy="8" r="1">
+      <animate attributeName="cy" values="8;6;8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="6" cy="6" r="0.8">
+      <animate attributeName="cy" values="6;4;6" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    <circle cx="4" cy="26" r="1">
+      <animate attributeName="cy" values="26;24;26" dur="2s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+  </g>
+  
+  <!-- 重要标识 -->
+  <circle cx="12" cy="16" r="2" fill="#FF3B30" opacity="0.8"/>
+  <text x="12" y="17.5" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="8" font-weight="bold" fill="white">!</text>
+</svg>
