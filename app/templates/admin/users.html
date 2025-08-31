@@ -819,7 +819,7 @@ function displayAdGuardClients(data) {
     // 显示统计信息
     statsDiv.innerHTML = `
         <div class="row mb-3">
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <div class="card bg-primary text-white">
                     <div class="card-body text-center">
                         <h5>${data.total_count}</h5>
@@ -827,23 +827,15 @@ function displayAdGuardClients(data) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <div class="card bg-success text-white">
                     <div class="card-body text-center">
                         <h5>${data.manual_count}</h5>
-                        <small>手动配置</small>
+                        <small>持久化配置</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="card bg-info text-white">
-                    <div class="card-body text-center">
-                        <h5>${data.auto_count}</h5>
-                        <small>自动发现</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <div class="card bg-warning text-white">
                     <div class="card-body text-center">
                         <h5>${data.matched_count}</h5>
@@ -851,19 +843,21 @@ function displayAdGuardClients(data) {
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
                 <div class="card bg-danger text-white">
                     <div class="card-body text-center">
                         <h5>${data.unmatched_clients.length}</h5>
-                        <small>未匹配</small>
+                        <small>未匹配客户端</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-6">
                 <div class="card bg-dark text-white">
                     <div class="card-body text-center">
                         <h5>${data.unmatched_allowed_ids.length}</h5>
-                        <small>孤立ID</small>
+                        <small>孤立允许ID</small>
                     </div>
                 </div>
             </div>

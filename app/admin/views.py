@@ -640,33 +640,8 @@ def adguard_clients():
                         'type': '手动配置'
                     })
         
-        # 处理自动发现的客户端
-        if 'auto_clients' in clients_data:
-            for auto_client in clients_data['auto_clients']:
-                client_name = auto_client.get('name', '')
-                client_ip = auto_client.get('ip', '')
-                
-                # 检查是否匹配现有用户
-                is_matched = client_name in user_client_names
-                if is_matched:
-                    matched_clients.add(client_name)
-                
-                client_info = {
-                    'name': client_name,
-                    'ids': [client_ip],
-                    'type': '自动发现',
-                    'matched': is_matched,
-                    'source': auto_client.get('source', ''),
-                    'whois_info': auto_client.get('whois_info', {})
-                }
-                all_clients.append(client_info)
-                
-                if not is_matched:
-                    unmatched_clients.append({
-                        'name': client_name,
-                        'ids': [client_ip],
-                        'type': '自动发现'
-                    })
+        # 注释：只处理持久化客户端，不处理自动发现的客户端
+        # 如需包含自动发现客户端，可取消注释以下代码块
         
         # 查找未匹配的允许客户端ID
         unmatched_allowed_ids = allowed_client_ids - user_client_ids
@@ -676,7 +651,6 @@ def adguard_clients():
             'clients': all_clients,
             'total_count': len(all_clients),
             'manual_count': len(clients_data.get('clients', [])),
-            'auto_count': len(clients_data.get('auto_clients', [])),
             'matched_count': len(matched_clients),
             'unmatched_clients': unmatched_clients,
             'unmatched_allowed_ids': list(unmatched_allowed_ids),
