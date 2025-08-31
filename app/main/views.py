@@ -119,7 +119,9 @@ def guide():
     
     提供产品使用教程和帮助文档
     """
-    return render_template('main/guide.html')
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
+    return render_template('main/guide.html', donation_config=donation_config)
 
 @main.route('/pricing')
 def pricing():

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>使用指南 - AdGuard Home Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -535,6 +538,46 @@
 </head>
 <body>
     <!-- 导航栏 -->
+    {% if current_user.is_authenticated %}
+    <!-- 已登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con:5000/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- 未登录用户导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
@@ -553,6 +596,7 @@
             </div>
         </div>
     </nav>
+    {% endif %}
 
     <!-- 主要内容 -->
     <main class="main-content">
@@ -879,6 +923,19 @@
     </footer>
 
     <script>
+        // 导航栏切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navToggle.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                });
+            }
+        });
+
         // 滚动动画
         const observerOptions = {
             threshold: 0.1,
