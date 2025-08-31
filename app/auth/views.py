@@ -87,7 +87,7 @@ def register():
             return redirect(url_for('auth.login'))
     
     if current_user.is_authenticated:
-        return redirect(url_for('main.landing'))
+        return redirect(url_for('main.dashboard'))
         
     if request.method == 'POST':
         email = request.form.get('email')
@@ -324,10 +324,6 @@ def register():
                         login_user(user)
                         flash('注册成功！', 'success')
                         return redirect(url_for('main.dashboard'))
-                        db.session.commit()
-                        login_user(user)
-                        flash('注册成功！', 'success')
-                        return redirect(url_for('main.dashboard'))
                         
                     except Exception as e:
                         # 不回滚用户创建，只回滚客户端映射（如果有）
@@ -369,7 +365,7 @@ def login():
     登录成功后重定向到主页。
     """
     if current_user.is_authenticated:
-        return redirect(url_for('main.landing'))
+        return redirect(url_for('main.dashboard'))
     
     # 检查是否为第一个用户，第一个用户始终允许注册
     user_count = User.query.count()

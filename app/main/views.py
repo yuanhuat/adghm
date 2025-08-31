@@ -1104,7 +1104,7 @@ def donation():
     # 检查捐赠功能是否启用且配置完整
     if not config.enabled or not config.is_configured():
         flash('捐赠功能暂时不可用', 'info')
-        return redirect(url_for('main.landing'))
+        return redirect(url_for('main.dashboard'))
     
     # 获取当前用户的客户端名称作为默认捐赠者姓名
     default_donor_name = ''
