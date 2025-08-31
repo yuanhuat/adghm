@@ -794,6 +794,105 @@ def manage_ai_analysis_config():
                 'error': str(e)
             }), 500
 
+@admin.route('/send-bulk-email', methods=['POST'])
+@login_required
+@admin_required
+def send_bulk_email():
+    """批量发送邮件给选中的用户"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': '请求数据格式错误'}), 400
+        
+        user_ids = data.get('user_ids', [])
+        subject = data.get('subject', '').strip()
+        message = data.get('message', '').strip()
+        additional_info = data.get('additional_info', '').strip()
+        
+        # 验证必填字段
+        if not user_ids:
+            return jsonify({'success': False, 'message': '请选择要发送邮件的用户'}), 400
+        
+        if not subject:
+            return jsonify({'success': False, 'message': '请输入邮件主题'}), 400
+            
+        if not message:
+            return jsonify({'success': False, 'message': '请输入邮件内容'}), 400
+        
+        # 获取选中的用户
+        users = User.query.filter(User.id.in_(user_ids)).all()
+        if not users:
+            return jsonify({'success': False, 'message': '未找到选中的用户'}), 400
+        
+        # 过滤出有邮箱的用户
+        users_with_email = [user for user in users if user.email]
+        if not users_with_email:
+            return jsonify({'success': False, 'message': '选中的用户中没有设置邮箱的用户'}), 400
+        
+        # 记录操作日志
+        operation_log = OperationLog(
+            user_id=current_user.id,
+            operation_type='bulk_email',
+             target_type='User',
+             target_id='bulk_email',
+             details=f'批量发送邮件给 {len(users_with_email)} 个用户，主题：{subject}',
+            
+            created_at=beijing_time()
+        )
+        db.session.add(operation_log)
+        db.session.commit()
+        
+        # 发送邮件统计
+        success_count = 0
+        failed_count = 0
+        failed_emails = []
+        
+        # 逐个发送邮件
+        for user in users_with_email:
+            try:
+                success = EmailService.send_email(
+                    to=user.email,
+                    subject=subject,
+                    template='bulk_email',
+                    message=message,
+                    additional_info=additional_info,
+                    username=user.username
+                )
+                
+                if success:
+                    success_count += 1
+                    current_app.logger.info(f'批量邮件发送成功：{user.email}')
+                else:
+                    failed_count += 1
+                    failed_emails.append(user.email)
+                    current_app.logger.error(f'批量邮件发送失败：{user.email}')
+                    
+            except Exception as e:
+                failed_count += 1
+                failed_emails.append(user.email)
+                current_app.logger.error(f'批量邮件发送异常：{user.email}, 错误：{str(e)}')
+        
+        # 返回发送结果
+        result = {
+            'success': True,
+            'message': f'邮件发送完成',
+            'success_count': success_count,
+            'failed_count': failed_count,
+            'total_count': len(users_with_email)
+        }
+        
+        if failed_emails:
+            result['failed_emails'] = failed_emails
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        current_app.logger.error(f'批量邮件发送异常：{str(e)}')
+        return jsonify({
+            'success': False,
+            'message': f'邮件发送失败：{str(e)}'
+        }), 500
+
 
 @admin.route('/api/donation-records/clear', methods=['POST'])
 @login_required

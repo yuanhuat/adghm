@@ -7,9 +7,20 @@
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary" onclick="showBulkEmailModal()" id="bulkEmailBtn" disabled>
+                        <i class="fas fa-envelope"></i> 批量发送邮件
+                    </button>
+                    <span class="ms-2 text-muted" id="selectedCount">已选择 0 个用户</span>
+                </div>
+                
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                <label for="selectAll" class="ms-1">全选</label>
+                            </th>
                             <th>ID</th>
                             <th>用户名</th>
                             <th>注册邮箱</th>
@@ -23,6 +34,13 @@
                     <tbody>
                         {% for user in users %}
                         <tr>
+                            <td>
+                                {% if user.email %}
+                                <input type="checkbox" class="user-checkbox" value="{{ user.id }}" data-email="{{ user.email }}" onchange="updateSelectedCount()">
+                                {% else %}
+                                <span class="text-muted">无邮箱</span>
+                                {% endif %}
+                            </td>
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
                             <td>
@@ -67,6 +85,45 @@
     </div>
 </div>
 
+<!-- 批量邮件发送模态框 -->
+<div class="modal fade" id="bulkEmailModal" tabindex="-1" aria-labelledby="bulkEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkEmailModalLabel">批量发送邮件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkEmailForm">
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">邮件主题 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="emailSubject" name="subject" required placeholder="请输入邮件主题">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailMessage" class="form-label">邮件内容 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="emailMessage" name="message" rows="8" required placeholder="请输入邮件内容，支持HTML格式"></textarea>
+                        <div class="form-text">支持HTML格式，如 &lt;br&gt; 换行、&lt;b&gt;粗体&lt;/b&gt; 等</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="additionalInfo" class="form-label">附加信息</label>
+                        <textarea class="form-control" id="additionalInfo" name="additional_info" rows="3" placeholder="可选的附加信息"></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="recipientInfo">将发送给 0 个用户</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="sendBulkEmail()" id="sendEmailBtn">
+                    <i class="fas fa-paper-plane"></i> 发送邮件
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function deleteUser(userId) {
     if (!confirm('确定要删除该用户吗？这将同时删除用户的所有客户端。')) {
@@ -97,5 +154,136 @@ function deleteUser(userId) {
         alert('删除用户失败：' + error);
     });
 }
+
+// 全选/取消全选功能
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const userCheckboxes = document.querySelectorAll('.user-checkbox');
+    
+    userCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+// 更新选中用户数量
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    
+    document.getElementById('selectedCount').textContent = `已选择 ${count} 个用户`;
+    document.getElementById('bulkEmailBtn').disabled = count === 0;
+    
+    // 更新全选复选框状态
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    if (count === 0) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = false;
+    } else if (count === allCheckboxes.length) {
+        selectAllCheckbox.indeterminate = false;
+        selectAllCheckbox.checked = true;
+    } else {
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+// 显示批量邮件发送模态框
+function showBulkEmailModal() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    
+    if (count === 0) {
+        alert('请先选择要发送邮件的用户');
+        return;
+    }
+    
+    document.getElementById('recipientInfo').textContent = `将发送给 ${count} 个用户`;
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('bulkEmailModal'));
+    modal.show();
+}
+
+// 发送批量邮件
+function sendBulkEmail() {
+    const form = document.getElementById('bulkEmailForm');
+    const formData = new FormData(form);
+    
+    // 验证表单
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // 获取选中的用户ID
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const userIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) {
+        alert('请先选择要发送邮件的用户');
+        return;
+    }
+    
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // 禁用发送按钮并显示加载状态
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+    
+    // 准备发送数据
+    const emailData = {
+        user_ids: userIds,
+        subject: formData.get('subject'),
+        message: formData.get('message'),
+        additional_info: formData.get('additional_info')
+    };
+    
+    // 发送请求
+    fetch('/admin/send-bulk-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`邮件发送成功！\n成功发送：${data.success_count} 封\n失败：${data.failed_count} 封`);
+            
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkEmailModal'));
+            modal.hide();
+            
+            // 清空表单
+            form.reset();
+            
+            // 取消所有选择
+            document.querySelectorAll('.user-checkbox:checked').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+            updateSelectedCount();
+        } else {
+            alert('邮件发送失败：' + (data.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('邮件发送失败：网络错误');
+    })
+    .finally(() => {
+        // 恢复发送按钮
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+    });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+});
 </script>
 {% endblock page_content %}
