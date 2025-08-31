@@ -360,7 +360,7 @@ class AdGuardService:
         print(f"准备创建AdGuardHome客户端，数据: {data}")
         
         try:
-            result = self._make_request('POST', '/control/clients/add', json=data)
+            result = self._make_request('POST', '/clients/add', json=data)
             print(f"成功创建AdGuardHome客户端: {result}")
             return result
         except Exception as e:
@@ -470,7 +470,7 @@ class AdGuardService:
             "data": client_data
         }
         
-        return self._make_request('POST', '/control/clients/update', json=request_body)
+        return self._make_request('POST', '/clients/update', json=request_body)
     
     def delete_client(self, name: str) -> Dict:
         """删除AdGuardHome客户端
@@ -490,7 +490,7 @@ class AdGuardService:
             raise Exception(f"客户端 {name} 不存在，无法删除")
             
         data = {"name": name}
-        return self._make_request('POST', '/control/clients/delete', json=data)
+        return self._make_request('POST', '/clients/delete', json=data)
     
     def search_clients(
         self,
@@ -509,7 +509,7 @@ class AdGuardService:
             search_criteria = [search_criteria]
             
         data = {"criteria": search_criteria}
-        return self._make_request('POST', '/control/clients/find', json=data)
+        return self._make_request('POST', '/clients/find', json=data)
         
     def find_client(self, name: str) -> Optional[Dict]:
         """根据名称查找AdGuardHome客户端
@@ -522,7 +522,7 @@ class AdGuardService:
         """
         try:
             # 获取所有客户端列表
-            response_data = self._make_request('GET', '/control/clients')
+            response_data = self._make_request('GET', '/clients')
             clients = response_data.get('clients', [])
             
             # 查找匹配名称的客户端
