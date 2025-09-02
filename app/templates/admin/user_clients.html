@@ -1,6 +1,74 @@
 {% extends "admin/base.html" %}
 
 {% block page_content %}
+<style>
+/* 客户端设置模态框样式 */
+.global-settings-container,
+.basic-settings-container,
+.safe-search-container,
+.blocked-services-container,
+.upstream-dns-container,
+.logs-stats-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+    margin-bottom: 20px;
+}
+
+.global-settings-container h4,
+.basic-settings-container h4,
+.safe-search-container h4,
+.blocked-services-container h4,
+.upstream-dns-container h4,
+.logs-stats-container h4 {
+    color: #495057;
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.help-text {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.safe-search-option {
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+#blockedServices {
+    min-height: 120px;
+}
+
+#customUpstreams {
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+}
+</style>
 <div class="container">
     <div class="row mb-4">
         <div class="col">
@@ -52,7 +120,8 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                <button onclick="editClientIds({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-sm btn-primary">编辑ID</button>
+                                <button onclick="editClientIds({{ mapping.id }}, '{{ mapping.client_name }}')" class="btn btn-sm btn-primary me-2">编辑ID</button>
+                                <button onclick="editClientSettings('{{ mapping.client_name }}')" class="btn btn-sm btn-success">编辑设置</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -62,6 +131,133 @@
             {% else %}
             <div class="alert alert-info">该用户暂无客户端。</div>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 客户端设置编辑模态框 -->
+<div class="modal fade" id="clientSettingsModal" tabindex="-1" aria-labelledby="clientSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientSettingsModalLabel">编辑客户端设置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="clientSettingsForm">
+                    <input type="hidden" id="currentClientName" value="">
+                    
+                    <!-- 全局设置 -->
+                    <div class="global-settings-container mb-4">
+                        <h4>全局设置</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="useGlobalSettings"> 使用全局设置
+                            </label>
+                            <div class="help-text">启用后将使用系统默认的全局过滤设置</div>
+                        </div>
+                    </div>
+
+                    <!-- 基础过滤设置 -->
+                    <div class="basic-settings-container mb-4">
+                        <h4>基础过滤</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="filteringEnabled"> 启用过滤
+                            </label>
+                            <div class="help-text">启用DNS过滤功能，阻止广告和恶意域名</div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="safebrowsingEnabled"> 启用安全浏览
+                            </label>
+                            <div class="help-text">保护免受恶意软件和钓鱼网站的威胁</div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="parentalEnabled"> 启用家长控制
+                            </label>
+                            <div class="help-text">阻止成人内容和不适宜儿童的网站</div>
+                        </div>
+                    </div>
+
+                    <!-- 安全搜索设置 -->
+                    <div class="safe-search-container mb-4">
+                        <h4>安全搜索</h4>
+                        <div class="form-group">
+                            <div class="safe-search-option">
+                                <label>
+                                    <input type="checkbox" id="safeSearchGoogle"> Google 安全搜索
+                                </label>
+                            </div>
+                            <div class="safe-search-option">
+                                <label>
+                                    <input type="checkbox" id="safeSearchYandex"> Yandex 安全搜索
+                                </label>
+                            </div>
+                            <div class="safe-search-option">
+                                <label>
+                                    <input type="checkbox" id="safeSearchBing"> Bing 安全搜索
+                                </label>
+                            </div>
+                            <div class="safe-search-option">
+                                <label>
+                                    <input type="checkbox" id="safeSearchDuckDuckGo"> DuckDuckGo 安全搜索
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 阻止服务设置 -->
+                    <div class="blocked-services-container mb-4">
+                        <h4>阻止服务</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="useGlobalBlockedServices"> 使用全局阻止服务设置
+                            </label>
+                            <div class="help-text">启用后将使用系统配置的全局阻止服务列表</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="blockedServices">自定义阻止服务：</label>
+                            <select multiple id="blockedServices" class="form-control">
+                                <!-- 服务选项将通过JavaScript动态加载 -->
+                            </select>
+                            <div class="help-text">选择要阻止的服务类型（按住Ctrl可多选）</div>
+                        </div>
+                    </div>
+
+                    <!-- 上游DNS设置 -->
+                    <div class="upstream-dns-container mb-4">
+                        <h4>上游DNS</h4>
+                        <div class="form-group">
+                            <label for="customUpstreams">自定义上游DNS服务器：</label>
+                            <textarea id="customUpstreams" class="form-control" rows="3" placeholder="每行一个DNS服务器地址，例如：\n8.8.8.8\n1.1.1.1"></textarea>
+                            <div class="help-text">留空则使用系统默认DNS服务器</div>
+                        </div>
+                    </div>
+
+                    <!-- 日志和统计设置 -->
+                    <div class="logs-stats-container mb-4">
+                        <h4>日志和统计</h4>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ignoreQuerylog"> 忽略查询日志
+                            </label>
+                            <div class="help-text">不记录此客户端的DNS查询日志</div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="ignoreStatistics"> 忽略统计信息
+                            </label>
+                            <div class="help-text">不统计此客户端的查询数据</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveClientSettings()">保存设置</button>
+            </div>
         </div>
     </div>
 </div>
@@ -93,6 +289,137 @@ function editClientIds(mappingId, clientName) {
     })
     .catch(error => {
         alert('更新客户端失败：' + error);
+    });
+}
+
+// 编辑客户端设置
+function editClientSettings(clientName) {
+    document.getElementById('currentClientName').value = clientName;
+    document.getElementById('clientSettingsModalLabel').textContent = `编辑客户端设置 - ${clientName}`;
+    
+    // 加载可用服务列表
+    loadAvailableServices();
+    
+    // 加载客户端当前设置
+    loadClientSettings(clientName);
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('clientSettingsModal'));
+    modal.show();
+}
+
+// 加载可用服务列表
+function loadAvailableServices() {
+    fetch('/api/adguard/blocked_services')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('blockedServices');
+            select.innerHTML = '';
+            
+            if (data.success && data.services) {
+                data.services.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = service.name;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('加载服务列表失败:', error);
+        });
+}
+
+// 加载客户端当前设置
+function loadClientSettings(clientName) {
+    fetch(`/api/adguard/clients/${encodeURIComponent(clientName)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.client) {
+                const client = data.client;
+                
+                // 设置基础选项
+                document.getElementById('useGlobalSettings').checked = client.use_global_settings || false;
+                document.getElementById('filteringEnabled').checked = client.filtering_enabled || false;
+                document.getElementById('safebrowsingEnabled').checked = client.safebrowsing_enabled || false;
+                document.getElementById('parentalEnabled').checked = client.parental_enabled || false;
+                document.getElementById('useGlobalBlockedServices').checked = client.use_global_blocked_services || false;
+                document.getElementById('ignoreQuerylog').checked = client.ignore_querylog || false;
+                document.getElementById('ignoreStatistics').checked = client.ignore_statistics || false;
+                
+                // 设置安全搜索选项
+                if (client.safe_search) {
+                    document.getElementById('safeSearchGoogle').checked = client.safe_search.google || false;
+                    document.getElementById('safeSearchYandex').checked = client.safe_search.yandex || false;
+                    document.getElementById('safeSearchBing').checked = client.safe_search.bing || false;
+                    document.getElementById('safeSearchDuckDuckGo').checked = client.safe_search.duckduckgo || false;
+                }
+                
+                // 设置阻止服务
+                if (client.blocked_services) {
+                    const select = document.getElementById('blockedServices');
+                    Array.from(select.options).forEach(option => {
+                        option.selected = client.blocked_services.includes(option.value);
+                    });
+                }
+                
+                // 设置上游DNS
+                if (client.upstreams) {
+                    document.getElementById('customUpstreams').value = client.upstreams.join('\n');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('加载客户端设置失败:', error);
+            alert('加载客户端设置失败: ' + error.message);
+        });
+}
+
+// 保存客户端设置
+function saveClientSettings() {
+    const clientName = document.getElementById('currentClientName').value;
+    
+    // 收集表单数据
+    const settings = {
+        use_global_settings: document.getElementById('useGlobalSettings').checked,
+        filtering_enabled: document.getElementById('filteringEnabled').checked,
+        safebrowsing_enabled: document.getElementById('safebrowsingEnabled').checked,
+        parental_enabled: document.getElementById('parentalEnabled').checked,
+        use_global_blocked_services: document.getElementById('useGlobalBlockedServices').checked,
+        ignore_querylog: document.getElementById('ignoreQuerylog').checked,
+        ignore_statistics: document.getElementById('ignoreStatistics').checked,
+        safe_search: {
+            google: document.getElementById('safeSearchGoogle').checked,
+            yandex: document.getElementById('safeSearchYandex').checked,
+            bing: document.getElementById('safeSearchBing').checked,
+            duckduckgo: document.getElementById('safeSearchDuckDuckGo').checked
+        },
+        blocked_services: Array.from(document.getElementById('blockedServices').selectedOptions).map(option => option.value),
+        upstreams: document.getElementById('customUpstreams').value.split('\n').filter(line => line.trim())
+    };
+    
+    // 发送更新请求
+    fetch(`/api/adguard/clients/${encodeURIComponent(clientName)}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('客户端设置已更新');
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('clientSettingsModal'));
+            modal.hide();
+        } else {
+            alert('更新失败: ' + (data.error || '未知错误'));
+        }
+    })
+    .catch(error => {
+        console.error('保存设置失败:', error);
+        alert('保存设置失败: ' + error.message);
     });
 }
 </script>

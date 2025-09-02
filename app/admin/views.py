@@ -556,27 +556,33 @@ def bulk_delete_users_optimized():
             db.session.commit()
             success_count = len(valid_users)
             
+            # 提交所有更改
+            db.session.commit()
+            success_count = len(valid_users)
+            
+            # 返回成功结果
+            return jsonify({
+                'success': True,
+                'message': f'成功删除 {success_count} 个用户',
+                'client_delete_errors': client_delete_errors if client_delete_errors else None
+            })
+            
         except Exception as e:
             db.session.rollback()
             return jsonify({
                 'success': False,
                 'message': f'删除数据库记录失败：{str(e)}'
             }), 500
-        
-        # 返回成功结果
-        return jsonify({
-            'success': True,
-            'message': f'成功删除 {success_count} 个用户',
-            'deleted_count': success_count,
-            'client_errors': client_delete_errors if client_delete_errors else None
-        })
     
     except Exception as e:
         db.session.rollback()
         return jsonify({
-            'success': False,
+            'success': False, 
             'message': f'批量删除用户失败：{str(e)}'
         }), 500
+
+
+
 
 @admin.route('/adguard-clients')
 @login_required

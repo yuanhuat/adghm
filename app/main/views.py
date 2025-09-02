@@ -1335,6 +1335,138 @@ def create_donation():
         }), 500
 
 
+@main.route('/api/adguard/blocked_services')
+@login_required
+@admin_required
+def api_adguard_blocked_services():
+    """获取AdGuard Home可用的阻止服务列表
+    
+    Returns:
+        JSON响应，包含可用的阻止服务列表
+    """
+    try:
+        adguard = AdGuardService()
+        response = adguard.get_blocked_services_all()
+        
+        # 提取服务信息，只保留id和name字段
+        services = []
+        if response and isinstance(response, dict) and 'blocked_services' in response:
+            for service in response['blocked_services']:
+                services.append({
+                    "id": service.get('id', ''),
+                    "name": service.get('name', '')
+                })
+        
+        # 如果API返回为空，使用备用静态列表
+        if not services:
+            services = [
+                {"id": "facebook", "name": "Facebook"},
+                {"id": "twitter", "name": "Twitter"},
+                {"id": "youtube", "name": "YouTube"},
+                {"id": "instagram", "name": "Instagram"},
+                {"id": "netflix", "name": "Netflix"},
+                {"id": "whatsapp", "name": "WhatsApp"},
+                {"id": "tiktok", "name": "TikTok"},
+                {"id": "snapchat", "name": "Snapchat"},
+                {"id": "discord", "name": "Discord"},
+                {"id": "reddit", "name": "Reddit"}
+            ]
+        
+        return jsonify({
+            'success': True,
+            'services': services
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取阻止服务列表失败：{str(e)}'
+        }), 500
+
+
+@main.route('/api/adguard/clients/<client_name>')
+@login_required
+@admin_required
+def api_adguard_client_get(client_name):
+    """获取指定客户端的详细信息
+    
+    Args:
+        client_name: 客户端名称
+        
+    Returns:
+        JSON响应，包含客户端的详细配置信息
+    """
+    try:
+        adguard = AdGuardService()
+        client = adguard.find_client(client_name)
+        
+        if not client:
+            return jsonify({
+                'success': False,
+                'message': f'未找到客户端：{client_name}'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'client': client
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取客户端信息失败：{str(e)}'
+        }), 500
+
+
+@main.route('/api/adguard/clients/<client_name>', methods=['PUT'])
+@login_required
+@admin_required
+def api_adguard_client_update(client_name):
+    """更新指定客户端的配置
+    
+    Args:
+        client_name: 客户端名称
+        
+    Returns:
+        JSON响应，表示更新是否成功
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        adguard = AdGuardService()
+        
+        # 构建更新数据
+        update_data = {
+            'name': client_name,
+            'data': data
+        }
+        
+        # 调用AdGuard Home API更新客户端
+        result = adguard.update_client(update_data)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': '客户端配置更新成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '客户端配置更新失败'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'更新客户端配置失败：{str(e)}'
+        }), 500
+
+
 @main.route('/donation/success')
 def donation_success():
     """捐赠支付成功页面
