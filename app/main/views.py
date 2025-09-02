@@ -943,17 +943,35 @@ def apple_doh_mobileconfig():
                 'error': '管理员已禁用苹果设备DoH配置文件下载功能'
             }), 403
         
-        # 获取用户的客户端ID
-        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
-        client_id = None
+        # 获取客户端ID参数，如果没有提供则使用用户的第一个客户端ID
+        requested_client_id = request.args.get('client_id')
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
         
-        if client_mapping and client_mapping.client_ids:
-            client_id = client_mapping.client_ids[0]
-        
-        if not client_id:
+        if not client_mappings:
             return jsonify({
                 'error': '用户没有关联的客户端ID'
             }), 400
+        
+        # 收集所有用户的客户端ID
+        all_user_client_ids = []
+        for mapping in client_mappings:
+            all_user_client_ids.extend(mapping.client_ids)
+        
+        if not all_user_client_ids:
+            return jsonify({
+                'error': '用户没有关联的客户端ID'
+            }), 400
+        
+        # 如果指定了客户端ID，验证用户是否有权限使用该客户端ID
+        if requested_client_id:
+            if requested_client_id not in all_user_client_ids:
+                return jsonify({
+                    'error': f'用户无权限使用客户端ID: {requested_client_id}'
+                }), 403
+            client_id = requested_client_id
+        else:
+            # 使用用户的第一个客户端ID作为默认值
+            client_id = all_user_client_ids[0]
         
         # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
         import re
@@ -1090,17 +1108,36 @@ def apple_dot_mobileconfig():
                 'error': '管理员已禁用苹果设备DoT配置文件下载功能'
             }), 403
         
-        # 获取用户的客户端ID
-        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
-        client_id = None
+        # 获取客户端ID参数，如果没有提供则使用用户的第一个客户端ID
+        requested_client_id = request.args.get('client_id')
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
         
-        if client_mapping and client_mapping.client_ids:
-            client_id = client_mapping.client_ids[0]
-        
-        if not client_id:
+        if not client_mappings:
             return jsonify({
                 'error': '用户没有关联的客户端ID'
             }), 400
+        
+        # 收集所有客户端ID
+        all_client_ids = []
+        for mapping in client_mappings:
+            if mapping.client_ids:
+                all_client_ids.extend(mapping.client_ids)
+        
+        if not all_client_ids:
+            return jsonify({
+                'error': '用户没有关联的客户端ID'
+            }), 400
+        
+        # 如果指定了客户端ID，验证用户是否有权限使用该客户端ID
+        if requested_client_id:
+            if requested_client_id not in all_client_ids:
+                return jsonify({
+                    'error': f'用户无权限使用客户端ID: {requested_client_id}'
+                }), 403
+            client_id = requested_client_id
+        else:
+            # 使用用户的第一个客户端ID作为默认值
+            client_id = all_client_ids[0]
         
         # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
         import re

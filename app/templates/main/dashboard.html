@@ -477,6 +477,34 @@
     margin-bottom: 5px;
 }
 
+.client-selector-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.client-selector-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #495057;
+}
+
+.client-selector-container label i {
+    margin-right: 8px;
+    color: #007bff;
+}
+
+.apple-config-display {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
 @media (max-width: 768px) {
     .apple-config-item {
         flex-direction: column;
@@ -706,6 +734,9 @@ function updateDnsConfig() {
     .then(data => {
         console.log('DNS config API data:', data);
         
+        // 保存DNS数据到全局变量，供客户端选择器使用
+        window.currentDnsData = data;
+        
         const titleElement = document.getElementById('dns-config-title');
         const contentElement = document.getElementById('dns-config-content');
         
@@ -825,71 +856,47 @@ function updateAppleConfig(dnsData) {
         return;
     }
     
-    // 为每个客户端生成苹果配置
-    dnsData.clients.forEach((client, index) => {
+    // 检查是否有可用的配置
+    const availableClients = dnsData.clients.filter(client => {
         const hasDoH = dnsData.doh_enabled && client.doh_server && dnsData.apple_doh_config_enabled;
         const hasDoT = dnsData.dot_enabled && client.dot_server && dnsData.apple_dot_config_enabled;
-    
-        if (hasDoH || hasDoT) {
-            hasConfig = true;
-            
-            // 如果有多个客户端，显示客户端名称
-            if (dnsData.clients.length > 1) {
-                html += `<div class="client-section"><h5 class="client-title"><i class="fas fa-mobile-alt"></i> ${client.client_name} (${client.client_id})</h5>`;
-            }
-            
-            html += '<div class="apple-config-items">';
-            
-            if (hasDoH) {
-                // 从包含客户端ID的服务器地址中提取原始域名
-                const dohServerWithClientId = client.doh_server || 'localhost';
-                const dohHost = dohServerWithClientId.includes('.') ? 
-                    dohServerWithClientId.substring(dohServerWithClientId.indexOf('.') + 1) : 
-                    dohServerWithClientId;
-                html += `
-                    <div class="apple-config-item">
-                        <div class="config-info">
-                            <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
-                            <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
-                        </div>
-                        <a href="/api/apple/doh.mobileconfig?host=${encodeURIComponent(dohHost)}" class="btn btn-primary btn-download" download>
-                            <i class="fas fa-download"></i> 下载配置文件
-                        </a>
-                    </div>
-                `;
-            }
-            
-            if (hasDoT) {
-                // 从包含客户端ID的服务器地址中提取原始域名
-                const dotServerWithClientId = client.dot_server || 'localhost';
-                const dotHost = dotServerWithClientId.includes('.') ? 
-                    dotServerWithClientId.substring(dotServerWithClientId.indexOf('.') + 1) : 
-                    dotServerWithClientId;
-                html += `
-                    <div class="apple-config-item">
-                        <div class="config-info">
-                            <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
-                            <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
-                        </div>
-                        <a href="/api/apple/dot.mobileconfig?host=${encodeURIComponent(dotHost)}" class="btn btn-primary btn-download" download>
-                            <i class="fas fa-download"></i> 下载配置文件
-                        </a>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            
-            // 如果有多个客户端，关闭客户端区域
-            if (dnsData.clients.length > 1) {
-                html += `</div>`;
-                // 如果不是最后一个客户端，添加分隔线
-                if (index < dnsData.clients.length - 1) {
-                    html += `<hr class="client-separator">`;
-                }
-            }
-        }
+        return hasDoH || hasDoT;
     });
+    
+    if (availableClients.length > 0) {
+        hasConfig = true;
+        
+        // 如果有多个客户端，显示选择器
+        if (availableClients.length > 1) {
+            html += `
+                <div class="client-selector-container">
+                    <label for="apple-client-select"><i class="fas fa-mobile-alt"></i> 选择客户端配置：</label>
+                    <select id="apple-client-select" class="form-control" onchange="updateAppleConfigForClient()">
+                        <option value="">请选择客户端</option>
+            `;
+            
+            availableClients.forEach(client => {
+                html += `<option value="${client.client_id}">${client.client_name} (${client.client_id})</option>`;
+            });
+            
+            html += `
+                    </select>
+                </div>
+                <div id="apple-config-display" class="apple-config-display" style="display: none;">
+            `;
+        } else {
+            // 只有一个客户端，直接显示
+            const client = availableClients[0];
+            html += '<div class="apple-config-items">';
+            html += generateAppleConfigItems(client, dnsData);
+            html += '</div>';
+        }
+        
+        // 如果有多个客户端，关闭显示区域
+        if (availableClients.length > 1) {
+            html += '</div>';
+        }
+    }
     
     if (hasConfig) {
         html += '<div class="apple-config-note">';
@@ -906,6 +913,79 @@ function updateAppleConfig(dnsData) {
     }
     
     appleContentElement.innerHTML = html;
+}
+
+// 生成苹果配置项的辅助函数
+function generateAppleConfigItems(client, dnsData) {
+    let html = '';
+    const hasDoH = dnsData.doh_enabled && client.doh_server && dnsData.apple_doh_config_enabled;
+    const hasDoT = dnsData.dot_enabled && client.dot_server && dnsData.apple_dot_config_enabled;
+    
+    if (hasDoH) {
+        // 从包含客户端ID的服务器地址中提取原始域名
+        const dohServerWithClientId = client.doh_server || 'localhost';
+        const dohHost = dohServerWithClientId.includes('.') ? 
+            dohServerWithClientId.substring(dohServerWithClientId.indexOf('.') + 1) : 
+            dohServerWithClientId;
+        html += `
+            <div class="apple-config-item">
+                <div class="config-info">
+                    <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
+                    <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                </div>
+                <a href="/api/apple/doh.mobileconfig?host=${encodeURIComponent(dohHost)}&client_id=${encodeURIComponent(client.client_id)}" class="btn btn-primary btn-download" download>
+                    <i class="fas fa-download"></i> 下载配置文件
+                </a>
+            </div>
+        `;
+    }
+    
+    if (hasDoT) {
+        // 从包含客户端ID的服务器地址中提取原始域名
+        const dotServerWithClientId = client.dot_server || 'localhost';
+        const dotHost = dotServerWithClientId.includes('.') ? 
+            dotServerWithClientId.substring(dotServerWithClientId.indexOf('.') + 1) : 
+            dotServerWithClientId;
+        html += `
+            <div class="apple-config-item">
+                <div class="config-info">
+                    <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
+                    <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                </div>
+                <a href="/api/apple/dot.mobileconfig?host=${encodeURIComponent(dotHost)}&client_id=${encodeURIComponent(client.client_id)}" class="btn btn-primary btn-download" download>
+                    <i class="fas fa-download"></i> 下载配置文件
+                </a>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// 处理客户端选择变化
+function updateAppleConfigForClient() {
+    const selectElement = document.getElementById('apple-client-select');
+    const displayElement = document.getElementById('apple-config-display');
+    
+    if (!selectElement || !displayElement) return;
+    
+    const selectedClientId = selectElement.value;
+    
+    if (!selectedClientId) {
+        displayElement.style.display = 'none';
+        return;
+    }
+    
+    // 从全局DNS数据中找到选中的客户端
+    const selectedClient = window.currentDnsData?.clients?.find(client => client.client_id === selectedClientId);
+    
+    if (selectedClient && window.currentDnsData) {
+        const configHtml = generateAppleConfigItems(selectedClient, window.currentDnsData);
+        displayElement.innerHTML = `<div class="apple-config-items">${configHtml}</div>`;
+        displayElement.style.display = 'block';
+    } else {
+        displayElement.style.display = 'none';
+    }
 }
 
 // 提交留言表单
