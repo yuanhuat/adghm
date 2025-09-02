@@ -18,7 +18,89 @@ from app.admin.views import admin_required
 from . import main
 from flask import send_file
 import os
+import uuid
+import hashlib
 
+
+def remove_expired_vip_clients(user_id):
+    """移除VIP过期用户的客户端（保留第一个客户端）
+    
+    Args:
+        user_id: 用户ID
+    """
+    try:
+        # 获取用户的所有客户端映射，按创建时间排序
+        user_mappings = ClientMapping.query.filter_by(user_id=user_id).order_by(ClientMapping.created_at).all()
+        
+        # 如果用户只有一个或没有客户端，不需要处理
+        if len(user_mappings) <= 1:
+            return
+        
+        # 保留第一个客户端，删除其余客户端
+        clients_to_remove = user_mappings[1:]  # 跳过第一个客户端
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        for mapping in clients_to_remove:
+            client_name = mapping.client_name
+            client_ids = mapping.client_ids
+            
+            try:
+                # 从AdGuard Home删除客户端
+                adguard.delete_client(client_name)
+                logging.info(f"已从AdGuard Home删除过期VIP客户端: {client_name}")
+            except Exception as e:
+                logging.warning(f"从AdGuard Home删除客户端失败: {str(e)}")
+                # 继续执行，不影响数据库删除
+            
+            try:
+                # 从允许列表中移除客户端ID
+                access_list = adguard._make_request('GET', '/access/list')
+                allowed_clients = access_list.get('allowed_clients', [])
+                
+                # 移除客户端ID
+                clients_to_remove_from_list = []
+                for client_id in client_ids:
+                    if client_id in allowed_clients:
+                        allowed_clients.remove(client_id)
+                        clients_to_remove_from_list.append(client_id)
+                
+                # 如果有客户端ID被移除，更新访问控制列表
+                if clients_to_remove_from_list:
+                    access_data = {
+                        'allowed_clients': allowed_clients,
+                        'disallowed_clients': access_list.get('disallowed_clients', []),
+                        'blocked_hosts': access_list.get('blocked_hosts', [])
+                    }
+                    adguard._make_request('POST', '/access/set', json=access_data)
+                    logging.info(f"已从允许列表中移除过期VIP客户端ID: {clients_to_remove_from_list}")
+            except Exception as e:
+                logging.warning(f"从允许列表移除客户端ID失败: {str(e)}")
+                # 继续执行，不影响数据库删除
+            
+            # 删除数据库记录
+            db.session.delete(mapping)
+            
+            # 记录操作日志
+            operation_log = OperationLog(
+                user_id=user_id,
+                operation_type='AUTO_DELETE',
+                target_type='CLIENT',
+                target_id=client_name,
+                details=f'VIP过期自动删除客户端: {client_name}'
+            )
+            db.session.add(operation_log)
+        
+        # 提交数据库更改
+        db.session.commit()
+        
+        if clients_to_remove:
+            logging.info(f"用户 {user_id} VIP过期，已自动删除 {len(clients_to_remove)} 个客户端，保留主客户端")
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"自动删除过期VIP客户端失败: {str(e)}")
 
 
 @main.route('/dashboard')
@@ -168,7 +250,12 @@ def clients():
     """客户端管理页面
     
     显示用户的所有客户端及其详细信息
+    自动检查VIP状态，如果VIP已过期则移除除第一个客户端外的所有客户端
     """
+    # 检查VIP状态并自动移除过期客户端
+    if not current_user.is_vip():
+        remove_expired_vip_clients(current_user.id)
+    
     seo_config = get_page_seo('clients')
     structured_data = get_structured_data('clients')
     return render_template('main/clients.html', 
