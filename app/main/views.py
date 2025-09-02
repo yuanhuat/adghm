@@ -1786,8 +1786,10 @@ def api_create_client():
             # 记录操作日志
             operation_log = OperationLog(
                 user_id=current_user.id,
-                operation_type='create_client',
-                description=f'VIP用户创建新客户端: {client_name} ({client_id})'
+                operation_type='CREATE',
+                target_type='CLIENT',
+                target_id=client_id,
+                details=f'VIP用户创建新客户端: {client_name} ({client_id})'
             )
             db.session.add(operation_log)
             db.session.commit()

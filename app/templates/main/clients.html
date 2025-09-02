@@ -139,7 +139,6 @@
         }
         
         // 创建客户端模态框控制
-        {% if current_user.is_vip %}
         const createClientBtn = document.getElementById('createClientBtn');
         const createClientModal = document.getElementById('createClientModal');
         const closeModal = document.getElementById('closeModal');
@@ -202,7 +201,6 @@
                 });
             });
         }
-        {% endif %}
         
         // 点击菜单项后关闭菜单
         if (navToggle && navMenu) {
