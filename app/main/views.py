@@ -1697,11 +1697,19 @@ def api_create_client():
         
         client_name = data.get('client_name', '').strip()
         client_id = data.get('client_id', '').strip()
+        tags = data.get('tags', ['user_child'])  # 默认使用user_child标签
         
         if not client_name or not client_id:
             return jsonify({
                 'success': False,
                 'message': '客户端名称和客户端ID不能为空'
+            }), 400
+        
+        # 验证标签格式
+        if not isinstance(tags, list):
+            return jsonify({
+                'success': False,
+                'message': '标签格式错误'
             }), 400
         
         # 检查客户端名称是否已存在（同一用户下）
@@ -1730,6 +1738,9 @@ def api_create_client():
             # 使用与注册时相同的逻辑创建客户端
             client_ids = [client_id]  # 使用用户提供的客户端ID
             
+            # 根据标签设置客户端配置
+            parental_enabled = 'user_child' in tags  # 如果包含user_child标签，启用家长控制
+            
             # 创建AdGuardHome客户端，使用安全的默认配置
             client_response = adguard.create_client(
                 name=client_name,
@@ -1737,7 +1748,7 @@ def api_create_client():
                 use_global_settings=True,  # 使用全局设置
                 filtering_enabled=True,
                 safebrowsing_enabled=True,  # 启用安全浏览
-                parental_enabled=False,
+                parental_enabled=parental_enabled,  # 根据标签决定是否启用家长控制
                 safe_search={  # 启用安全搜索
                     "enabled": True,
                     "bing": True,
@@ -1748,6 +1759,7 @@ def api_create_client():
                     "youtube": True
                 },
                 use_global_blocked_services=True,  # 使用全局屏蔽服务设置
+                tags=tags,  # 传递标签
                 ignore_querylog=False,
                 ignore_statistics=False
             )

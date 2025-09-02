@@ -122,6 +122,7 @@
                         <input type="text" id="clientId" name="client_id" required placeholder="请输入客户端ID（如IP地址或设备标识）">
                         <small class="form-text">客户端ID用于标识设备，可以是IP地址或设备名称</small>
                     </div>
+                    <!-- 客户端标签选择功能已隐藏，VIP用户默认使用user_child标签 -->
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
                         <button type="submit" class="btn btn-primary">创建客户端</button>
@@ -190,7 +191,8 @@
                     },
                     body: JSON.stringify({
                         client_name: clientName,
-                        client_id: clientId
+                        client_id: clientId,
+                        tags: ['user_child']
                     })
                 })
                 .then(response => response.json())
