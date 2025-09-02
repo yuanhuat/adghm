@@ -1637,6 +1637,326 @@ def manage_ai_analysis_config():
             }), 500
 
 
+@admin.route('/vip-filter-rules')
+@login_required
+@admin_required
+def vip_filter_rules():
+    """VIP专属过滤规则管理页面"""
+    return render_template('admin/vip_filter_rules.html')
+
+
+@admin.route('/api/vip-filter-rules', methods=['GET'])
+@login_required
+@admin_required
+def get_vip_filter_rules():
+    """获取VIP专属过滤规则"""
+    try:
+        adguard_service = AdGuardService()
+        
+        # 获取过滤器状态，包含用户规则
+        response = adguard_service._make_request('GET', '/filtering/status')
+        
+        if not response:
+            return jsonify({
+                'success': False,
+                'error': 'AdGuard Home服务不可用'
+            }), 500
+        
+        # 解析规则，筛选出VIP专属规则（包含user_child标签的规则）
+        all_rules = response.get('user_rules', [])
+        vip_rules = []
+        
+        for rule in all_rules:
+            # 检查规则是否包含user_child标签
+            if '$ctag=user_child' in rule:
+                # 解析规则信息
+                rule_parts = rule.split(' ! ')
+                actual_rule = rule_parts[0].replace('$ctag=user_child', '').strip()
+                description = rule_parts[1] if len(rule_parts) > 1 else ''
+                
+                # 处理禁用的规则（以!开头）
+                enabled = True
+                if actual_rule.startswith('!'):
+                    enabled = False
+                    actual_rule = actual_rule[1:].strip()
+                
+                vip_rules.append({
+                    'rule': actual_rule,
+                    'description': description,
+                    'enabled': enabled
+                })
+        
+        return jsonify({
+            'success': True,
+            'rules': vip_rules
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/vip-filter-rules', methods=['POST'])
+@login_required
+@admin_required
+def add_vip_filter_rule():
+    """添加VIP专属过滤规则"""
+    try:
+        data = request.get_json()
+        rule = data.get('rule', '').strip()
+        description = data.get('description', '').strip()
+        enabled = data.get('enabled', True)
+        
+        if not rule:
+            return jsonify({
+                'success': False,
+                'error': '规则不能为空'
+            }), 400
+        
+        adguard_service = AdGuardService()
+        
+        # 获取过滤器状态，包含用户规则
+        response = adguard_service._make_request('GET', '/filtering/status')
+        
+        if not response:
+            return jsonify({
+                'success': False,
+                'error': 'AdGuard Home服务不可用'
+            }), 500
+        
+        current_rules = response.get('user_rules', [])
+        
+        # 构建新的VIP专属规则
+        vip_rule = f"{rule}$ctag=user_child"
+        if description:
+            vip_rule += f" ! {description}"
+        
+        # 如果规则被禁用，在前面添加!
+        if not enabled:
+            vip_rule = f"!{vip_rule}"
+        
+        # 检查规则是否已存在
+        rule_exists = False
+        for existing_rule in current_rules:
+            if rule in existing_rule and '$ctag=user_child' in existing_rule:
+                rule_exists = True
+                break
+        
+        if rule_exists:
+            return jsonify({
+                'success': False,
+                'error': '该规则已存在'
+            }), 400
+        
+        # 添加新规则
+        new_rules = current_rules + [vip_rule]
+        
+        # 更新规则
+        update_response = adguard_service._make_request('POST', '/filtering/set_rules', json={
+            'rules': new_rules
+        })
+        
+        if update_response is None:
+            return jsonify({
+                'success': False,
+                'error': '更新规则失败'
+            }), 500
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='add_vip_filter_rule',
+            target_type='FilterRule',
+            target_id=rule,
+            details=f'添加VIP专属过滤规则：{rule}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '规则添加成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/vip-filter-rules/<int:rule_index>', methods=['PUT'])
+@login_required
+@admin_required
+def update_vip_filter_rule(rule_index):
+    """更新VIP专属过滤规则"""
+    try:
+        data = request.get_json()
+        rule = data.get('rule', '').strip()
+        description = data.get('description', '').strip()
+        enabled = data.get('enabled', True)
+        
+        if not rule:
+            return jsonify({
+                'success': False,
+                'error': '规则不能为空'
+            }), 400
+        
+        adguard_service = AdGuardService()
+        
+        # 获取过滤器状态，包含用户规则
+        response = adguard_service._make_request('GET', '/filtering/status')
+        
+        if not response:
+            return jsonify({
+                'success': False,
+                'error': 'AdGuard Home服务不可用'
+            }), 500
+        
+        current_rules = response.get('user_rules', [])
+        
+        # 找到VIP专属规则
+        vip_rules = []
+        vip_rule_indices = []
+        
+        for i, existing_rule in enumerate(current_rules):
+            if '$ctag=user_child' in existing_rule:
+                vip_rules.append(existing_rule)
+                vip_rule_indices.append(i)
+        
+        if rule_index >= len(vip_rules):
+            return jsonify({
+                'success': False,
+                'error': '规则索引无效'
+            }), 400
+        
+        # 构建新的VIP专属规则
+        vip_rule = f"{rule}$ctag=user_child"
+        if description:
+            vip_rule += f" ! {description}"
+        
+        # 如果规则被禁用，在前面添加!
+        if not enabled:
+            vip_rule = f"!{vip_rule}"
+        
+        # 更新规则列表
+        actual_index = vip_rule_indices[rule_index]
+        current_rules[actual_index] = vip_rule
+        
+        # 更新规则
+        update_response = adguard_service._make_request('POST', '/filtering/set_rules', json={
+            'rules': current_rules
+        })
+        
+        if update_response is None:
+            return jsonify({
+                'success': False,
+                'error': '更新规则失败'
+            }), 500
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='update_vip_filter_rule',
+            target_type='FilterRule',
+            target_id=rule,
+            details=f'更新VIP专属过滤规则：{rule}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '规则更新成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin.route('/api/vip-filter-rules/<int:rule_index>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_vip_filter_rule(rule_index):
+    """删除VIP专属过滤规则"""
+    try:
+        adguard_service = AdGuardService()
+        
+        # 获取过滤器状态，包含用户规则
+        response = adguard_service._make_request('GET', '/filtering/status')
+        
+        if not response:
+            return jsonify({
+                'success': False,
+                'error': 'AdGuard Home服务不可用'
+            }), 500
+        
+        current_rules = response.get('user_rules', [])
+        
+        # 找到VIP专属规则
+        vip_rules = []
+        vip_rule_indices = []
+        
+        for i, existing_rule in enumerate(current_rules):
+            if '$ctag=user_child' in existing_rule:
+                vip_rules.append(existing_rule)
+                vip_rule_indices.append(i)
+        
+        if rule_index >= len(vip_rules):
+            return jsonify({
+                'success': False,
+                'error': '规则索引无效'
+            }), 400
+        
+        # 获取要删除的规则信息（用于日志）
+        rule_to_delete = vip_rules[rule_index]
+        
+        # 删除规则
+        actual_index = vip_rule_indices[rule_index]
+        current_rules.pop(actual_index)
+        
+        # 更新规则
+        update_response = adguard_service._make_request('POST', '/filtering/set_rules', json={
+            'rules': current_rules
+        })
+        
+        if update_response is None:
+            return jsonify({
+                'success': False,
+                'error': '删除规则失败'
+            }), 500
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='delete_vip_filter_rule',
+            target_type='FilterRule',
+            target_id=str(rule_index),
+            details=f'删除VIP专属过滤规则：{rule_to_delete}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '规则删除成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @admin.route('/vip-config', methods=['GET', 'POST'])
 @login_required
 @admin_required

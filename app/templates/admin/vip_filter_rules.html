@@ -1,0 +1,424 @@
+{% extends "admin/base.html" %}
+
+{% block title %}VIP专属过滤规则{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">VIP专属过滤规则</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">管理后台</a></li>
+        <li class="breadcrumb-item active">VIP专属过滤规则</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter me-1"></i>
+            VIP专属过滤规则管理
+            <button type="button" class="btn btn-primary btn-sm float-end" data-bs-toggle="modal" data-bs-target="#addRuleModal">
+                <i class="fas fa-plus"></i> 添加规则
+            </button>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>说明：</strong>VIP专属过滤规则将自动应用于所有带有 <code>user_child</code> 标签的客户端，主要用于家长控制和儿童保护。
+            </div>
+            
+            <!-- 规则列表 -->
+            <div id="rulesContainer">
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加规则模态框 -->
+<div class="modal fade" id="addRuleModal" tabindex="-1" aria-labelledby="addRuleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRuleModalLabel">添加VIP专属过滤规则</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <div class="mb-3">
+                        <label for="ruleType" class="form-label">规则类型</label>
+                        <select class="form-select" id="ruleType" required>
+                            <option value="">请选择规则类型</option>
+                            <option value="block">阻止域名</option>
+                            <option value="allow">允许域名</option>
+                            <option value="custom">自定义规则</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ruleDomain" class="form-label">域名/规则</label>
+                        <input type="text" class="form-control" id="ruleDomain" placeholder="例如：example.com 或 ||example.com^" required>
+                        <div class="form-text">支持通配符和AdGuard语法</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ruleDescription" class="form-label">规则描述</label>
+                        <input type="text" class="form-control" id="ruleDescription" placeholder="简要描述此规则的用途">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ruleEnabled" checked>
+                            <label class="form-check-label" for="ruleEnabled">
+                                启用此规则
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="addRule()">添加规则</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑规则模态框 -->
+<div class="modal fade" id="editRuleModal" tabindex="-1" aria-labelledby="editRuleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRuleModalLabel">编辑VIP专属过滤规则</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRuleForm">
+                    <input type="hidden" id="editRuleIndex">
+                    <div class="mb-3">
+                        <label for="editRuleType" class="form-label">规则类型</label>
+                        <select class="form-select" id="editRuleType" required>
+                            <option value="block">阻止域名</option>
+                            <option value="allow">允许域名</option>
+                            <option value="custom">自定义规则</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRuleDomain" class="form-label">域名/规则</label>
+                        <input type="text" class="form-control" id="editRuleDomain" required>
+                        <div class="form-text">支持通配符和AdGuard语法</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRuleDescription" class="form-label">规则描述</label>
+                        <input type="text" class="form-control" id="editRuleDescription">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editRuleEnabled">
+                            <label class="form-check-label" for="editRuleEnabled">
+                                启用此规则
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="updateRule()">更新规则</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let vipRules = [];
+
+// 页面加载时获取规则
+$(document).ready(function() {
+    loadVipRules();
+});
+
+// 加载VIP专属过滤规则
+function loadVipRules() {
+    $.ajax({
+        url: '/admin/api/vip-filter-rules',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                vipRules = response.rules || [];
+                renderRules();
+            } else {
+                showAlert('error', '加载规则失败：' + (response.error || '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert('error', '加载规则失败：' + error);
+        }
+    });
+}
+
+// 渲染规则列表
+function renderRules() {
+    const container = $('#rulesContainer');
+    
+    if (vipRules.length === 0) {
+        container.html(`
+            <div class="text-center py-4">
+                <i class="fas fa-filter fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">暂无VIP专属过滤规则</h5>
+                <p class="text-muted">点击上方"添加规则"按钮开始创建规则</p>
+            </div>
+        `);
+        return;
+    }
+    
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>规则</th>
+                        <th>类型</th>
+                        <th>描述</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    vipRules.forEach((rule, index) => {
+        const ruleType = getRuleType(rule.rule);
+        const statusBadge = rule.enabled ? 
+            '<span class="badge bg-success">启用</span>' : 
+            '<span class="badge bg-secondary">禁用</span>';
+        
+        html += `
+            <tr>
+                <td><code>${escapeHtml(rule.rule)}</code></td>
+                <td><span class="badge bg-${getRuleTypeBadgeClass(ruleType)}">${getRuleTypeText(ruleType)}</span></td>
+                <td>${escapeHtml(rule.description || '-')}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editRule(${index})" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="deleteRule(${index})" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.html(html);
+}
+
+// 添加规则
+function addRule() {
+    const type = $('#ruleType').val();
+    const domain = $('#ruleDomain').val().trim();
+    const description = $('#ruleDescription').val().trim();
+    const enabled = $('#ruleEnabled').is(':checked');
+    
+    if (!type || !domain) {
+        showAlert('warning', '请填写完整的规则信息');
+        return;
+    }
+    
+    const rule = generateRule(type, domain);
+    
+    const newRule = {
+        rule: rule,
+        description: description,
+        enabled: enabled
+    };
+    
+    $.ajax({
+        url: '/admin/api/vip-filter-rules',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(newRule),
+        success: function(response) {
+            if (response.success) {
+                $('#addRuleModal').modal('hide');
+                $('#addRuleForm')[0].reset();
+                showAlert('success', '规则添加成功');
+                loadVipRules();
+            } else {
+                showAlert('error', '添加规则失败：' + (response.error || '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert('error', '添加规则失败：' + error);
+        }
+    });
+}
+
+// 编辑规则
+function editRule(index) {
+    const rule = vipRules[index];
+    if (!rule) return;
+    
+    $('#editRuleIndex').val(index);
+    $('#editRuleDomain').val(rule.rule);
+    $('#editRuleDescription').val(rule.description || '');
+    $('#editRuleEnabled').prop('checked', rule.enabled);
+    
+    // 根据规则内容推断类型
+    const ruleType = getRuleType(rule.rule);
+    $('#editRuleType').val(ruleType);
+    
+    $('#editRuleModal').modal('show');
+}
+
+// 更新规则
+function updateRule() {
+    const index = parseInt($('#editRuleIndex').val());
+    const type = $('#editRuleType').val();
+    const domain = $('#editRuleDomain').val().trim();
+    const description = $('#editRuleDescription').val().trim();
+    const enabled = $('#editRuleEnabled').is(':checked');
+    
+    if (!type || !domain) {
+        showAlert('warning', '请填写完整的规则信息');
+        return;
+    }
+    
+    const rule = generateRule(type, domain);
+    
+    const updatedRule = {
+        rule: rule,
+        description: description,
+        enabled: enabled
+    };
+    
+    $.ajax({
+        url: `/admin/api/vip-filter-rules/${index}`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(updatedRule),
+        success: function(response) {
+            if (response.success) {
+                $('#editRuleModal').modal('hide');
+                showAlert('success', '规则更新成功');
+                loadVipRules();
+            } else {
+                showAlert('error', '更新规则失败：' + (response.error || '未知错误'));
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert('error', '更新规则失败：' + error);
+        }
+    });
+}
+
+// 删除规则
+function deleteRule(index) {
+    const rule = vipRules[index];
+    if (!rule) return;
+    
+    if (confirm(`确定要删除规则 "${rule.rule}" 吗？`)) {
+        $.ajax({
+            url: `/admin/api/vip-filter-rules/${index}`,
+            method: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '规则删除成功');
+                    loadVipRules();
+                } else {
+                    showAlert('error', '删除规则失败：' + (response.error || '未知错误'));
+                }
+            },
+            error: function(xhr, status, error) {
+                showAlert('error', '删除规则失败：' + error);
+            }
+        });
+    }
+}
+
+// 生成规则
+function generateRule(type, domain) {
+    switch (type) {
+        case 'block':
+            return domain.startsWith('||') ? domain : `||${domain}^`;
+        case 'allow':
+            return domain.startsWith('@@') ? domain : `@@||${domain}^`;
+        case 'custom':
+        default:
+            return domain;
+    }
+}
+
+// 获取规则类型
+function getRuleType(rule) {
+    if (rule.startsWith('@@')) {
+        return 'allow';
+    } else if (rule.startsWith('||') && rule.endsWith('^')) {
+        return 'block';
+    } else {
+        return 'custom';
+    }
+}
+
+// 获取规则类型文本
+function getRuleTypeText(type) {
+    switch (type) {
+        case 'block': return '阻止';
+        case 'allow': return '允许';
+        case 'custom': return '自定义';
+        default: return '未知';
+    }
+}
+
+// 获取规则类型徽章样式
+function getRuleTypeBadgeClass(type) {
+    switch (type) {
+        case 'block': return 'danger';
+        case 'allow': return 'success';
+        case 'custom': return 'info';
+        default: return 'secondary';
+    }
+}
+
+// 显示提示信息
+function showAlert(type, message) {
+    const alertClass = type === 'error' ? 'danger' : type;
+    const alertHtml = `
+        <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+            ${escapeHtml(message)}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    $('.card-body').prepend(alertHtml);
+    
+    // 3秒后自动关闭
+    setTimeout(() => {
+        $('.alert').alert('close');
+    }, 3000);
+}
+
+// HTML转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
