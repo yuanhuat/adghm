@@ -505,6 +505,25 @@
     border: 1px solid #dee2e6;
 }
 
+.client-selector-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.client-selector-container label {
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: block;
+    color: #495057;
+}
+
+.dns-config-display {
+    margin-top: 15px;
+}
+
 @media (max-width: 768px) {
     .apple-config-item {
         flex-direction: column;
@@ -753,66 +772,48 @@ function updateDnsConfig() {
             
             let hasConfig = false;
             
-            // 遍历所有客户端配置
-            if (data.clients && data.clients.length > 0) {
-                data.clients.forEach((client, index) => {
-                    // 如果有多个客户端，显示客户端名称
-                    if (data.clients.length > 1) {
-                        html += `<div class="client-section"><h5 class="client-title"><i class="fas fa-desktop"></i> ${client.client_name} (${client.client_id})</h5>`;
-                    }
+            // 检查是否有客户端配置
+            if (!data.clients || data.clients.length === 0) {
+                html = '<p class="no-config">暂无可用的DNS配置信息</p>';
+                contentElement.innerHTML = html;
+                return;
+            }
+            
+            // 检查是否有可用的DNS配置
+            const availableClients = data.clients.filter(client => {
+                const hasDoQ = data.doq_enabled && client.doq_server;
+                const hasDoT = data.dot_enabled && client.dot_server;
+                const hasDoH = data.doh_enabled && client.doh_server;
+                return hasDoQ || hasDoT || hasDoH;
+            });
+            
+            if (availableClients.length > 0) {
+                hasConfig = true;
+                
+                // 如果有多个客户端，显示选择器
+                if (availableClients.length > 1) {
+                    html += `
+                        <div class="client-selector-container">
+                            <label for="dns-client-select"><i class="fas fa-desktop"></i> 选择客户端配置：</label>
+                            <select id="dns-client-select" class="form-control" onchange="updateDnsConfigForClient()">
+                                <option value="">请选择客户端</option>
+                    `;
                     
-                    // DNS-over-QUIC配置
-                    if (data.doq_enabled && client.doq_server) {
-                        hasConfig = true;
-                        html += `
-                            <div class="dns-config-item">
-                                <h4><i class="fas fa-bolt" style="color: #007bff;"></i> DNS-over-QUIC (DoQ)</h4>
-                                <div class="dns-server-info">
-                                    <p><strong>服务器：</strong> <code>quic://${client.doq_server}:${data.doq_port}</code></p>
-                                    ${data.doq_description ? `<p class="dns-desc">${data.doq_description}</p>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }
+                    availableClients.forEach(client => {
+                        html += `<option value="${client.client_id}">${client.client_name} (${client.client_id})</option>`;
+                    });
                     
-                    // DNS-over-TLS配置
-                    if (data.dot_enabled && client.dot_server) {
-                        hasConfig = true;
-                        html += `
-                            <div class="dns-config-item">
-                                <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
-                                <div class="dns-server-info">
-                                    <p><strong>服务器：</strong> <code>tls://${client.dot_server}:${data.dot_port}</code></p>
-                                    ${data.dot_description ? `<p class="dns-desc">${data.dot_description}</p>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    // DNS-over-HTTPS配置
-                    if (data.doh_enabled && client.doh_server) {
-                        hasConfig = true;
-                        const dohUrl = `https://${client.doh_server}${data.doh_port && data.doh_port != 443 ? ':' + data.doh_port : ''}${client.doh_path || '/dns-query'}`;
-                        html += `
-                            <div class="dns-config-item">
-                                <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
-                                <div class="dns-server-info">
-                                    <p><strong>服务器：</strong> <code>${dohUrl}</code></p>
-                                    ${data.doh_description ? `<p class="dns-desc">${data.doh_description}</p>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    // 如果有多个客户端，关闭客户端区域
-                    if (data.clients.length > 1) {
-                        html += `</div>`;
-                        // 如果不是最后一个客户端，添加分隔线
-                        if (index < data.clients.length - 1) {
-                            html += `<hr class="client-separator">`;
-                        }
-                    }
-                });
+                    html += `
+                            </select>
+                        </div>
+                        <div id="dns-config-display" class="dns-config-display" style="display: none;">
+                        </div>
+                    `;
+                } else {
+                    // 只有一个客户端，直接显示
+                    const client = availableClients[0];
+                    html += generateDnsConfigItems(client, data);
+                }
             }
             
             if (!hasConfig) {
@@ -832,6 +833,81 @@ function updateDnsConfig() {
             contentElement.innerHTML = '<p class="error-message">加载DNS配置信息失败</p>';
         }
     });
+}
+
+// 生成DNS配置项的HTML
+function generateDnsConfigItems(client, data) {
+    let html = '';
+    
+    // DNS-over-QUIC配置
+    if (data.doq_enabled && client.doq_server) {
+        html += `
+            <div class="dns-config-item">
+                <h4><i class="fas fa-bolt" style="color: #007bff;"></i> DNS-over-QUIC (DoQ)</h4>
+                <div class="dns-server-info">
+                    <p><strong>服务器：</strong> <code>quic://${client.doq_server}:${data.doq_port}</code></p>
+                    ${data.doq_description ? `<p class="dns-desc">${data.doq_description}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // DNS-over-TLS配置
+    if (data.dot_enabled && client.dot_server) {
+        html += `
+            <div class="dns-config-item">
+                <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
+                <div class="dns-server-info">
+                    <p><strong>服务器：</strong> <code>tls://${client.dot_server}:${data.dot_port}</code></p>
+                    ${data.dot_description ? `<p class="dns-desc">${data.dot_description}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // DNS-over-HTTPS配置
+    if (data.doh_enabled && client.doh_server) {
+        const dohUrl = `https://${client.doh_server}${data.doh_port && data.doh_port != 443 ? ':' + data.doh_port : ''}${client.doh_path || '/dns-query'}`;
+        html += `
+            <div class="dns-config-item">
+                <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
+                <div class="dns-server-info">
+                    <p><strong>服务器：</strong> <code>${dohUrl}</code></p>
+                    ${data.doh_description ? `<p class="dns-desc">${data.doh_description}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// 根据选择的客户端更新DNS配置显示
+function updateDnsConfigForClient() {
+    const select = document.getElementById('dns-client-select');
+    const displayDiv = document.getElementById('dns-config-display');
+    
+    if (!select || !displayDiv || !window.currentDnsData) {
+        return;
+    }
+    
+    const selectedClientId = select.value;
+    
+    if (!selectedClientId) {
+        displayDiv.style.display = 'none';
+        return;
+    }
+    
+    // 查找选中的客户端
+    const selectedClient = window.currentDnsData.clients.find(client => client.client_id === selectedClientId);
+    
+    if (selectedClient) {
+        const html = generateDnsConfigItems(selectedClient, window.currentDnsData);
+        displayDiv.innerHTML = html;
+        displayDiv.style.display = 'block';
+    } else {
+        displayDiv.style.display = 'none';
+    }
 }
 
 // 更新苹果配置文件
