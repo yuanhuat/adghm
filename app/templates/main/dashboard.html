@@ -536,28 +536,70 @@
 
 .client-selector-container select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 20px 14px 16px;
     border: 2px solid #e9ecef;
-    border-radius: 8px;
-    background: #ffffff;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
     font-size: 14px;
     color: #495057;
-    transition: all 0.3s ease;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2328a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>');
     background-repeat: no-repeat;
     background-position: right 12px center;
-    background-size: 12px;
+    background-size: 16px;
 }
 
 .client-selector-container select:focus {
     outline: none;
     border-color: #28a745;
-    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f8f0 100%);
 }
 
 .client-selector-container select:hover {
     border-color: #28a745;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f8f0 100%);
+}
+
+.client-selector-container select option {
+    padding: 14px 16px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.client-selector-container select option:hover {
+    background: linear-gradient(145deg, #e8f5e8 0%, #f0f8f0 100%);
+    color: #28a745;
+    font-weight: 600;
+    transform: scale(1.02);
+}
+
+.client-selector-container select option:checked,
+.client-selector-container select option:selected {
+    background: linear-gradient(145deg, #28a745 0%, #20c997 100%);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.client-selector-container select option:disabled {
+    background: linear-gradient(145deg, #e9ecef 0%, #f8f9fa 100%);
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .apple-config-selector {
@@ -591,28 +633,70 @@
 
 .apple-config-selector select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 20px 14px 16px;
     border: 2px solid #e9ecef;
-    border-radius: 8px;
-    background: #ffffff;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
     font-size: 14px;
     color: #495057;
-    transition: all 0.3s ease;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23007bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>');
     background-repeat: no-repeat;
     background-position: right 12px center;
-    background-size: 12px;
+    background-size: 16px;
 }
 
 .apple-config-selector select:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f4ff 100%);
 }
 
 .apple-config-selector select:hover {
     border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    background: linear-gradient(145deg, #ffffff 0%, #f0f4ff 100%);
+}
+
+.apple-config-selector select option {
+    padding: 14px 16px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    color: #495057;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.apple-config-selector select option:hover {
+    background: linear-gradient(145deg, #e8f2ff 0%, #f0f4ff 100%);
+    color: #007bff;
+    font-weight: 600;
+    transform: scale(1.02);
+}
+
+.apple-config-selector select option:checked,
+.apple-config-selector select option:selected {
+    background: linear-gradient(145deg, #007bff 0%, #0056b3 100%);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.apple-config-selector select option:disabled {
+    background: linear-gradient(145deg, #e9ecef 0%, #f8f9fa 100%);
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 .dns-config-display {
