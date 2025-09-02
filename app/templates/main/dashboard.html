@@ -818,50 +818,80 @@ function updateAppleConfig(dnsData) {
         return;
     }
     
-    // 检查是否有可用的DNS配置
-    const hasDoH = dnsData.doh_enabled && dnsData.doh_server && dnsData.apple_doh_config_enabled;
-    const hasDoT = dnsData.dot_enabled && dnsData.dot_server && dnsData.apple_dot_config_enabled;
+    // 检查是否有客户端配置
+    if (!dnsData.clients || dnsData.clients.length === 0) {
+        html = '<p class="no-config">暂无可用的DNS配置，请联系管理员设置</p>';
+        appleContentElement.innerHTML = html;
+        return;
+    }
     
-    if (hasDoH || hasDoT) {
-        hasConfig = true;
-        html += '<div class="apple-config-items">';
-        
-        if (hasDoH) {
-            const dohHost = dnsData.doh_server || 'localhost';
-            html += `
-                <div class="apple-config-item">
-                    <div class="config-info">
-                        <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
-                        <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+    // 为每个客户端生成苹果配置
+    dnsData.clients.forEach((client, index) => {
+        const hasDoH = dnsData.doh_enabled && client.doh_server && dnsData.apple_doh_config_enabled;
+        const hasDoT = dnsData.dot_enabled && client.dot_server && dnsData.apple_dot_config_enabled;
+    
+        if (hasDoH || hasDoT) {
+            hasConfig = true;
+            
+            // 如果有多个客户端，显示客户端名称
+            if (dnsData.clients.length > 1) {
+                html += `<div class="client-section"><h5 class="client-title"><i class="fas fa-mobile-alt"></i> ${client.client_name} (${client.client_id})</h5>`;
+            }
+            
+            html += '<div class="apple-config-items">';
+            
+            if (hasDoH) {
+                // 从包含客户端ID的服务器地址中提取原始域名
+                const dohServerWithClientId = client.doh_server || 'localhost';
+                const dohHost = dohServerWithClientId.includes('.') ? 
+                    dohServerWithClientId.substring(dohServerWithClientId.indexOf('.') + 1) : 
+                    dohServerWithClientId;
+                html += `
+                    <div class="apple-config-item">
+                        <div class="config-info">
+                            <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
+                            <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                        </div>
+                        <a href="/api/apple/doh.mobileconfig?host=${encodeURIComponent(dohHost)}" class="btn btn-primary btn-download" download>
+                            <i class="fas fa-download"></i> 下载配置文件
+                        </a>
                     </div>
-                    <a href="/api/apple/doh.mobileconfig?host=${encodeURIComponent(dohHost)}" class="btn btn-primary btn-download" download>
-                        <i class="fas fa-download"></i> 下载配置文件
-                    </a>
-                </div>
-            `;
-        }
-        
-        if (hasDoT) {
-            // 从包含客户端ID的服务器地址中提取原始域名
-            const dotServerWithClientId = dnsData.dot_server || 'localhost';
-            // 如果服务器地址包含客户端ID，提取原始域名部分
-            const dotHost = dotServerWithClientId.includes('.') ? 
-                dotServerWithClientId.substring(dotServerWithClientId.indexOf('.') + 1) : 
-                dotServerWithClientId;
-            html += `
-                <div class="apple-config-item">
-                    <div class="config-info">
-                        <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
-                        <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                `;
+            }
+            
+            if (hasDoT) {
+                // 从包含客户端ID的服务器地址中提取原始域名
+                const dotServerWithClientId = client.dot_server || 'localhost';
+                const dotHost = dotServerWithClientId.includes('.') ? 
+                    dotServerWithClientId.substring(dotServerWithClientId.indexOf('.') + 1) : 
+                    dotServerWithClientId;
+                html += `
+                    <div class="apple-config-item">
+                        <div class="config-info">
+                            <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
+                            <p>适用于 iOS 14+ 和 macOS Big Sur+</p>
+                        </div>
+                        <a href="/api/apple/dot.mobileconfig?host=${encodeURIComponent(dotHost)}" class="btn btn-primary btn-download" download>
+                            <i class="fas fa-download"></i> 下载配置文件
+                        </a>
                     </div>
-                    <a href="/api/apple/dot.mobileconfig?host=${encodeURIComponent(dotHost)}" class="btn btn-primary btn-download" download>
-                        <i class="fas fa-download"></i> 下载配置文件
-                    </a>
-                </div>
-            `;
+                `;
+            }
+            
+            html += '</div>';
+            
+            // 如果有多个客户端，关闭客户端区域
+            if (dnsData.clients.length > 1) {
+                html += `</div>`;
+                // 如果不是最后一个客户端，添加分隔线
+                if (index < dnsData.clients.length - 1) {
+                    html += `<hr class="client-separator">`;
+                }
+            }
         }
-        
-        html += '</div>';
+    });
+    
+    if (hasConfig) {
         html += '<div class="apple-config-note">';
         html += '<p><i class="fas fa-info-circle"></i> <strong>使用说明：</strong></p>';
         html += '<ol>';
@@ -871,9 +901,7 @@ function updateAppleConfig(dnsData) {
         html += '<li>安装完成后，您的设备将自动使用AdGuard Home的DNS服务</li>';
         html += '</ol>';
         html += '</div>';
-    }
-    
-    if (!hasConfig) {
+    } else {
         html = '<p class="no-config">暂无可用的DNS配置，请联系管理员设置</p>';
     }
     
