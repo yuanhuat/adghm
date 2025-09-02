@@ -507,17 +507,112 @@
 
 .client-selector-container {
     margin-bottom: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
     border-left: 4px solid #28a745;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.client-selector-container:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .client-selector-container label {
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     display: block;
     color: #495057;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.client-selector-container label i {
+    margin-right: 8px;
+    color: #28a745;
+}
+
+.client-selector-container select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 14px;
+    color: #495057;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+.client-selector-container select:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.client-selector-container select:hover {
+    border-color: #28a745;
+}
+
+.apple-config-selector {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.apple-config-selector:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.apple-config-selector label {
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: block;
+    color: #495057;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.apple-config-selector label i {
+    margin-right: 8px;
+    color: #007bff;
+}
+
+.apple-config-selector select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 14px;
+    color: #495057;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+.apple-config-selector select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.apple-config-selector select:hover {
+    border-color: #007bff;
 }
 
 .dns-config-display {
@@ -945,7 +1040,7 @@ function updateAppleConfig(dnsData) {
         // 如果有多个客户端，显示选择器
         if (availableClients.length > 1) {
             html += `
-                <div class="client-selector-container">
+                <div class="apple-config-selector">
                     <label for="apple-client-select"><i class="fas fa-mobile-alt"></i> 选择客户端配置：</label>
                     <select id="apple-client-select" class="form-control" onchange="updateAppleConfigForClient()">
                         <option value="">请选择客户端</option>
