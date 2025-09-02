@@ -722,47 +722,66 @@ function updateDnsConfig() {
             
             let hasConfig = false;
             
-            // DNS-over-QUIC配置
-            if (data.doq_enabled && data.doq_server) {
-                hasConfig = true;
-                html += `
-                    <div class="dns-config-item">
-                        <h4><i class="fas fa-bolt" style="color: #007bff;"></i> DNS-over-QUIC (DoQ)</h4>
-                        <div class="dns-server-info">
-                            <p><strong>服务器：</strong> <code>quic://${data.doq_server}:${data.doq_port}</code></p>
-                            ${data.doq_description ? `<p class="dns-desc">${data.doq_description}</p>` : ''}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // DNS-over-TLS配置
-            if (data.dot_enabled && data.dot_server) {
-                hasConfig = true;
-                html += `
-                    <div class="dns-config-item">
-                        <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
-                        <div class="dns-server-info">
-                            <p><strong>服务器：</strong> <code>tls://${data.dot_server}:${data.dot_port}</code></p>
-                            ${data.dot_description ? `<p class="dns-desc">${data.dot_description}</p>` : ''}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // DNS-over-HTTPS配置
-            if (data.doh_enabled && data.doh_server) {
-                hasConfig = true;
-                const dohUrl = `https://${data.doh_server}${data.doh_port && data.doh_port != 443 ? ':' + data.doh_port : ''}${data.doh_path || '/dns-query'}`;
-                html += `
-                    <div class="dns-config-item">
-                        <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
-                        <div class="dns-server-info">
-                            <p><strong>服务器：</strong> <code>${dohUrl}</code></p>
-                            ${data.doh_description ? `<p class="dns-desc">${data.doh_description}</p>` : ''}
-                        </div>
-                    </div>
-                `;
+            // 遍历所有客户端配置
+            if (data.clients && data.clients.length > 0) {
+                data.clients.forEach((client, index) => {
+                    // 如果有多个客户端，显示客户端名称
+                    if (data.clients.length > 1) {
+                        html += `<div class="client-section"><h5 class="client-title"><i class="fas fa-desktop"></i> ${client.client_name} (${client.client_id})</h5>`;
+                    }
+                    
+                    // DNS-over-QUIC配置
+                    if (data.doq_enabled && client.doq_server) {
+                        hasConfig = true;
+                        html += `
+                            <div class="dns-config-item">
+                                <h4><i class="fas fa-bolt" style="color: #007bff;"></i> DNS-over-QUIC (DoQ)</h4>
+                                <div class="dns-server-info">
+                                    <p><strong>服务器：</strong> <code>quic://${client.doq_server}:${data.doq_port}</code></p>
+                                    ${data.doq_description ? `<p class="dns-desc">${data.doq_description}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // DNS-over-TLS配置
+                    if (data.dot_enabled && client.dot_server) {
+                        hasConfig = true;
+                        html += `
+                            <div class="dns-config-item">
+                                <h4><i class="fas fa-shield-alt" style="color: #28a745;"></i> DNS-over-TLS (DoT)</h4>
+                                <div class="dns-server-info">
+                                    <p><strong>服务器：</strong> <code>tls://${client.dot_server}:${data.dot_port}</code></p>
+                                    ${data.dot_description ? `<p class="dns-desc">${data.dot_description}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // DNS-over-HTTPS配置
+                    if (data.doh_enabled && client.doh_server) {
+                        hasConfig = true;
+                        const dohUrl = `https://${client.doh_server}${data.doh_port && data.doh_port != 443 ? ':' + data.doh_port : ''}${client.doh_path || '/dns-query'}`;
+                        html += `
+                            <div class="dns-config-item">
+                                <h4><i class="fas fa-globe" style="color: #17a2b8;"></i> DNS-over-HTTPS (DoH)</h4>
+                                <div class="dns-server-info">
+                                    <p><strong>服务器：</strong> <code>${dohUrl}</code></p>
+                                    ${data.doh_description ? `<p class="dns-desc">${data.doh_description}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // 如果有多个客户端，关闭客户端区域
+                    if (data.clients.length > 1) {
+                        html += `</div>`;
+                        // 如果不是最后一个客户端，添加分隔线
+                        if (index < data.clients.length - 1) {
+                            html += `<hr class="client-separator">`;
+                        }
+                    }
+                });
             }
             
             if (!hasConfig) {

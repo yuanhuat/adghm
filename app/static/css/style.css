@@ -2700,3 +2700,58 @@ tr:hover {
         color: #8e8e93;
     }
 }
+
+/* 多客户端DNS配置样式 */
+.client-section {
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.client-title {
+    color: #5a5c69;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e3e6f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.client-title i {
+    color: #858796;
+    font-size: 14px;
+}
+
+.client-separator {
+    border: none;
+    border-top: 2px solid #e3e6f0;
+    margin: 25px 0;
+    opacity: 0.6;
+}
+
+/* 当只有一个客户端时，保持原有样式 */
+.dns-config-content:has(.client-section) .dns-config-item {
+    margin-left: 0;
+}
+
+/* 响应式设计 - 多客户端 */
+@media (max-width: 768px) {
+    .client-section {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .client-title {
+        font-size: 14px;
+    }
+    
+    .client-separator {
+        margin: 20px 0;
+    }
+}

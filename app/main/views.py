@@ -812,9 +812,10 @@ def api_dns_config():
     
     返回JSON格式的DNS配置数据，用于在用户主页显示DNS-over-QUIC和DNS-over-TLS配置
     服务器地址格式为：客户端ID.管理员设置的域名
+    支持显示用户所有客户端的DNS配置
     
     Returns:
-        JSON: 包含DNS配置信息的数据
+        JSON: 包含DNS配置信息的数据，包括所有客户端的配置
     """
     try:
         # 获取DNS配置
@@ -837,62 +838,65 @@ def api_dns_config():
                 'doh_server': '',
                 'doh_port': 443,
                 'doh_path': '/dns-query',
-                'doh_description': ''
+                'doh_description': '',
+                'clients': []
             })
         
-        # 获取用户的客户端映射，使用第一个客户端ID
-        client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
-        client_id = None
+        # 获取用户的所有客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        clients_config = []
         
-        if client_mapping and client_mapping.client_ids:
-            # 使用第一个客户端ID
-            client_id = client_mapping.client_ids[0] if client_mapping.client_ids else None
+        if client_mappings:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_config = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'doq_server': '',
+                            'dot_server': '',
+                            'doh_server': '',
+                            'doh_path': ''
+                        }
+                        
+                        # 构建该客户端的DNS服务器地址
+                        if config.doq_enabled and config.doq_server:
+                            client_config['doq_server'] = f"{client_id}.{config.doq_server}"
+                        
+                        if config.dot_enabled and config.dot_server:
+                            client_config['dot_server'] = f"{client_id}.{config.dot_server}"
+                        
+                        if config.doh_enabled and config.doh_server:
+                            client_config['doh_server'] = f"{client_id}.{config.doh_server}"
+                            client_config['doh_path'] = config.doh_path or '/dns-query'
+                        
+                        clients_config.append(client_config)
         
-        # 构建用户专属的服务器地址
-        user_doq_server = ''
-        user_dot_server = ''
-        user_doh_server = ''
-        user_doh_path = ''
-        
-        if client_id:
-            if config.doq_enabled and config.doq_server:
-                user_doq_server = f"{client_id}.{config.doq_server}"
-            
-            if config.dot_enabled and config.dot_server:
-                user_dot_server = f"{client_id}.{config.dot_server}"
-            
-            if config.doh_enabled and config.doh_server:
-                # DoH服务器地址包含客户端ID作为子域名
-                user_doh_server = f"{client_id}.{config.doh_server}"
-                # 路径不包含客户端ID
-                user_doh_path = config.doh_path or '/dns-query'
-        else:
-            # 如果没有客户端ID，使用原始服务器地址
-            if config.doq_enabled and config.doq_server:
-                user_doq_server = config.doq_server
-            
-            if config.dot_enabled and config.dot_server:
-                user_dot_server = config.dot_server
-            
-            if config.doh_enabled and config.doh_server:
-                user_doh_server = config.doh_server
+        # 如果没有客户端，提供一个默认配置（使用原始服务器地址）
+        if not clients_config:
+            default_config = {
+                'client_id': '您的客户端ID',
+                'client_name': '默认客户端',
+                'doq_server': config.doq_server if config.doq_enabled else '',
+                'dot_server': config.dot_server if config.dot_enabled else '',
+                'doh_server': config.doh_server if config.doh_enabled else '',
+                'doh_path': config.doh_path or '/dns-query' if config.doh_enabled else ''
+            }
+            clients_config.append(default_config)
         
         return jsonify({
             'display_title': config.display_title or 'DNS配置信息',
             'display_description': config.display_description or '',
             'doq_enabled': config.doq_enabled,
-            'doq_server': user_doq_server,
             'doq_port': config.doq_port,
             'doq_description': config.doq_description or '',
             'dot_enabled': config.dot_enabled,
-            'dot_server': user_dot_server,
             'dot_port': config.dot_port,
             'dot_description': config.dot_description or '',
             'doh_enabled': config.doh_enabled,
-            'doh_server': user_doh_server,
             'doh_port': config.doh_port,
-            'doh_path': user_doh_path or (config.doh_path or '/dns-query'),
             'doh_description': config.doh_description or '',
+            'clients': clients_config,
             # 添加苹果配置控制字段
             'apple_config_enabled': config.apple_config_enabled,
             'apple_doh_config_enabled': config.apple_doh_config_enabled,
