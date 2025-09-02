@@ -1674,3 +1674,146 @@ def robots():
         return send_from_directory('static', 'robots.txt', mimetype='text/plain')
     except FileNotFoundError:
         return Response('Robots.txt not found', status=404)
+
+
+@main.route('/api/clients/create', methods=['POST'])
+@login_required
+def api_create_client():
+    """VIP用户创建新客户端API"""
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'message': '只有VIP用户才能创建新客户端'
+            }), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        client_name = data.get('client_name', '').strip()
+        client_id = data.get('client_id', '').strip()
+        
+        if not client_name or not client_id:
+            return jsonify({
+                'success': False,
+                'message': '客户端名称和客户端ID不能为空'
+            }), 400
+        
+        # 检查客户端名称是否已存在（同一用户下）
+        existing_mapping = ClientMapping.query.filter_by(
+            user_id=current_user.id,
+            client_name=client_name
+        ).first()
+        
+        if existing_mapping:
+            return jsonify({
+                'success': False,
+                'message': '客户端名称已存在，请使用其他名称'
+            }), 400
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        # 检查AdGuard连接
+        if not adguard.check_connection():
+            return jsonify({
+                'success': False,
+                'message': '无法连接到AdGuardHome服务器，请联系管理员'
+            }), 500
+        
+        try:
+            # 使用与注册时相同的逻辑创建客户端
+            client_ids = [client_id]  # 使用用户提供的客户端ID
+            
+            # 创建AdGuardHome客户端，使用安全的默认配置
+            client_response = adguard.create_client(
+                name=client_name,
+                ids=client_ids,
+                use_global_settings=True,  # 使用全局设置
+                filtering_enabled=True,
+                safebrowsing_enabled=True,  # 启用安全浏览
+                parental_enabled=False,
+                safe_search={  # 启用安全搜索
+                    "enabled": True,
+                    "bing": True,
+                    "duckduckgo": True,
+                    "google": True,
+                    "pixabay": True,
+                    "yandex": True,
+                    "youtube": True
+                },
+                use_global_blocked_services=True,  # 使用全局屏蔽服务设置
+                ignore_querylog=False,
+                ignore_statistics=False
+            )
+            
+            # 将客户端加入允许列表
+            try:
+                # 获取当前的访问控制列表
+                access_list = adguard._make_request('GET', '/access/list')
+                allowed_clients = access_list.get('allowed_clients', [])
+                
+                # 将新客户端ID添加到允许列表
+                if client_id not in allowed_clients:
+                    allowed_clients.append(client_id)
+                    
+                    # 更新访问控制列表
+                    access_data = {
+                        'allowed_clients': allowed_clients,
+                        'disallowed_clients': access_list.get('disallowed_clients', []),
+                        'blocked_hosts': access_list.get('blocked_hosts', [])
+                    }
+                    adguard._make_request('POST', '/access/set', json=access_data)
+                    logging.info(f"已将客户端 {client_id} 添加到允许列表")
+            except Exception as e:
+                logging.warning(f"将客户端添加到允许列表失败: {str(e)}")
+                # 继续执行，不影响客户端创建流程
+            
+            # 创建客户端映射
+            client_mapping = ClientMapping(
+                user_id=current_user.id,
+                client_name=client_name,
+                client_ids=client_ids
+            )
+            db.session.add(client_mapping)
+            db.session.commit()
+            
+            # 记录操作日志
+            operation_log = OperationLog(
+                user_id=current_user.id,
+                operation_type='create_client',
+                description=f'VIP用户创建新客户端: {client_name} ({client_id})'
+            )
+            db.session.add(operation_log)
+            db.session.commit()
+            
+            logging.info(f"VIP用户 {current_user.username} 成功创建客户端: {client_name} ({client_id})")
+            
+            return jsonify({
+                'success': True,
+                'message': '客户端创建成功',
+                'client': {
+                    'name': client_name,
+                    'id': client_id
+                }
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"创建AdGuard客户端失败: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'创建客户端失败: {str(e)}'
+            }), 500
+            
+    except Exception as e:
+        logging.error(f"VIP用户创建客户端API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误'
+        }), 500

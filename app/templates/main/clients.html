@@ -52,7 +52,14 @@
             {% endwith %}
             
             <div class="client-list">
-                <h2>我的客户端列表</h2>
+                <div class="client-header">
+                    <h2>我的客户端列表</h2>
+                    {% if current_user.is_vip %}
+                    <button class="btn btn-primary" id="createClientBtn">
+                        <i class="fas fa-plus"></i> 创建新客户端
+                    </button>
+                    {% endif %}
+                </div>
                 {% if current_user.client_mappings %}
                 <table>
                     <thead>
@@ -89,9 +96,36 @@
         </main>
     </div>
     
+    <!-- 创建客户端模态框 -->
+    {% if current_user.is_vip %}
+    <div id="createClientModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建新客户端</h3>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="createClientForm">
+                    <div class="form-group">
+                        <label for="clientName">客户端名称:</label>
+                        <input type="text" id="clientName" name="client_name" required placeholder="请输入客户端名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientId">客户端ID:</label>
+                        <input type="text" id="clientId" name="client_id" required placeholder="请输入客户端ID（如IP地址或设备标识）">
+                        <small class="form-text">客户端ID用于标识设备，可以是IP地址或设备名称</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                        <button type="submit" class="btn btn-primary">创建客户端</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-
-    
+    <script>
     // 导航菜单控制
     document.addEventListener('DOMContentLoaded', function() {
         const navToggle = document.getElementById('navToggle');
@@ -102,8 +136,76 @@
                 navToggle.classList.toggle('active');
                 navMenu.classList.toggle('active');
             });
+        }
+        
+        // 创建客户端模态框控制
+        {% if current_user.is_vip %}
+        const createClientBtn = document.getElementById('createClientBtn');
+        const createClientModal = document.getElementById('createClientModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const createClientForm = document.getElementById('createClientForm');
+        
+        if (createClientBtn && createClientModal) {
+            // 打开模态框
+            createClientBtn.addEventListener('click', function() {
+                createClientModal.style.display = 'block';
+            });
             
-            // 点击菜单项后关闭菜单
+            // 关闭模态框
+            function closeModalFunc() {
+                createClientModal.style.display = 'none';
+                createClientForm.reset();
+            }
+            
+            closeModal.addEventListener('click', closeModalFunc);
+            cancelBtn.addEventListener('click', closeModalFunc);
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(e) {
+                if (e.target === createClientModal) {
+                    closeModalFunc();
+                }
+            });
+            
+            // 表单提交
+            createClientForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(createClientForm);
+                const clientName = formData.get('client_name');
+                const clientId = formData.get('client_id');
+                
+                // 发送创建请求
+                fetch('/api/clients/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        client_name: clientName,
+                        client_id: clientId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('客户端创建成功！');
+                        location.reload(); // 刷新页面显示新客户端
+                    } else {
+                        alert('创建失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('创建失败：网络错误');
+                });
+            });
+        }
+        {% endif %}
+        
+        // 点击菜单项后关闭菜单
+        if (navToggle && navMenu) {
             const navLinks = navMenu.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
                 link.addEventListener('click', function() {
