@@ -147,8 +147,39 @@
                             </div>
                             <div class="info-item">
                                 <span class="info-label">账号类型</span>
-                                <span class="info-value account-type">{% if current_user.is_vip() %}VIP用户{% elif current_user.is_admin %}管理员{% else %}普通用户{% endif %}</span>
+                                <span class="info-value account-type">
+                                    {% if current_user.is_vip() %}
+                                        <span class="vip-badge"><i class="fas fa-crown"></i> VIP用户</span>
+                                    {% elif current_user.is_admin %}
+                                        <span class="admin-badge"><i class="fas fa-shield-alt"></i> 管理员</span>
+                                    {% else %}
+                                        <span class="normal-badge">普通用户</span>
+                                    {% endif %}
+                                </span>
                             </div>
+                            {% if current_user.is_vip() %}
+                            <div class="info-item vip-info">
+                                <span class="info-label">VIP到期时间</span>
+                                <span class="info-value vip-expire">
+                                    {% if current_user.vip_expire_time %}
+                                        {{ current_user.vip_expire_time.strftime('%Y-%m-%d %H:%M') }}
+                                        <small class="vip-days-left">
+                                            (剩余{{ current_user.get_vip_days_left() }}天)
+                                        </small>
+                                    {% else %}
+                                        永久VIP
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            {% if current_user.total_donation and current_user.total_donation > 0 %}
+                            <div class="info-item donation-info">
+                                <span class="info-label">累计捐赠</span>
+                                <span class="info-value donation-amount">
+                                    <i class="fas fa-heart text-danger"></i> ￥{{ "%.2f"|format(current_user.total_donation) }}
+                                </span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

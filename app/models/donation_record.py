@@ -99,6 +99,35 @@ class DonationRecord(db.Model):
             cls.status == 'success'
         ).count()
     
+    def process_vip_upgrade(self):
+        """处理VIP升级逻辑
+        
+        当捐赠成功时调用此方法，根据VIP配置自动升级用户为VIP
+        """
+        if self.status != 'success' or not self.user_id:
+            return
+        
+        from app.models.vip_config import VipConfig
+        from app.models.user import User
+        
+        vip_config = VipConfig.get_config()
+        if not vip_config.is_vip_eligible(self.amount):
+            return
+        
+        user = User.query.get(self.user_id)
+        if not user:
+            return
+        
+        # 增加用户累计捐赠金额
+        user.add_donation(self.amount)
+        
+        # 计算VIP天数并延长VIP时间
+        vip_days = vip_config.calculate_vip_days(self.amount)
+        if vip_days > 0:
+            user.extend_vip(vip_days)
+            
+        db.session.commit()
+    
     def to_dict(self):
         """转换为字典格式
         

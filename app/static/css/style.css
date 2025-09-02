@@ -845,6 +845,89 @@ tr:hover {
     font-weight: 600;
 }
 
+/* VIP状态样式 */
+.vip-badge {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1d1d1f;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    animation: vip-glow 2s ease-in-out infinite alternate;
+}
+
+.admin-badge {
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.normal-badge {
+    background: linear-gradient(135deg, #86868b, #a1a1a6);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+@keyframes vip-glow {
+    from {
+        box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    to {
+        box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+    }
+}
+
+.vip-info {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.vip-expire {
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+.vip-days-left {
+    color: #86868b;
+    font-weight: 400;
+    font-size: 0.75rem;
+    margin-left: 8px;
+}
+
+.donation-info {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 142, 83, 0.1));
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.donation-amount {
+    color: #1d1d1f;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .card-action {
     margin-top: 24px;
 }

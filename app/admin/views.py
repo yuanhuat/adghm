@@ -16,6 +16,7 @@ from app.models.dns_config import DnsConfig
 from app.models.system_config import SystemConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
+from app.models.vip_config import VipConfig
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -1541,6 +1542,61 @@ def manage_ai_analysis_config():
                 'error': str(e)
             }), 500
 
+
+@admin.route('/vip-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def vip_config():
+    """VIP配置管理页面
+    
+    允许管理员配置VIP相关设置，如VIP价格、时长、升级条件等。
+    """
+    config = VipConfig.get_config()
+    
+    if request.method == 'POST':
+        try:
+            # 获取表单数据
+            vip_price = float(request.form.get('vip_price', 30.0))
+            vip_duration_days = int(request.form.get('vip_duration_days', 365))
+            auto_upgrade = 'auto_upgrade' in request.form
+            min_vip_amount = float(request.form.get('min_vip_amount', 30.0))
+            cumulative_upgrade = 'cumulative_upgrade' in request.form
+            vip_title = request.form.get('vip_title', '').strip()
+            vip_description = request.form.get('vip_description', '').strip()
+            enabled = 'enabled' in request.form
+            
+            # 更新配置
+            config.vip_price = vip_price
+            config.vip_duration_days = vip_duration_days
+            config.auto_upgrade = auto_upgrade
+            config.min_vip_amount = min_vip_amount
+            config.cumulative_upgrade = cumulative_upgrade
+            config.vip_title = vip_title or 'VIP会员'
+            config.vip_description = vip_description
+            config.enabled = enabled
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_vip_config',
+                target_type='SYSTEM',
+                target_id='vip_config',
+                details=f'更新VIP配置：价格={vip_price}，时长={vip_duration_days}天，最小金额={min_vip_amount}，启用={enabled}'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            flash('VIP配置已更新', 'success')
+            return redirect(url_for('admin.vip_config'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'更新失败：{str(e)}', 'error')
+    
+    return render_template('admin/vip_config.html', config=config)
+
 @admin.route('/send-bulk-email', methods=['POST'])
 @login_required
 @admin_required
@@ -1638,6 +1694,153 @@ def send_bulk_email():
         return jsonify({
             'success': False,
             'message': f'邮件发送失败：{str(e)}'
+        }), 500
+
+
+@admin.route('/api/user/by-client/<client_id>', methods=['GET'])
+@login_required
+@admin_required
+def get_user_by_client_id(client_id):
+    """根据客户端ID获取用户信息API"""
+    try:
+        from app.models.user import User
+        from app.models.client_mapping import ClientMapping
+        import json
+        
+        # 查找包含该客户端ID的客户端映射
+        client_mappings = ClientMapping.query.all()
+        target_mapping = None
+        
+        for mapping in client_mappings:
+            client_ids = json.loads(mapping._client_ids)
+            if client_id in client_ids:
+                target_mapping = mapping
+                break
+        
+        if not target_mapping:
+            return jsonify({
+                'success': False,
+                'message': '客户端ID不存在'
+            }), 404
+        
+        # 获取对应的用户信息
+        user = User.query.get(target_mapping.user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': '用户不存在'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'client_name': target_mapping.client_name
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取用户信息失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/donation-records/add', methods=['POST'])
+@login_required
+@admin_required
+def add_donation_record():
+    """手动添加捐赠记录
+    
+    管理员可以使用此接口为用户手动添加捐赠记录，用于处理线下捐赠等情况。
+    """
+    try:
+        data = request.get_json()
+        
+        # 验证必需字段
+        required_fields = ['user_id', 'donor_name', 'amount', 'payment_type']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'error': f'缺少必需字段：{field}'
+                }), 400
+        
+        user_id = int(data['user_id'])
+        donor_name = data['donor_name'].strip()
+        amount = float(data['amount'])
+        payment_type = data['payment_type'].strip()
+        trade_no = data.get('trade_no', '').strip()
+        
+        # 验证用户是否存在
+        from app.models.user import User
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'error': '用户不存在'
+            }), 400
+        
+        # 验证金额
+        if amount <= 0:
+            return jsonify({
+                'success': False,
+                'error': '捐赠金额必须大于0'
+            }), 400
+        
+        # 生成订单号
+        import uuid
+        import time
+        order_id = f'MANUAL_{int(time.time())}_{str(uuid.uuid4())[:8].upper()}'
+        
+        # 创建捐赠记录
+        from app.models.donation_record import DonationRecord
+        from app.utils.timezone import beijing_time
+        donation_record = DonationRecord(
+            order_id=order_id,
+            donor_name=donor_name,
+            amount=amount,
+            payment_type=payment_type,
+            trade_no=trade_no if trade_no else None,
+            status='success',  # 手动添加的记录直接设为成功状态
+            user_id=user_id,
+            paid_at=beijing_time()  # 设置支付时间为当前时间
+        )
+        db.session.add(donation_record)
+        db.session.flush()  # 获取记录ID
+        
+        # 处理VIP升级逻辑
+        donation_record.process_vip_upgrade()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='add_donation_record',
+            target_type='donation_record',
+            target_id=str(donation_record.id),
+            details=f'手动添加捐赠记录：用户={user.username}，捐赠者={donor_name}，金额={amount}，支付方式={payment_type}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '捐赠记录添加成功',
+            'record': donation_record.to_dict()
+        })
+        
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': f'数据格式错误：{str(e)}'
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'添加捐赠记录失败：{str(e)}'
         }), 500
 
 

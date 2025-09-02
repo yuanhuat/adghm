@@ -6,9 +6,12 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-heart text-danger"></i> 捐赠记录管理</h2>
             <div>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#clearModal">
-                    <i class="fas fa-trash"></i> 清空所有记录
-                </button>
+                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addRecordModal">
+                        <i class="fas fa-plus"></i> 手动添加记录
+                    </button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#clearModal">
+                        <i class="fas fa-trash"></i> 清空记录
+                    </button>
             </div>
         </div>
 
@@ -169,6 +172,56 @@
     </div>
 </div>
 
+<!-- 手动添加捐赠记录模态框 -->
+<div class="modal fade" id="addRecordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">手动添加捐赠记录</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addRecordForm">
+                    <div class="mb-3">
+                        <label for="clientId" class="form-label">客户端ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="clientId" name="client_id" placeholder="请输入客户端ID" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="donorName" class="form-label">捐赠者姓名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="donorName" name="donor_name" required placeholder="请输入捐赠者姓名">
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">捐赠金额 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">¥</span>
+                            <input type="number" class="form-control" id="amount" name="amount" required min="0.01" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentType" class="form-label">支付方式 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="paymentType" name="payment_type" required>
+                            <option value="">请选择支付方式</option>
+                            <option value="alipay">支付宝</option>
+                            <option value="wxpay">微信支付</option>
+                            <option value="bank">银行转账</option>
+                            <option value="cash">现金</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tradeNo" class="form-label">交易号</label>
+                        <input type="text" class="form-control" id="tradeNo" name="trade_no" placeholder="可选，支付平台交易号">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="addRecord()">添加记录</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 清空确认模态框 -->
 <div class="modal fade" id="clearModal" tabindex="-1" aria-labelledby="clearModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -266,6 +319,125 @@ $(document).ready(function() {
             }
         });
     });
+    
+    // 当客户端ID输入框失去焦点时，自动获取用户信息并填充捐赠者姓名
+    $('#clientId').on('blur', function() {
+        const clientId = $(this).val();
+        if (clientId) {
+            // 发送AJAX请求获取用户信息
+            $.ajax({
+                url: '/admin/api/user/by-client/' + encodeURIComponent(clientId),
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.user) {
+                        // 自动填充捐赠者姓名（优先使用客户端名称，如果没有则使用用户名）
+                        const donorName = response.user.client_name || response.user.username;
+                        $('#donorName').val(donorName);
+                        // 存储用户ID用于后续提交
+                        $('#clientId').data('user-id', response.user.id);
+                    } else {
+                        // 客户端ID不存在，清空捐赠者姓名
+                        $('#donorName').val('');
+                        $('#clientId').removeData('user-id');
+                        alert('客户端ID不存在，请检查输入的ID是否正确');
+                    }
+                },
+                error: function() {
+                    // 请求失败，清空捐赠者姓名
+                    $('#donorName').val('');
+                    $('#clientId').removeData('user-id');
+                    alert('获取用户信息失败，请检查网络连接');
+                }
+            });
+        } else {
+            // 清空捐赠者姓名
+            $('#donorName').val('');
+            $('#clientId').removeData('user-id');
+        }
+    });
 });
+
+// 添加捐赠记录函数
+function addRecord() {
+    const form = document.getElementById('addRecordForm');
+    const formData = new FormData(form);
+    
+    // 验证表单
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // 获取存储的用户ID
+    const userId = $('#clientId').data('user-id');
+    if (!userId) {
+        alert('请先输入有效的客户端ID');
+        return;
+    }
+    
+    // 构建请求数据
+    const data = {
+        user_id: userId,
+        donor_name: formData.get('donor_name'),
+        amount: formData.get('amount'),
+        payment_type: formData.get('payment_type'),
+        trade_no: formData.get('trade_no')
+    };
+    
+    $.ajax({
+        url: '/admin/api/donation-records/add',
+        type: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                // 显示成功消息
+                const alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show">
+                        <i class="fas fa-check-circle"></i> ${response.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('.container.mt-4').prepend(alertHtml);
+                
+                // 关闭模态框
+                $('#addRecordModal').modal('hide');
+                
+                // 重置表单
+                form.reset();
+                
+                // 刷新页面
+                setTimeout(function() {
+                    location.reload();
+                }, 1500);
+            } else {
+                // 显示错误消息
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="fas fa-exclamation-circle"></i> ${response.error || '添加失败'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('.container.mt-4').prepend(alertHtml);
+            }
+        },
+        error: function(xhr) {
+            let errorMsg = '添加失败';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            }
+            
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> ${errorMsg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.container.mt-4').prepend(alertHtml);
+        }
+    });
+}
 </script>
 {% endblock %}

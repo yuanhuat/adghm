@@ -7,9 +7,10 @@ from .announcement import Announcement
 from .dns_import_source import DnsImportSource
 from .donation_config import DonationConfig
 from .donation_record import DonationRecord
+from .vip_config import VipConfig
 
 from .feedback import Feedback
 from .verification_code import VerificationCode
 from .email_config import EmailConfig
 
-__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'Feedback', 'VerificationCode', 'EmailConfig']
+__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'VipConfig', 'Feedback', 'VerificationCode', 'EmailConfig']

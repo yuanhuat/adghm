@@ -1,0 +1,187 @@
+{% extends "admin/base.html" %}
+
+{% block title %}VIP配置{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">VIP配置</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">管理后台</a></li>
+        <li class="breadcrumb-item active">VIP配置</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-crown me-1"></i>
+            VIP会员配置
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('admin.vip_config') }}">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enabled" name="enabled" {{ 'checked' if config.enabled else '' }}>
+                            <label class="form-check-label" for="enabled">
+                                启用VIP功能
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            开启后用户捐赠达到条件将自动成为VIP。
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto_upgrade" name="auto_upgrade" {{ 'checked' if config.auto_upgrade else '' }}>
+                            <label class="form-check-label" for="auto_upgrade">
+                                自动升级VIP
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            用户捐赠后自动升级为VIP。
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="cumulative_upgrade" name="cumulative_upgrade" {{ 'checked' if config.cumulative_upgrade else '' }}>
+                            <label class="form-check-label" for="cumulative_upgrade">
+                                累计捐赠升级
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            支持多次捐赠累计达到VIP条件。
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="vip_title" class="form-label">VIP称号</label>
+                        <input type="text" class="form-control" id="vip_title" name="vip_title" value="{{ config.vip_title or 'VIP会员' }}" required>
+                        <div class="form-text text-muted">VIP用户的显示称号</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="vip_duration_days" class="form-label">VIP时长（天）</label>
+                        <input type="number" class="form-control" id="vip_duration_days" name="vip_duration_days" value="{{ config.vip_duration_days or 365 }}" min="1" required>
+                        <div class="form-text text-muted">VIP会员的有效期天数</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="vip_description" class="form-label">VIP说明</label>
+                        <textarea class="form-control" id="vip_description" name="vip_description" rows="3" placeholder="请输入VIP会员的说明和权益介绍">{{ config.vip_description or '' }}</textarea>
+                        <div class="form-text text-muted">VIP会员的详细说明和权益介绍</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="vip_price" class="form-label">VIP年费价格</label>
+                        <div class="input-group">
+                            <span class="input-group-text">￥</span>
+                            <input type="number" class="form-control" id="vip_price" name="vip_price" value="{{ config.vip_price or 30.00 }}" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="form-text text-muted">VIP会员的标准年费价格</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="min_vip_amount" class="form-label">最小VIP金额</label>
+                        <div class="input-group">
+                            <span class="input-group-text">￥</span>
+                            <input type="number" class="form-control" id="min_vip_amount" name="min_vip_amount" value="{{ config.min_vip_amount or 30.00 }}" min="0.01" step="0.01" required>
+                        </div>
+                        <div class="form-text text-muted">成为VIP的最小捐赠金额</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> 保存配置
+                    </button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="resetForm()">
+                        <i class="fas fa-undo me-1"></i> 重置
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- VIP功能说明卡片 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-info-circle me-1"></i>
+            VIP功能说明
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-cog text-primary"></i> 配置说明</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>VIP年费价格：</strong>标准VIP会员的年费价格，用于计算VIP时长</li>
+                        <li><strong>VIP时长：</strong>按年费价格购买VIP的有效期天数</li>
+                        <li><strong>最小VIP金额：</strong>用户单次或累计捐赠达到此金额即可成为VIP</li>
+                        <li><strong>自动升级：</strong>用户捐赠后是否自动升级为VIP会员</li>
+                        <li><strong>累计捐赠：</strong>是否支持多次捐赠金额累计计算VIP资格</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-calculator text-success"></i> 计算规则</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>VIP天数计算：</strong>（捐赠金额 ÷ 年费价格）× VIP时长</li>
+                        <li><strong>示例：</strong>年费30元，时长365天，捐赠15元 = 182天VIP</li>
+                        <li><strong>累计升级：</strong>多次捐赠金额会累加到用户总捐赠中</li>
+                        <li><strong>时长叠加：</strong>VIP未过期时新的VIP时长会叠加到现有时长</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>提示：</strong>修改配置后，新的规则将应用于后续的捐赠记录。已有的VIP用户不会受到影响。
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function resetForm() {
+    if (confirm('确定要重置表单吗？所有未保存的更改将丢失。')) {
+        document.querySelector('form').reset();
+    }
+}
+
+// 实时计算VIP天数示例
+document.addEventListener('DOMContentLoaded', function() {
+    const priceInput = document.getElementById('vip_price');
+    const daysInput = document.getElementById('vip_duration_days');
+    const minAmountInput = document.getElementById('min_vip_amount');
+    
+    function updateExample() {
+        const price = parseFloat(priceInput.value) || 30;
+        const days = parseInt(daysInput.value) || 365;
+        const minAmount = parseFloat(minAmountInput.value) || 30;
+        
+        const exampleDays = Math.floor((minAmount / price) * days);
+        
+        // 可以在这里添加实时计算显示
+        console.log(`最小金额 ${minAmount} 元可获得 ${exampleDays} 天VIP`);
+    }
+    
+    priceInput.addEventListener('input', updateExample);
+    daysInput.addEventListener('input', updateExample);
+    minAmountInput.addEventListener('input', updateExample);
+    
+    updateExample();
+});
+</script>
+{% endblock %}

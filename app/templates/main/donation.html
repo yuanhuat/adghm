@@ -379,6 +379,109 @@
                 font-size: 1.1rem;
             }
         }
+        .vip-info-section {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #fff2a8 100%);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #ffd700;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
+        }
+        .vip-info-section h3 {
+            color: #b8860b;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        .vip-info-section h3 i {
+            color: #ffd700;
+            margin-right: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .vip-benefits {
+            display: grid;
+            gap: 20px;
+        }
+        .vip-description {
+            text-align: center;
+            color: #8b6914;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .vip-pricing {
+            display: flex;
+            justify-content: center;
+        }
+        .vip-price-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .vip-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #b8860b;
+            margin-bottom: 10px;
+        }
+        .vip-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+        .vip-duration {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .vip-auto-upgrade, .vip-cumulative {
+            background: rgba(255, 107, 107, 0.1);
+            color: #d63031;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 5px 0;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        .vip-auto-upgrade i, .vip-cumulative i {
+            margin-right: 5px;
+        }
+        .user-vip-status {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            border: 2px solid #e1e8ed;
+        }
+        .current-vip-status {
+            color: #ffd700;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .current-vip-status i {
+            margin-right: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .vip-expire {
+            display: block;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .upgrade-tip {
+            color: #2d3436;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .upgrade-tip i {
+            color: #0984e3;
+            margin-right: 8px;
+        }
         @media (max-width: 480px) {
             .donation-header h1 {
                 font-size: 1.8rem;
@@ -388,6 +491,12 @@
             }
             .amount-btn, .payment-method {
                 padding: 12px 20px;
+            }
+            .vip-info-section {
+                padding: 20px;
+            }
+            .vip-price-card {
+                padding: 20px;
             }
         }
     </style>
@@ -414,6 +523,63 @@
                 <h3><i class="fas fa-info-circle"></i> 捐赠说明</h3>
                 <p>{{ donation_description or '您的每一份捐赠都将用于服务器维护、功能开发和技术支持，让我们能够为您提供更好的DNS解析服务。' }}</p>
             </div>
+
+            {% if vip_config and vip_config.enabled %}
+            <div class="vip-info-section">
+                <h3><i class="fas fa-crown"></i> VIP会员权益</h3>
+                <div class="vip-benefits">
+                    <div class="vip-description">
+                        <p>{{ vip_config.vip_description or '成为VIP会员，享受更多专属服务和优先支持！' }}</p>
+                    </div>
+                    
+                    <div class="vip-pricing">
+                        <div class="vip-price-card">
+                            <div class="vip-title">{{ vip_config.vip_title }}</div>
+                            <div class="vip-price">￥{{ "%.2f"|format(vip_config.vip_price) }}</div>
+                            <div class="vip-duration">{{ vip_config.vip_duration_days }}天</div>
+                            {% if vip_config.auto_upgrade %}
+                            <div class="vip-auto-upgrade">
+                                <i class="fas fa-magic"></i> 捐赠满 ￥{{ "%.2f"|format(vip_config.min_vip_amount) }} 自动升级
+                            </div>
+                            {% endif %}
+                            {% if vip_config.cumulative_upgrade %}
+                            <div class="vip-cumulative">
+                                <i class="fas fa-plus-circle"></i> 支持累计捐赠升级
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if user_vip_status %}
+                    <div class="user-vip-status">
+                        {% if user_vip_status.is_vip %}
+                        <div class="current-vip-status">
+                            <i class="fas fa-crown"></i> 您当前是VIP会员
+                            {% if user_vip_status.vip_expire_time %}
+                            <span class="vip-expire">到期时间：{{ user_vip_status.vip_expire_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="upgrade-tip">
+                            <i class="fas fa-info-circle"></i> 
+                            {% if vip_config.cumulative_upgrade %}
+                                您已累计捐赠 ￥{{ "%.2f"|format(user_vip_status.total_donation) }}，
+                                {% set remaining = vip_config.min_vip_amount - user_vip_status.total_donation %}
+                                {% if remaining > 0 %}
+                                    再捐赠 ￥{{ "%.2f"|format(remaining) }} 即可升级为VIP
+                                {% else %}
+                                    下次捐赠将自动升级为VIP
+                                {% endif %}
+                            {% else %}
+                                单次捐赠满 ￥{{ "%.2f"|format(vip_config.min_vip_amount) }} 即可升级为VIP
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             <form id="donationForm" class="donation-form">
                 <div class="form-group">

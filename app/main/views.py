@@ -10,6 +10,7 @@ from app.models.feedback import Feedback
 from app.models.dns_config import DnsConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
+from app.models.vip_config import VipConfig
 from app.services.adguard_service import AdGuardService
 from app.utils.seo_config import get_page_seo, get_structured_data
 
@@ -1154,23 +1155,36 @@ def donation():
         flash('捐赠功能暂时不可用', 'info')
         return redirect(url_for('main.dashboard'))
     
+    # 获取VIP配置
+    vip_config = VipConfig.get_config()
+    
     # 获取当前用户的客户端名称作为默认捐赠者姓名
     default_donor_name = ''
+    user_vip_status = None
     if current_user.is_authenticated:
         try:
             client_mapping = ClientMapping.query.filter_by(user_id=current_user.id).first()
             if client_mapping:
                 default_donor_name = client_mapping.client_name
+            
+            # 获取用户VIP状态信息
+            user_vip_status = {
+                'is_vip': current_user.is_vip(),
+                'vip_expire_time': current_user.vip_expire_time,
+                'total_donation': float(current_user.total_donation or 0)
+            }
         except Exception as e:
-            logging.error(f"获取用户客户端名称失败: {str(e)}")
+            logging.error(f"获取用户信息失败: {str(e)}")
     
     return render_template('main/donation.html', 
                          config=config,
+                         vip_config=vip_config,
                          min_amount=float(config.min_amount),
                          max_amount=float(config.max_amount),
                          donation_enabled=True,
                          donation_description=config.donation_description,
-                         default_donor_name=default_donor_name)
+                         default_donor_name=default_donor_name,
+                         user_vip_status=user_vip_status)
 
 
 @main.route('/api/donation/create', methods=['POST'])
