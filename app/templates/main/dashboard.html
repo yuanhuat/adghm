@@ -1000,7 +1000,7 @@ function updateAnnouncementBanner(data) {
     );
     
     if (latestAnnouncement) {
-        bannerText.textContent = `${latestAnnouncement.title}: ${latestAnnouncement.content}`;
+        bannerText.innerHTML = `${latestAnnouncement.title}: ${latestAnnouncement.content}`;
         banner.style.display = 'block';
         banner.dataset.announcementId = latestAnnouncement.id;
     } else {

@@ -484,10 +484,26 @@ tr:hover {
     overflow: hidden;
 }
 
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/static/images/hero-graphic.svg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+    z-index: 1;
+}
+
 .hero-content {
     flex: 1;
     padding: 0 60px;
     z-index: 2;
+    position: relative;
 }
 
 .hero-title {
@@ -550,10 +566,13 @@ tr:hover {
     justify-content: center;
     align-items: center;
     padding: 40px;
+    z-index: 2;
+    position: relative;
 }
 
 .hero-graphic {
     filter: drop-shadow(0 10px 30px rgba(0, 122, 255, 0.3));
+    opacity: 0.8;
 }
 
 .main-header {
@@ -1922,17 +1941,19 @@ tr:hover {
      }
  }
  
- /* Apple风格公告横幅 */
+ /* 现代化公告横幅 */
 .announcement-banner {
-    background: rgba(255, 149, 0, 0.9);
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.95), rgba(108, 117, 125, 0.9));
     backdrop-filter: saturate(180%) blur(20px);
     color: white;
-    padding: 16px 20px;
+    padding: 20px 24px;
     margin: 20px 0;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(255, 149, 0, 0.3);
-    animation: slideDown 0.5s ease-out;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 123, 255, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
 }
 
 @keyframes slideDown {
@@ -1952,33 +1973,105 @@ tr:hover {
     justify-content: space-between;
     max-width: 1200px;
     margin: 0 auto;
-    gap: 16px;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
 }
 
 .announcement-icon {
     color: white;
     flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .announcement-text {
     flex: 1;
     font-weight: 500;
-    line-height: 1.4;
-    font-size: 14px;
+    line-height: 1.5;
+    font-size: 15px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* HTML内容样式支持 */
+.announcement-text a {
+    color: #ffffff;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.announcement-text a:hover {
+    color: #e3f2fd;
+    text-decoration: none;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.announcement-text strong {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.announcement-text em {
+    font-style: italic;
+    color: #e3f2fd;
+}
+
+.announcement-text code {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
 }
 
 .announcement-close {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border: none;
     color: white;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    padding: 10px;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.announcement-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.announcement-close:active {
+    transform: scale(0.95);
+}
+
+/* 装饰性背景效果 */
+.announcement-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+    z-index: 1;
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    50% {
+        transform: translateX(100%);
+        opacity: 1;
+    }
 }
 
 .announcement-close:hover {
@@ -2221,6 +2314,11 @@ tr:hover {
         padding: 60px 40px;
     }
     
+    .hero-section::before {
+        background-size: contain;
+        opacity: 0.2;
+    }
+    
     .hero-content {
         padding: 0;
         margin-bottom: 40px;
@@ -2304,6 +2402,11 @@ tr:hover {
         margin-bottom: 40px;
     }
     
+    .hero-section::before {
+        background-size: contain;
+        opacity: 0.15;
+    }
+    
     .hero-title {
         font-size: 2.5rem;
     }
@@ -2382,6 +2485,11 @@ tr:hover {
         margin-bottom: 30px;
     }
     
+    .hero-section::before {
+        background-size: contain;
+        opacity: 0.1;
+    }
+    
     .hero-title {
         font-size: 2rem;
     }
@@ -2421,15 +2529,22 @@ tr:hover {
     
     .announcement-banner {
         margin: 16px 0;
-        padding: 12px 16px;
+        padding: 16px 20px;
+        border-radius: 12px;
     }
     
     .announcement-banner-content {
-        gap: 12px;
+        gap: 16px;
     }
     
     .announcement-text {
-        font-size: 13px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .announcement-close {
+        padding: 8px;
+        border-radius: 8px;
     }
 }
 
