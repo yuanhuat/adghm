@@ -836,14 +836,7 @@ tr:hover {
     color: #1d1d1f;
 }
 
-.account-type {
-    padding: 4px 12px;
-    background: linear-gradient(135deg, #007AFF, #5856D6);
-    color: white;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
+
 
 /* VIP状态样式 */
 .vip-badge {
