@@ -1819,3 +1819,102 @@ def api_create_client():
             'success': False,
             'message': '服务器内部错误'
         }), 500
+
+
+@main.route('/api/clients/<int:mapping_id>', methods=['DELETE'])
+@login_required
+def api_delete_client(mapping_id):
+    """VIP用户删除客户端API"""
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'message': '只有VIP用户才能删除客户端'
+            }), 403
+        
+        # 获取客户端映射
+        mapping = ClientMapping.query.get_or_404(mapping_id)
+        
+        # 验证权限：只能删除自己的客户端
+        if mapping.user_id != current_user.id:
+            return jsonify({
+                'success': False,
+                'message': '没有权限删除此客户端'
+            }), 403
+        
+        # 检查是否为第一个客户端（不允许删除）
+        user_mappings = ClientMapping.query.filter_by(user_id=current_user.id).order_by(ClientMapping.created_at).all()
+        if user_mappings and user_mappings[0].id == mapping_id:
+            return jsonify({
+                'success': False,
+                'message': '不能删除主客户端'
+            }), 400
+        
+        client_name = mapping.client_name
+        client_ids = mapping.client_ids
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        try:
+            # 从AdGuard Home删除客户端
+            adguard.delete_client(client_name)
+            logging.info(f"已从AdGuard Home删除客户端: {client_name}")
+        except Exception as e:
+            logging.warning(f"从AdGuard Home删除客户端失败: {str(e)}")
+            # 继续执行，不影响数据库删除
+        
+        try:
+            # 从允许列表中移除客户端ID
+            access_list = adguard._make_request('GET', '/access/list')
+            allowed_clients = access_list.get('allowed_clients', [])
+            
+            # 移除客户端ID
+            clients_to_remove = []
+            for client_id in client_ids:
+                if client_id in allowed_clients:
+                    allowed_clients.remove(client_id)
+                    clients_to_remove.append(client_id)
+            
+            # 如果有客户端ID被移除，更新访问控制列表
+            if clients_to_remove:
+                access_data = {
+                    'allowed_clients': allowed_clients,
+                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                }
+                adguard._make_request('POST', '/access/set', json=access_data)
+                logging.info(f"已从允许列表中移除客户端ID: {clients_to_remove}")
+        except Exception as e:
+            logging.warning(f"从允许列表移除客户端ID失败: {str(e)}")
+            # 继续执行，不影响数据库删除
+        
+        # 删除数据库记录
+        db.session.delete(mapping)
+        
+        # 记录操作日志
+        operation_log = OperationLog(
+            user_id=current_user.id,
+            operation_type='DELETE',
+            target_type='CLIENT',
+            target_id=client_name,
+            details=f'VIP用户删除客户端: {client_name}'
+        )
+        db.session.add(operation_log)
+        db.session.commit()
+        
+        logging.info(f"VIP用户 {current_user.username} 成功删除客户端: {client_name}")
+        
+        return jsonify({
+            'success': True,
+            'message': '客户端删除成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"VIP用户删除客户端API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误'
+        }), 500

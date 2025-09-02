@@ -83,7 +83,14 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                <span class="text-muted">管理员可在后台管理</span>
+                                {% if current_user.is_vip and not loop.first %}
+                                <button class="btn btn-danger btn-sm" onclick="deleteClient({{ mapping.id }}, '{{ mapping.client_name }}')"
+                                        title="删除客户端">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                                {% else %}
+                                <span class="text-muted">{% if loop.first %}主客户端{% else %}管理员可在后台管理{% endif %}</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -221,6 +228,31 @@
             });
         }
     });
+    
+    // 删除客户端函数
+    function deleteClient(mappingId, clientName) {
+        if (confirm(`确定要删除客户端 "${clientName}" 吗？\n\n注意：删除后将无法恢复，该客户端的所有配置都将丢失。`)) {
+            fetch(`/api/clients/${mappingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('客户端删除成功！');
+                    location.reload(); // 刷新页面
+                } else {
+                    alert('删除失败：' + (data.message || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('删除失败：网络错误');
+            });
+        }
+    }
 
     </script>
 </body>
