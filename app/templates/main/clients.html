@@ -144,6 +144,98 @@
                 navToggle.classList.toggle('active');
                 navMenu.classList.toggle('active');
             });
+    
+    // 显示客户端ID错误信息
+    function showClientIdError(inputElement, message) {
+        removeClientIdError(inputElement); // 先移除现有错误信息
+        
+        const errorMsg = document.createElement('small');
+        errorMsg.className = 'client-id-error-message';
+        errorMsg.style.color = '#dc3545';
+        errorMsg.style.display = 'block';
+        errorMsg.style.marginTop = '5px';
+        errorMsg.textContent = message;
+        
+        inputElement.parentNode.appendChild(errorMsg);
+    }
+    
+    // 移除客户端ID错误信息
+    function removeClientIdError(inputElement) {
+        const errorMsg = inputElement.parentNode.querySelector('.client-id-error-message');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+    }
+    
+    // 检查客户端ID是否重复
+    function checkClientIdDuplicate(clientId, inputElement) {
+        // 移除之前的重复检查错误信息
+        const existingDuplicateMsg = inputElement.parentNode.querySelector('.client-id-duplicate-message');
+        if (existingDuplicateMsg) {
+            existingDuplicateMsg.remove();
+        }
+        
+        fetch('/api/clients/check-duplicate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                client_id: clientId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.duplicate) {
+                    // 显示重复错误信息
+                    const errorMsg = document.createElement('small');
+                    errorMsg.className = 'client-id-duplicate-message';
+                    errorMsg.style.color = '#dc3545';
+                    errorMsg.style.display = 'block';
+                    errorMsg.style.marginTop = '5px';
+                    errorMsg.textContent = data.message;
+                    
+                    inputElement.parentNode.appendChild(errorMsg);
+                } else {
+                    // 显示可用信息
+                    const successMsg = document.createElement('small');
+                    successMsg.className = 'client-id-duplicate-message';
+                    successMsg.style.color = '#28a745';
+                    successMsg.style.display = 'block';
+                    successMsg.style.marginTop = '5px';
+                    successMsg.textContent = '✓ 客户端ID可用';
+                    
+                    inputElement.parentNode.appendChild(successMsg);
+                    
+                    // 3秒后移除成功信息
+                    setTimeout(() => {
+                        if (successMsg && successMsg.parentNode) {
+                            successMsg.remove();
+                        }
+                    }, 3000);
+                }
+            } else {
+                // 处理API返回的错误（包括重复检测）
+                if (data.duplicate) {
+                    // 显示重复错误信息
+                    const errorMsg = document.createElement('small');
+                    errorMsg.className = 'client-id-duplicate-message';
+                    errorMsg.style.color = '#dc3545';
+                    errorMsg.style.display = 'block';
+                    errorMsg.style.marginTop = '5px';
+                    errorMsg.textContent = data.message;
+                    
+                    inputElement.parentNode.appendChild(errorMsg);
+                } else {
+                    console.error('检查客户端ID重复失败:', data.message);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('检查客户端ID重复时发生网络错误:', error);
+        });
+    }
         }
         
         // 创建客户端模态框控制
@@ -152,6 +244,55 @@
         const closeModal = document.getElementById('closeModal');
         const cancelBtn = document.getElementById('cancelBtn');
         const createClientForm = document.getElementById('createClientForm');
+        const clientIdInput = document.getElementById('clientId');
+        
+        // 客户端ID输入验证 - 限制特殊字符和重复检测
+        let duplicateCheckTimeout;
+        if (clientIdInput) {
+            clientIdInput.addEventListener('input', function(e) {
+                // 只允许字母、数字、点号、连字符、下划线和冒号（用于IPv6）
+                const allowedPattern = /^[a-zA-Z0-9._:-]*$/;
+                const value = e.target.value;
+                
+                if (!allowedPattern.test(value)) {
+                    // 移除不允许的字符
+                    e.target.value = value.replace(/[^a-zA-Z0-9._:-]/g, '');
+                    
+                    // 显示提示信息
+                    showClientIdError(e.target, '客户端ID只能包含字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
+                } else {
+                    // 移除格式错误信息
+                    removeClientIdError(e.target);
+                    
+                    // 防抖检查重复
+                    clearTimeout(duplicateCheckTimeout);
+                    if (e.target.value.trim().length > 0) {
+                        duplicateCheckTimeout = setTimeout(() => {
+                            checkClientIdDuplicate(e.target.value.trim(), e.target);
+                        }, 500); // 500ms防抖
+                    }
+                }
+            });
+            
+            // 失去焦点时也检查重复
+            clientIdInput.addEventListener('blur', function(e) {
+                if (e.target.value.trim().length > 0) {
+                    checkClientIdDuplicate(e.target.value.trim(), e.target);
+                }
+            });
+            
+            // 防止粘贴不合法字符
+            clientIdInput.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    const allowedPattern = /^[a-zA-Z0-9._:-]*$/;
+                    const value = e.target.value;
+                    
+                    if (!allowedPattern.test(value)) {
+                        e.target.value = value.replace(/[^a-zA-Z0-9._:-]/g, '');
+                    }
+                }, 0);
+            });
+        }
         
         if (createClientBtn && createClientModal) {
             // 打开模态框
@@ -182,6 +323,26 @@
                 const formData = new FormData(createClientForm);
                 const clientName = formData.get('client_name');
                 const clientId = formData.get('client_id');
+                
+                // 提交前再次验证客户端ID
+                const allowedPattern = /^[a-zA-Z0-9._:-]+$/;
+                if (!allowedPattern.test(clientId)) {
+                    alert('客户端ID格式不正确！只能包含字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
+                    return;
+                }
+                
+                // 检查客户端ID长度
+                if (clientId.length < 1 || clientId.length > 100) {
+                    alert('客户端ID长度必须在1-100个字符之间！');
+                    return;
+                }
+                
+                // 检查是否存在重复错误信息
+                const duplicateErrorMsg = document.querySelector('.client-id-duplicate-message[style*="color: rgb(220, 53, 69)"]');
+                if (duplicateErrorMsg) {
+                    alert('客户端ID已存在，请使用其他ID！');
+                    return;
+                }
                 
                 // 发送创建请求
                 fetch('/api/clients/create', {
