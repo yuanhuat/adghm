@@ -471,7 +471,131 @@ class AdGuardService:
         }
         
         return self._make_request('POST', '/clients/update', json=request_body)
-    
+
+    def add_client_to_allowlist_with_retry(self, client_id: str, max_retries: int = 3, retry_delay: int = 2) -> bool:
+        """添加客户端到允许列表，支持重试机制
+        
+        Args:
+            client_id: 客户端ID
+            max_retries: 最大重试次数，默认3次
+            retry_delay: 重试间隔（秒），默认2秒
+        
+        Returns:
+            bool: 是否成功添加到允许列表
+        """
+        import time
+        
+        for attempt in range(max_retries + 1):
+            try:
+                # 获取当前的访问控制列表
+                access_list = self._make_request('GET', '/access/list')
+                allowed_clients = access_list.get('allowed_clients', [])
+                
+                # 检查客户端是否已在允许列表中
+                if client_id in allowed_clients:
+                    print(f"客户端 {client_id} 已在允许列表中")
+                    return True
+                
+                # 将新客户端ID添加到允许列表
+                allowed_clients.append(client_id)
+                
+                # 更新访问控制列表
+                access_data = {
+                    'allowed_clients': allowed_clients,
+                    'disallowed_clients': access_list.get('disallowed_clients', []),
+                    'blocked_hosts': access_list.get('blocked_hosts', [])
+                }
+                self._make_request('POST', '/access/set', json=access_data)
+                print(f"已将客户端 {client_id} 添加到允许列表")
+                return True
+                
+            except Exception as e:
+                error_msg = str(e)
+                if attempt < max_retries:
+                    print(f"将客户端添加到允许列表失败（第{attempt + 1}次尝试）: {error_msg}，{retry_delay}秒后重试...")
+                    time.sleep(retry_delay)
+                else:
+                    print(f"将客户端添加到允许列表失败（已重试{max_retries}次）: {error_msg}")
+                    return False
+        
+        return False
+
+    def create_client_with_retry(
+        self,
+        name: str,
+        ids: Optional[List[str]] = None,
+        use_global_settings: bool = True,
+        filtering_enabled: bool = True,
+        safebrowsing_enabled: bool = False,
+        parental_enabled: bool = False,
+        safe_search: Optional[Dict] = None,
+        use_global_blocked_services: bool = True,
+        blocked_services: Optional[List[str]] = None,
+        upstreams: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
+        ignore_querylog: bool = False,
+        ignore_statistics: bool = False,
+        max_retries: int = 3,
+        retry_delay: int = 2
+    ) -> Dict:
+        """带重试机制的创建AdGuardHome客户端方法
+        
+        Args:
+            name: 客户端名称
+            ids: 客户端标识列表（可以是IP、CIDR、MAC或客户端ID）
+            use_global_settings: 是否使用全局设置
+            filtering_enabled: 是否启用过滤
+            safebrowsing_enabled: 是否启用安全浏览
+            parental_enabled: 是否启用家长控制
+            safe_search: 安全搜索配置，包含各搜索引擎的启用状态
+            use_global_blocked_services: 是否使用全局服务屏蔽设置
+            blocked_services: 要屏蔽的服务列表
+            upstreams: 上游DNS服务器列表
+            tags: 客户端标签列表
+            ignore_querylog: 是否忽略查询日志
+            ignore_statistics: 是否忽略统计信息
+            max_retries: 最大重试次数，默认3次
+            retry_delay: 重试间隔（秒），默认2秒
+            
+        Returns:
+            创建成功的客户端信息
+            
+        Raises:
+            Exception: 当重试次数用尽仍然失败时抛出异常
+        """
+        import time
+        
+        for attempt in range(max_retries + 1):
+            try:
+                result = self.create_client(
+                    name=name,
+                    ids=ids,
+                    use_global_settings=use_global_settings,
+                    filtering_enabled=filtering_enabled,
+                    safebrowsing_enabled=safebrowsing_enabled,
+                    parental_enabled=parental_enabled,
+                    safe_search=safe_search,
+                    use_global_blocked_services=use_global_blocked_services,
+                    blocked_services=blocked_services,
+                    upstreams=upstreams,
+                    tags=tags,
+                    ignore_querylog=ignore_querylog,
+                    ignore_statistics=ignore_statistics
+                )
+                print(f"成功创建AdGuardHome客户端: {name}")
+                return result
+                
+            except Exception as e:
+                error_msg = str(e)
+                if attempt < max_retries:
+                    print(f"创建AdGuardHome客户端失败（第{attempt + 1}次尝试）: {error_msg}，{retry_delay}秒后重试...")
+                    time.sleep(retry_delay)
+                else:
+                    print(f"创建AdGuardHome客户端最终失败（已重试{max_retries}次）: {error_msg}")
+                    raise Exception(f"创建客户端失败，已重试 {max_retries} 次: {error_msg}")
+        
+        raise Exception(f"创建客户端失败，已重试 {max_retries} 次")
+
     def delete_client(self, name: str, check_exists: bool = True) -> Dict:
         """删除AdGuardHome客户端
         

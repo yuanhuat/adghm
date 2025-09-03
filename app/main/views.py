@@ -1869,8 +1869,8 @@ def api_create_client():
             # 根据标签设置客户端配置
             parental_enabled = 'user_child' in tags  # 如果包含user_child标签，启用家长控制
             
-            # 创建AdGuardHome客户端，使用安全的默认配置
-            client_response = adguard.create_client(
+            # 创建AdGuardHome客户端，使用安全的默认配置（带重试机制）
+            client_response = adguard.create_client_with_retry(
                 name=client_name,
                 ids=client_ids,
                 use_global_settings=True,  # 使用全局设置
@@ -1892,26 +1892,8 @@ def api_create_client():
                 ignore_statistics=False
             )
             
-            # 将客户端加入允许列表
-            try:
-                # 获取当前的访问控制列表
-                access_list = adguard._make_request('GET', '/access/list')
-                allowed_clients = access_list.get('allowed_clients', [])
-                
-                # 将新客户端ID添加到允许列表
-                if client_id not in allowed_clients:
-                    allowed_clients.append(client_id)
-                    
-                    # 更新访问控制列表
-                    access_data = {
-                        'allowed_clients': allowed_clients,
-                        'disallowed_clients': access_list.get('disallowed_clients', []),
-                        'blocked_hosts': access_list.get('blocked_hosts', [])
-                    }
-                    adguard._make_request('POST', '/access/set', json=access_data)
-                    logging.info(f"已将客户端 {client_id} 添加到允许列表")
-            except Exception as e:
-                logging.warning(f"将客户端添加到允许列表失败: {str(e)}")
+            # 将客户端加入允许列表（带重试机制）
+            adguard.add_client_to_allowlist_with_retry(client_id)
                 # 继续执行，不影响客户端创建流程
             
             # 创建客户端映射
