@@ -248,9 +248,9 @@
             <div class="modal-body">
                 <form id="bulkVipForm">
                     <div class="mb-3">
-                        <label for="bulkUserIds" class="form-label">用户ID列表 <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="bulkUserIds" name="user_ids" rows="4" required placeholder="请输入用户ID，每行一个或用逗号分隔\n例如：\n1\n2\n3\n或者：1,2,3"></textarea>
-                        <div class="form-text">支持每行一个ID或用逗号分隔多个ID</div>
+                        <label for="bulkUserIds" class="form-label">用户名/ID列表 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="bulkUserIds" name="user_ids" rows="4" required placeholder="请输入用户名或用户ID，每行一个或用逗号分隔\n例如：\nuser1\nuser2\n123\n或者：user1,user2,123"></textarea>
+                        <div class="form-text">支持每行一个用户名/ID或用逗号分隔多个用户名/ID</div>
                     </div>
                     <div class="mb-3">
                         <label for="bulkVipDays" class="form-label">VIP天数 <span class="text-danger">*</span></label>
@@ -1335,16 +1335,16 @@ function showBulkVipModal() {
     if (selectedUserIds.length > 0) {
         document.getElementById('bulkVipPreview').innerHTML = '<span class="text-info">已自动填入选中的 ' + selectedUserIds.length + ' 个用户ID，请选择VIP天数后查看预览</span>';
     } else {
-        document.getElementById('bulkVipPreview').innerHTML = '<span class="text-muted">请输入用户ID和选择VIP天数后查看预览</span>';
+        document.getElementById('bulkVipPreview').innerHTML = '<span class="text-muted">请输入用户名/ID和选择VIP天数后查看预览</span>';
     }
     
     document.getElementById('executeBulkVipBtn').disabled = true;
 }
 
 /**
- * 解析用户ID列表
- * @param {string} userIdsText - 用户输入的ID文本
- * @returns {number[]} - 解析后的用户ID数组
+ * 解析用户名/ID列表
+ * @param {string} userIdsText - 用户输入的用户名/ID文本
+ * @returns {string[]} - 解析后的用户名/ID数组
  */
 function parseUserIds(userIdsText) {
     if (!userIdsText.trim()) {
@@ -1352,17 +1352,17 @@ function parseUserIds(userIdsText) {
     }
     
     // 支持换行符和逗号分隔
-    const ids = userIdsText.replace(/[\r\n]+/g, ',').split(',');
-    const validIds = [];
+    const identifiers = userIdsText.replace(/[\r\n]+/g, ',').split(',');
+    const validIdentifiers = [];
     
-    for (let id of ids) {
-        const trimmedId = id.trim();
-        if (trimmedId && !isNaN(trimmedId)) {
-            validIds.push(parseInt(trimmedId));
+    for (let identifier of identifiers) {
+        const trimmedIdentifier = identifier.trim();
+        if (trimmedIdentifier) {
+            validIdentifiers.push(trimmedIdentifier);
         }
     }
     
-    return [...new Set(validIds)]; // 去重
+    return [...new Set(validIdentifiers)]; // 去重
 }
 
 /**
@@ -1374,13 +1374,13 @@ function previewBulkVip() {
     const extendExisting = document.getElementById('extendExisting').checked;
     
     if (!userIdsText.trim() || !vipDays) {
-        alert('请输入用户ID和选择VIP天数');
+        alert('请输入用户名/ID和选择VIP天数');
         return;
     }
     
     const userIds = parseUserIds(userIdsText);
     if (userIds.length === 0) {
-        alert('请输入有效的用户ID');
+        alert('请输入有效的用户名/ID');
         return;
     }
     
@@ -1466,13 +1466,13 @@ function executeBulkVip() {
     const extendExisting = document.getElementById('extendExisting').checked;
     
     if (!userIdsText.trim() || !vipDays) {
-        alert('请输入用户ID和选择VIP天数');
+        alert('请输入用户名/ID和选择VIP天数');
         return;
     }
     
     const userIds = parseUserIds(userIdsText);
     if (userIds.length === 0) {
-        alert('请输入有效的用户ID');
+        alert('请输入有效的用户名/ID');
         return;
     }
     

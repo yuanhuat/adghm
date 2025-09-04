@@ -1719,18 +1719,19 @@ def bulk_vip_upgrade():
     
     支持批量为多个用户设置VIP状态，可以选择延长现有VIP时间或重置VIP时间。
     支持预览模式，可以在实际执行前查看操作结果。
+    支持通过用户ID或用户名查询用户。
     """
     try:
         data = request.get_json()
-        user_ids = data.get('user_ids', [])
+        user_identifiers = data.get('user_ids', [])  # 现在可以是ID或用户名
         vip_days = data.get('vip_days')
         extend_existing = data.get('extend_existing', True)
         preview_only = data.get('preview_only', False)
         
-        if not user_ids:
+        if not user_identifiers:
             return jsonify({
                 'success': False,
-                'message': '用户ID列表不能为空'
+                'message': '用户标识列表不能为空'
             }), 400
             
         if vip_days is None:
@@ -1739,16 +1740,24 @@ def bulk_vip_upgrade():
                 'message': 'VIP天数不能为空'
             }), 400
             
-        # 验证用户ID并获取用户信息
+        # 验证用户标识并获取用户信息（支持ID和用户名）
         valid_users = []
         invalid_users = []
         
-        for user_id in user_ids:
-            user = User.query.get(user_id)
+        for identifier in user_identifiers:
+            user = None
+            # 首先尝试作为ID查询
+            if str(identifier).isdigit():
+                user = User.query.get(int(identifier))
+            
+            # 如果ID查询失败，尝试作为用户名查询
+            if not user:
+                user = User.query.filter_by(username=str(identifier)).first()
+            
             if user:
                 valid_users.append(user)
             else:
-                invalid_users.append(user_id)
+                invalid_users.append(identifier)
         
         if not valid_users:
             return jsonify({
