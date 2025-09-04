@@ -482,6 +482,12 @@ tr:hover {
     border-radius: 24px;
     position: relative;
     overflow: hidden;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .hero-section::before {
@@ -504,6 +510,11 @@ tr:hover {
     padding: 0 60px;
     z-index: 2;
     position: relative;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .hero-title {
@@ -512,6 +523,12 @@ tr:hover {
     font-weight: 700;
     line-height: 1.1;
     color: #1d1d1f;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 0.3s ease;
 }
 
 .hero-greeting {
@@ -528,6 +545,12 @@ tr:hover {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 0.3s ease;
 }
 
 .hero-subtitle {
@@ -540,10 +563,25 @@ tr:hover {
 .hero-stats {
     display: flex;
     gap: 40px;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .hero-stat {
     text-align: center;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 0.3s ease;
+}
+
+.hero-stat:hover {
+    transform: translate3d(0, -2px, 0);
 }
 
 .stat-number {
@@ -552,6 +590,12 @@ tr:hover {
     font-weight: 700;
     color: #1d1d1f;
     margin-bottom: 4px;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: all 0.3s ease;
 }
 
 .stat-label {
