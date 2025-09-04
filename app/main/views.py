@@ -1307,7 +1307,7 @@ def donation():
             user_vip_status = {
                 'is_vip': current_user.is_vip(),
                 'vip_expire_time': current_user.vip_expire_time,
-                'total_donation': float(current_user.total_donation or 0)
+                'total_donation': current_user.total_donation or 0
             }
         except Exception as e:
             logging.error(f"获取用户信息失败: {str(e)}")
@@ -1335,6 +1335,7 @@ def create_donation():
         
         # 检查捐赠功能是否启用且配置完整
         if not config.enabled or not config.is_configured():
+            logging.warning(f"捐赠功能不可用: enabled={config.enabled}, configured={config.is_configured()}")
             return jsonify({
                 'success': False,
                 'error': '捐赠功能暂时不可用'
@@ -1342,13 +1343,31 @@ def create_donation():
         
         # 获取请求数据
         data = request.get_json()
-        amount = float(data.get('amount', 0))
+        if not data:
+            logging.error("捐赠请求数据为空或格式错误")
+            return jsonify({
+                'success': False,
+                'error': '请求数据格式错误'
+            }), 400
+            
+        logging.info(f"收到捐赠请求数据: {data}")
+        
+        try:
+            amount = float(data.get('amount', 0))
+        except (ValueError, TypeError) as e:
+            logging.error(f"捐赠金额格式错误: {data.get('amount')}, 错误: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': '捐赠金额格式错误'
+            }), 400
+            
         donor_name = data.get('donor_name', '').strip()
         payment_type = data.get('payment_type', '').strip()
         message = data.get('message', '').strip()
         
         # 验证捐赠金额
-        if amount < config.min_amount or amount > config.max_amount:
+        if amount < float(config.min_amount) or amount > float(config.max_amount):
+            logging.warning(f"捐赠金额超出范围: {amount}, 范围: {config.min_amount}-{config.max_amount}")
             return jsonify({
                 'success': False,
                 'error': f'捐赠金额必须在 {config.min_amount} 到 {config.max_amount} 之间'
@@ -1356,6 +1375,7 @@ def create_donation():
         
         # 验证支付方式
         if payment_type not in ['alipay', 'wxpay']:
+            logging.warning(f"无效的支付方式: {payment_type}")
             return jsonify({
                 'success': False,
                 'error': '请选择有效的支付方式'
