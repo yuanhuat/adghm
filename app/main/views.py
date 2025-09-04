@@ -264,9 +264,12 @@ def clients():
     if not current_user.is_vip():
         remove_expired_vip_clients(current_user.id)
     
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('clients')
     structured_data = get_structured_data('clients')
     return render_template('main/clients.html', 
+                         donation_config=donation_config,
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
@@ -1313,6 +1316,7 @@ def donation():
             logging.error(f"获取用户信息失败: {str(e)}")
     
     return render_template('main/donation.html', 
+                         donation_config=config,
                          config=config,
                          vip_config=vip_config,
                          min_amount=float(config.min_amount),
@@ -1828,6 +1832,7 @@ def donation_ranking():
     total_count = DonationRecord.get_total_count()
     
     return render_template('main/donation_ranking.html', 
+                         donation_config=config,
                          leaderboard=leaderboard,
                          recent_donations=recent_donations,
                          total_amount=total_amount,
