@@ -43,6 +43,7 @@
                             <th>用户名</th>
                             <th>注册邮箱</th>
                             <th>注册时间</th>
+                            <th>VIP状态</th>
                             <th>客户端数</th>
                             <th>DNS请求数</th>
                             <th>客户端名称</th>
@@ -76,6 +77,20 @@
                                 {% endif %}
                             </td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if user.is_vip() %}
+                                    <span class="badge bg-success">VIP</span><br>
+                                    <small class="text-muted">到期: {{ user.vip_expire_time.strftime('%Y-%m-%d %H:%M') if user.vip_expire_time else '永久' }}</small><br>
+                                    <button class="btn btn-sm btn-outline-primary mt-1" onclick="editVipTime({{ user.id }}, '{{ user.vip_expire_time.strftime('%Y-%m-%d %H:%M') if user.vip_expire_time else '' }}')">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </button>
+                                {% else %}
+                                    <span class="badge bg-secondary">普通用户</span><br>
+                                    <button class="btn btn-sm btn-outline-success mt-1" onclick="editVipTime({{ user.id }}, '')">
+                                        <i class="fas fa-crown"></i> 设为VIP
+                                    </button>
+                                {% endif %}
+                            </td>
                             <td>{{ user.client_mappings|length }}</td>
                             <td>
                                 <span class="badge badge-info">
@@ -1155,5 +1170,130 @@ function deleteUnmatchedClients(data) {
         </div>
     </div>
 </div>
+
+<!-- VIP时间编辑模态框 -->
+<div class="modal fade" id="editVipModal" tabindex="-1" aria-labelledby="editVipModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVipModalLabel">
+                    <i class="fas fa-crown"></i> 编辑VIP时间
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editVipForm">
+                    <input type="hidden" id="editUserId" name="user_id">
+                    <div class="mb-3">
+                        <label for="vipExpireTime" class="form-label">VIP到期时间</label>
+                        <input type="datetime-local" class="form-control" id="vipExpireTime" name="vip_expire_time">
+                        <div class="form-text">留空表示取消VIP状态，设置未来时间表示延长VIP</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vipDays" class="form-label">或者选择延长天数</label>
+                        <select class="form-select" id="vipDays" onchange="updateVipTime()">
+                            <option value="">请选择...</option>
+                            <option value="7">延长7天</option>
+                            <option value="30">延长30天</option>
+                            <option value="90">延长90天</option>
+                            <option value="365">延长365天</option>
+                            <option value="-1">设为永久VIP</option>
+                            <option value="0">取消VIP</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveVipTime()">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * 编辑用户VIP时间
+ * @param {number} userId - 用户ID
+ * @param {string} currentExpireTime - 当前VIP到期时间
+ */
+function editVipTime(userId, currentExpireTime) {
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('vipExpireTime').value = currentExpireTime;
+    document.getElementById('vipDays').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('editVipModal'));
+    modal.show();
+}
+
+/**
+ * 根据选择的天数更新VIP时间
+ */
+function updateVipTime() {
+    const days = document.getElementById('vipDays').value;
+    const vipExpireTimeInput = document.getElementById('vipExpireTime');
+    
+    if (days === '') {
+        return;
+    }
+    
+    if (days === '0') {
+        // 取消VIP
+        vipExpireTimeInput.value = '';
+    } else if (days === '-1') {
+        // 永久VIP - 设置为很远的未来时间
+        const farFuture = new Date('2099-12-31 23:59');
+        vipExpireTimeInput.value = farFuture.toISOString().slice(0, 16);
+    } else {
+        // 延长指定天数
+        const now = new Date();
+        const currentExpire = vipExpireTimeInput.value ? new Date(vipExpireTimeInput.value) : now;
+        const baseTime = currentExpire > now ? currentExpire : now;
+        
+        const newExpire = new Date(baseTime.getTime() + parseInt(days) * 24 * 60 * 60 * 1000);
+        vipExpireTimeInput.value = newExpire.toISOString().slice(0, 16);
+    }
+}
+
+/**
+ * 保存VIP时间设置
+ */
+function saveVipTime() {
+    const userId = document.getElementById('editUserId').value;
+    const vipExpireTime = document.getElementById('vipExpireTime').value;
+    
+    const data = {
+        user_id: parseInt(userId),
+        vip_expire_time: vipExpireTime || null
+    };
+    
+    fetch('/admin/users/edit-vip', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editVipModal'));
+            modal.hide();
+            
+            // 刷新页面
+            location.reload();
+        } else {
+            alert('保存失败: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+    });
+}
+</script>
 
 {% endblock %}

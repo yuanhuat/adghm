@@ -1636,6 +1636,80 @@ def manage_ai_analysis_config():
                 'error': str(e)
             }), 500
 
+@admin.route('/users/edit-vip', methods=['POST'])
+@login_required
+@admin_required
+def edit_user_vip():
+    """编辑用户VIP时间
+    
+    接收用户ID和新的VIP到期时间，更新用户的VIP状态。
+    如果vip_expire_time为空，则取消用户的VIP状态。
+    """
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        vip_expire_time = data.get('vip_expire_time')
+        
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'message': '用户ID不能为空'
+            }), 400
+            
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': '用户不存在'
+            }), 404
+            
+        # 记录操作日志
+        old_vip_status = f"VIP到期时间: {user.vip_expire_time}" if user.vip_expire_time else "非VIP用户"
+        
+        if vip_expire_time:
+            # 设置VIP时间
+            from datetime import datetime
+            try:
+                expire_time = datetime.fromisoformat(vip_expire_time.replace('T', ' '))
+                user.vip_expire_time = expire_time
+                user.is_vip_user = True
+                new_vip_status = f"VIP到期时间: {expire_time}"
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'message': '时间格式错误'
+                }), 400
+        else:
+            # 取消VIP
+            user.vip_expire_time = None
+            user.is_vip_user = False
+            new_vip_status = "取消VIP状态"
+            
+        db.session.commit()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='UPDATE',
+            target_type='USER',
+            target_id=str(user.id),
+            details=f"修改用户 {user.username} 的VIP状态: {old_vip_status} -> {new_vip_status}"
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'VIP状态更新成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'更新失败: {str(e)}'
+        }), 500
+
 
 @admin.route('/vip-filter-rules')
 @login_required
