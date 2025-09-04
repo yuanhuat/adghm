@@ -60,7 +60,14 @@
                                 {% endif %}
                             </td>
                             <td>{{ user.id }}</td>
-                            <td>{{ user.username }}</td>
+                            <td>
+                                {{ user.username }}
+                                {% if user.is_vip() %}
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="fas fa-crown"></i> VIP
+                                    </span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if user.email %}
                                     {{ user.email }}
