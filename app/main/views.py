@@ -1595,6 +1595,181 @@ def api_adguard_client_update(client_name):
         }), 500
 
 
+@main.route('/api/clients/<client_name>/upstreams')
+@login_required
+def api_get_client_upstreams(client_name):
+    """获取指定客户端的上游DNS配置
+    
+    Args:
+        client_name: 客户端名称
+        
+    Returns:
+        JSON响应，包含客户端的上游DNS配置
+    """
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'message': '只有VIP用户才能查看客户端上游配置'
+            }), 403
+        
+        # 验证用户是否有权限访问该客户端
+        client_mapping = ClientMapping.query.filter_by(
+            user_id=current_user.id,
+            client_name=client_name
+        ).first()
+        
+        if not client_mapping:
+            return jsonify({
+                'success': False,
+                'message': '客户端不存在或您没有权限访问'
+            }), 404
+        
+        # 从AdGuard Home获取客户端配置
+        adguard = AdGuardService()
+        client = adguard.find_client(client_name)
+        
+        if not client:
+            return jsonify({
+                'success': False,
+                'message': f'在AdGuard Home中未找到客户端：{client_name}'
+            }), 404
+        
+        # 获取上游DNS配置
+        upstreams = client.get('upstreams', [])
+        
+        return jsonify({
+            'success': True,
+            'upstreams': upstreams
+        })
+        
+    except Exception as e:
+        logging.error(f"获取客户端上游配置失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'获取上游配置失败：{str(e)}'
+        }), 500
+
+
+@main.route('/api/clients/<client_name>/upstreams', methods=['PUT'])
+@login_required
+def api_update_client_upstreams(client_name):
+    """更新指定客户端的上游DNS配置
+    
+    Args:
+        client_name: 客户端名称
+        
+    Returns:
+        JSON响应，表示更新是否成功
+    """
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'message': '只有VIP用户才能编辑客户端上游配置'
+            }), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        upstreams = data.get('upstreams', [])
+        
+        # 验证上游DNS格式
+        if not isinstance(upstreams, list):
+            return jsonify({
+                'success': False,
+                'message': '上游DNS配置格式错误，必须是数组'
+            }), 400
+        
+        # 验证用户是否有权限访问该客户端
+        client_mapping = ClientMapping.query.filter_by(
+            user_id=current_user.id,
+            client_name=client_name
+        ).first()
+        
+        if not client_mapping:
+            return jsonify({
+                'success': False,
+                'message': '客户端不存在或您没有权限访问'
+            }), 404
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        # 获取当前客户端配置
+        current_client = adguard.find_client(client_name)
+        if not current_client:
+            return jsonify({
+                'success': False,
+                'message': f'在AdGuard Home中未找到客户端：{client_name}'
+            }), 404
+        
+        # 调用AdGuard Home API更新客户端，传递正确的参数
+        try:
+            # 构建更新数据，保持与当前客户端配置一致
+            update_data = {
+                'name': client_name,
+                'ids': current_client.get('ids', []),
+                'use_global_settings': current_client.get('use_global_settings', True),
+                'filtering_enabled': current_client.get('filtering_enabled', True),
+                'parental_enabled': current_client.get('parental_enabled', False),
+                'safebrowsing_enabled': current_client.get('safebrowsing_enabled', True),
+                'use_global_blocked_services': current_client.get('use_global_blocked_services', True),
+                'blocked_services': current_client.get('blocked_services', []),
+                'upstreams': upstreams,  # 更新上游DNS配置
+                'tags': current_client.get('tags', []),
+                'ignore_querylog': current_client.get('ignore_querylog', False),
+                'ignore_statistics': current_client.get('ignore_statistics', False)
+            }
+            
+            # 如果存在safe_search配置，也包含进去
+            if 'safe_search' in current_client:
+                update_data['safe_search'] = current_client['safe_search']
+            
+            result = adguard.update_client(**update_data)
+        except Exception as api_error:
+            logging.error(f"调用AdGuard API时发生错误: {str(api_error)}")
+            raise api_error
+        
+        # AdGuard API调用成功（即使返回空字典也表示成功）
+        if result is not None:
+            # 记录操作日志
+            operation_log = OperationLog(
+                user_id=current_user.id,
+                operation_type='UPDATE',
+                target_type='CLIENT_UPSTREAMS',
+                target_id=client_name,
+                details=f'VIP用户更新客户端上游DNS配置: {client_name}, 上游数量: {len(upstreams)}'
+            )
+            db.session.add(operation_log)
+            db.session.commit()
+            
+            logging.info(f"VIP用户 {current_user.username} 成功更新客户端 {client_name} 的上游DNS配置")
+            
+            return jsonify({
+                'success': True,
+                'message': '上游DNS配置更新成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '上游DNS配置更新失败'
+            }), 500
+        
+    except Exception as e:
+        logging.error(f"更新客户端上游配置失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'更新上游配置失败：{str(e)}'
+        }), 500
+
+
 @main.route('/donation/success')
 def donation_success():
     """捐赠支付成功页面

@@ -83,13 +83,19 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                {% if current_user.is_vip and not loop.first %}
+                                {% if current_user.is_vip %}
+                                <button class="btn btn-info btn-sm" onclick="editUpstreams('{{ mapping.client_name }}', {{ mapping.id }})"
+                                        title="编辑上游DNS">
+                                    <i class="fas fa-cog"></i> 上游DNS
+                                </button>
+                                {% if not loop.first %}
                                 <button class="btn btn-danger btn-sm" onclick="deleteClient({{ mapping.id }}, '{{ mapping.client_name }}')"
                                         title="删除客户端">
                                     <i class="fas fa-trash"></i> 删除
                                 </button>
+                                {% endif %}
                                 {% else %}
-                                <span class="text-muted">{% if loop.first %}主客户端{% else %}管理员可在后台管理{% endif %}</span>
+                                <span class="text-muted">{% if loop.first %}主客户端{% else %}仅VIP可编辑{% endif %}</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -126,6 +132,39 @@
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
                         <button type="submit" class="btn btn-primary">创建客户端</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 编辑上游DNS模态框 -->
+    {% if current_user.is_vip %}
+    <div id="editUpstreamsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑上游DNS配置</h3>
+                <span class="close" id="closeUpstreamsModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editUpstreamsForm">
+                    <div class="form-group">
+                        <label for="clientNameDisplay">客户端名称:</label>
+                        <input type="text" id="clientNameDisplay" readonly class="form-control-readonly">
+                        <input type="hidden" id="clientMappingId">
+                        <input type="hidden" id="clientNameHidden">
+                    </div>
+                    <div class="form-group">
+                        <label for="upstreamsConfig">上游DNS服务器:</label>
+                        <textarea id="upstreamsConfig" name="upstreams" rows="8" 
+                                  placeholder="每行一个DNS服务器，例如：&#10;8.8.8.8&#10;1.1.1.1&#10;https://dns.google/dns-query&#10;tls://dns.google"
+                                  class="form-control"></textarea>
+                        <small class="form-text">每行输入一个DNS服务器地址。支持普通DNS、DoH、DoT等格式。留空使用全局设置。</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelUpstreamsBtn">取消</button>
+                        <button type="submit" class="btn btn-primary">保存配置</button>
                     </div>
                 </form>
             </div>
@@ -245,6 +284,12 @@
         const cancelBtn = document.getElementById('cancelBtn');
         const createClientForm = document.getElementById('createClientForm');
         const clientIdInput = document.getElementById('clientId');
+        
+        // 上游DNS编辑模态框控制
+        const editUpstreamsModal = document.getElementById('editUpstreamsModal');
+        const closeUpstreamsModal = document.getElementById('closeUpstreamsModal');
+        const cancelUpstreamsBtn = document.getElementById('cancelUpstreamsBtn');
+        const editUpstreamsForm = document.getElementById('editUpstreamsForm');
         
         // 客户端ID输入验证 - 限制特殊字符和重复检测
         let duplicateCheckTimeout;
@@ -372,6 +417,63 @@
             });
         }
         
+        // 上游DNS编辑模态框事件处理
+        if (editUpstreamsModal && closeUpstreamsModal && cancelUpstreamsBtn && editUpstreamsForm) {
+            // 关闭模态框函数
+            function closeUpstreamsModalFunc() {
+                editUpstreamsModal.style.display = 'none';
+                editUpstreamsForm.reset();
+            }
+            
+            // 关闭模态框事件
+            closeUpstreamsModal.addEventListener('click', closeUpstreamsModalFunc);
+            cancelUpstreamsBtn.addEventListener('click', closeUpstreamsModalFunc);
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(e) {
+                if (e.target === editUpstreamsModal) {
+                    closeUpstreamsModalFunc();
+                }
+            });
+            
+            // 表单提交处理
+            editUpstreamsForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const clientName = document.getElementById('clientNameHidden').value;
+                const upstreamsText = document.getElementById('upstreamsConfig').value;
+                
+                // 将文本转换为数组，过滤空行
+                const upstreams = upstreamsText.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                // 发送更新请求
+                fetch(`/api/clients/${clientName}/upstreams`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        upstreams: upstreams
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('上游DNS配置更新成功！');
+                        closeUpstreamsModalFunc();
+                    } else {
+                        alert('更新失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('更新失败：网络错误');
+                });
+            });
+        }
+        
         // 点击菜单项后关闭菜单
         if (navToggle && navMenu) {
             const navLinks = navMenu.querySelectorAll('.nav-link');
@@ -415,6 +517,40 @@
                 alert('删除失败：网络错误');
             });
         }
+    }
+
+    // 编辑上游DNS配置函数
+    function editUpstreams(clientName, mappingId) {
+        const modal = document.getElementById('editUpstreamsModal');
+        const clientNameDisplay = document.getElementById('clientNameDisplay');
+        const clientNameHidden = document.getElementById('clientNameHidden');
+        const clientMappingId = document.getElementById('clientMappingId');
+        const upstreamsConfig = document.getElementById('upstreamsConfig');
+        
+        // 设置客户端信息
+        clientNameDisplay.value = clientName;
+        clientNameHidden.value = clientName;
+        clientMappingId.value = mappingId;
+        
+        // 获取当前上游配置
+        fetch(`/api/clients/${clientName}/upstreams`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 将上游DNS数组转换为每行一个的文本
+                    upstreamsConfig.value = (data.upstreams || []).join('\n');
+                } else {
+                    console.error('获取上游配置失败:', data.message);
+                    upstreamsConfig.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('获取上游配置时发生网络错误:', error);
+                upstreamsConfig.value = '';
+            });
+        
+        // 显示模态框
+        modal.style.display = 'block';
     }
 
     </script>
