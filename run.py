@@ -22,6 +22,6 @@ if __name__ == '__main__':
     api_filter = APILogFilter()
     log.addFilter(api_filter)
     
-    print(f" * Running on http://localhost:5000")
-    print(f" * Running on http://0.0.0.0:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f" * Running on http://localhost:80")
+    print(f" * Running on http://0.0.0.0:80")
+    app.run(host='0.0.0.0', port=80, debug=True)
