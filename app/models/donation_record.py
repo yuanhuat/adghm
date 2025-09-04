@@ -110,21 +110,20 @@ class DonationRecord(db.Model):
         from app.models.vip_config import VipConfig
         from app.models.user import User
         
-        vip_config = VipConfig.get_config()
-        if not vip_config.is_vip_eligible(self.amount):
-            return
-        
         user = User.query.get(self.user_id)
         if not user:
             return
         
-        # 增加用户累计捐赠金额
+        # 总是增加用户累计捐赠金额（无论VIP功能是否启用）
         user.add_donation(self.amount)
         
-        # 计算VIP天数并延长VIP时间
-        vip_days = vip_config.calculate_vip_days(self.amount)
-        if vip_days > 0:
-            user.extend_vip(vip_days)
+        # 检查是否符合VIP升级条件
+        vip_config = VipConfig.get_config()
+        if vip_config.is_vip_eligible(self.amount):
+            # 计算VIP天数并延长VIP时间
+            vip_days = vip_config.calculate_vip_days(self.amount)
+            if vip_days > 0:
+                user.extend_vip(vip_days)
             
         db.session.commit()
     
