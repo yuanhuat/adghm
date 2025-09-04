@@ -707,6 +707,30 @@ class AdGuardService:
         except Exception:
             return None
     
+    def find_client_name_by_id(self, client_id: str) -> Optional[str]:
+        """根据客户端ID查找客户端名称
+        
+        Args:
+            client_id: 客户端ID
+            
+        Returns:
+            Optional[str]: 客户端名称，如果未找到则返回None
+        """
+        try:
+            # 获取所有客户端列表
+            response_data = self._make_request('GET', '/clients')
+            clients = response_data.get('clients', [])
+            
+            # 查找包含指定ID的客户端
+            for client in clients:
+                client_ids = client.get('ids', [])
+                if client_id in client_ids:
+                    return client.get('name')
+                    
+            return None
+        except Exception:
+            return None
+    
     def get_status(self) -> Optional[Dict]:
         """获取AdGuardHome服务器状态和版本信息
         
@@ -1197,12 +1221,18 @@ class AdGuardService:
             List[str]: 该客户端的自定义规则列表
         """
         try:
+            # 根据客户端ID查找客户端名称
+            client_name = self.find_client_name_by_id(client_id)
+            if not client_name:
+                print(f"未找到客户端ID {client_id} 对应的客户端名称")
+                return []
+            
             status = self.get_filtering_status()
             user_rules = status.get('user_rules', [])
             
             # 查找带有客户端标签的规则
             client_rules = []
-            client_tag = f"$ctag=client_{client_id}"
+            client_tag = f"$client={client_name}"
             
             for rule in user_rules:
                 if client_tag in rule:
@@ -1227,13 +1257,18 @@ class AdGuardService:
             Dict: 操作结果
         """
         try:
+            # 根据客户端ID查找客户端名称
+            client_name = self.find_client_name_by_id(client_id)
+            if not client_name:
+                return {"success": False, "error": f"未找到客户端ID {client_id} 对应的客户端名称"}
+            
             # 获取当前所有规则
             status = self.get_filtering_status()
             current_rules = status.get('user_rules', [])
             
             # 添加客户端标签
-            client_tag = f"$ctag=client_{client_id}"
-            tagged_rule = f"{rule} {client_tag}"
+            client_tag = f"$client={client_name}"
+            tagged_rule = f"{rule}{client_tag}"
             
             # 检查规则是否已存在
             if tagged_rule not in current_rules:
@@ -1255,13 +1290,18 @@ class AdGuardService:
             Dict: 操作结果
         """
         try:
+            # 根据客户端ID查找客户端名称
+            client_name = self.find_client_name_by_id(client_id)
+            if not client_name:
+                return {"success": False, "error": f"未找到客户端ID {client_id} 对应的客户端名称"}
+            
             # 获取当前所有规则
             status = self.get_filtering_status()
             current_rules = status.get('user_rules', [])
             
             # 构建要删除的规则（带标签）
-            client_tag = f"$ctag=client_{client_id}"
-            tagged_rule = f"{rule} {client_tag}"
+            client_tag = f"$client={client_name}"
+            tagged_rule = f"{rule}{client_tag}"
             
             # 删除规则
             if tagged_rule in current_rules:
@@ -1282,12 +1322,17 @@ class AdGuardService:
             Dict: 操作结果，包含删除的规则数量
         """
         try:
+            # 根据客户端ID查找客户端名称
+            client_name = self.find_client_name_by_id(client_id)
+            if not client_name:
+                return {"success": False, "error": f"未找到客户端ID {client_id} 对应的客户端名称"}
+            
             # 获取当前所有规则
             status = self.get_filtering_status()
             current_rules = status.get('user_rules', [])
             
             # 查找并删除该客户端的所有规则
-            client_tag = f"$ctag=client_{client_id}"
+            client_tag = f"$client={client_name}"
             rules_to_remove = [rule for rule in current_rules if client_tag in rule]
             
             if rules_to_remove:
