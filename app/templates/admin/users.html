@@ -28,6 +28,9 @@
                     <button type="button" class="btn btn-success ms-2" onclick="showAdGuardClientsModal()" id="adguardClientsBtn">
                         <i class="fas fa-network-wired"></i> 查询AdGuard客户端
                     </button>
+                    <button type="button" class="btn btn-warning ms-2" onclick="showBulkVipModal()" id="bulkVipBtn" disabled>
+                        <i class="fas fa-crown"></i> 批量升级VIP
+                    </button>
                     <span class="ms-2 text-muted" id="selectedCount">已选择 0 个用户</span>
                     <span class="ms-2 text-info" id="filterStatus" style="display: none;"></span>
                 </div>
@@ -234,6 +237,60 @@
     </div>
 </div>
 
+<!-- 批量VIP升级模态框 -->
+<div class="modal fade" id="bulkVipModal" tabindex="-1" aria-labelledby="bulkVipModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkVipModalLabel">批量升级VIP</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkVipForm">
+                    <div class="mb-3">
+                        <label for="bulkUserIds" class="form-label">用户ID列表 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="bulkUserIds" name="user_ids" rows="4" required placeholder="请输入用户ID，每行一个或用逗号分隔\n例如：\n1\n2\n3\n或者：1,2,3"></textarea>
+                        <div class="form-text">支持每行一个ID或用逗号分隔多个ID</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulkVipDays" class="form-label">VIP天数 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="bulkVipDays" name="vip_days" required>
+                            <option value="">请选择VIP天数</option>
+                            <option value="7">7天</option>
+                            <option value="30">30天</option>
+                            <option value="90">90天</option>
+                            <option value="365">365天</option>
+                            <option value="-1">永久VIP</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="extendExisting" name="extend_existing" checked>
+                            <label class="text-muted" for="extendExisting">
+                                对已有VIP用户延长时间（而非重置）
+                            </label>
+                        </div>
+                        <div class="form-text">勾选此项时，已有VIP的用户将在现有到期时间基础上延长；不勾选则重置为从现在开始计算</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">预览操作</label>
+                        <div id="bulkVipPreview" class="border rounded p-3 bg-light" style="min-height: 100px;">
+                            <span class="text-muted">请输入用户ID和选择VIP天数后查看预览</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-info" onclick="previewBulkVip()">预览</button>
+                <button type="button" class="btn btn-warning" onclick="executeBulkVip()" id="executeBulkVipBtn" disabled>
+                    <i class="fas fa-crown"></i> 执行升级
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function deleteUser(userId) {
     if (!confirm('确定要删除该用户吗？这将同时删除用户的所有客户端。')) {
@@ -294,6 +351,8 @@ function updateSelectedCount() {
     document.getElementById('selectedCount').textContent = `已选择 ${count} 个用户`;
     document.getElementById('bulkEmailBtn').disabled = count === 0;
     document.getElementById('bulkDeleteBtn').disabled = count === 0;
+    // 批量VIP升级按钮始终可用，不依赖于选择状态
+    document.getElementById('bulkVipBtn').disabled = false;
     
     // 更新全选复选框状态 - 只考虑可见的复选框
     const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
@@ -1255,6 +1314,215 @@ function updateVipTime() {
         const newExpire = new Date(baseTime.getTime() + parseInt(days) * 24 * 60 * 60 * 1000);
         vipExpireTimeInput.value = newExpire.toISOString().slice(0, 16);
     }
+}
+
+/**
+ * 显示批量VIP升级模态框
+ */
+function showBulkVipModal() {
+    const modal = new bootstrap.Modal(document.getElementById('bulkVipModal'));
+    modal.show();
+    
+    // 获取当前选中的用户ID
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const selectedUserIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+    
+    // 填入选中的用户ID（如果有的话）
+    document.getElementById('bulkUserIds').value = selectedUserIds.join(', ');
+    document.getElementById('bulkVipDays').value = '';
+    document.getElementById('extendExisting').checked = true;
+    
+    if (selectedUserIds.length > 0) {
+        document.getElementById('bulkVipPreview').innerHTML = '<span class="text-info">已自动填入选中的 ' + selectedUserIds.length + ' 个用户ID，请选择VIP天数后查看预览</span>';
+    } else {
+        document.getElementById('bulkVipPreview').innerHTML = '<span class="text-muted">请输入用户ID和选择VIP天数后查看预览</span>';
+    }
+    
+    document.getElementById('executeBulkVipBtn').disabled = true;
+}
+
+/**
+ * 解析用户ID列表
+ * @param {string} userIdsText - 用户输入的ID文本
+ * @returns {number[]} - 解析后的用户ID数组
+ */
+function parseUserIds(userIdsText) {
+    if (!userIdsText.trim()) {
+        return [];
+    }
+    
+    // 支持换行符和逗号分隔
+    const ids = userIdsText.replace(/[\r\n]+/g, ',').split(',');
+    const validIds = [];
+    
+    for (let id of ids) {
+        const trimmedId = id.trim();
+        if (trimmedId && !isNaN(trimmedId)) {
+            validIds.push(parseInt(trimmedId));
+        }
+    }
+    
+    return [...new Set(validIds)]; // 去重
+}
+
+/**
+ * 预览批量VIP升级操作
+ */
+function previewBulkVip() {
+    const userIdsText = document.getElementById('bulkUserIds').value;
+    const vipDays = document.getElementById('bulkVipDays').value;
+    const extendExisting = document.getElementById('extendExisting').checked;
+    
+    if (!userIdsText.trim() || !vipDays) {
+        alert('请输入用户ID和选择VIP天数');
+        return;
+    }
+    
+    const userIds = parseUserIds(userIdsText);
+    if (userIds.length === 0) {
+        alert('请输入有效的用户ID');
+        return;
+    }
+    
+    const data = {
+        user_ids: userIds,
+        vip_days: parseInt(vipDays),
+        extend_existing: extendExisting,
+        preview_only: true
+    };
+    
+    fetch('/admin/users/bulk-vip', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            displayBulkVipPreview(result.preview);
+            document.getElementById('executeBulkVipBtn').disabled = false;
+        } else {
+            alert('预览失败: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+    });
+}
+
+/**
+ * 显示批量VIP升级预览结果
+ * @param {Object} preview - 预览数据
+ */
+function displayBulkVipPreview(preview) {
+    const previewDiv = document.getElementById('bulkVipPreview');
+    
+    let html = '<div class="row">';
+    
+    if (preview.valid_users && preview.valid_users.length > 0) {
+        html += '<div class="col-md-6">';
+        html += '<h6 class="text-success"><i class="fas fa-check"></i> 有效用户 (' + preview.valid_users.length + ')</h6>';
+        html += '<ul class="list-unstyled small">';
+        preview.valid_users.forEach(user => {
+            html += '<li><strong>ID:' + user.id + '</strong> - ' + user.username;
+            if (user.current_vip_expire) {
+                html += ' <span class="badge bg-warning">当前VIP到期: ' + user.current_vip_expire + '</span>';
+            }
+            html += '<br><span class="text-info">新到期时间: ' + user.new_expire_time + '</span></li>';
+        });
+        html += '</ul></div>';
+    }
+    
+    if (preview.invalid_users && preview.invalid_users.length > 0) {
+        html += '<div class="col-md-6">';
+        html += '<h6 class="text-danger"><i class="fas fa-times"></i> 无效用户 (' + preview.invalid_users.length + ')</h6>';
+        html += '<ul class="list-unstyled small">';
+        preview.invalid_users.forEach(userId => {
+            html += '<li class="text-danger">ID:' + userId + ' - 用户不存在</li>';
+        });
+        html += '</ul></div>';
+    }
+    
+    html += '</div>';
+    
+    if (preview.summary) {
+        html += '<hr><div class="alert alert-info small mb-0">';
+        html += '<strong>操作摘要:</strong> ' + preview.summary;
+        html += '</div>';
+    }
+    
+    previewDiv.innerHTML = html;
+}
+
+/**
+ * 执行批量VIP升级
+ */
+function executeBulkVip() {
+    const userIdsText = document.getElementById('bulkUserIds').value;
+    const vipDays = document.getElementById('bulkVipDays').value;
+    const extendExisting = document.getElementById('extendExisting').checked;
+    
+    if (!userIdsText.trim() || !vipDays) {
+        alert('请输入用户ID和选择VIP天数');
+        return;
+    }
+    
+    const userIds = parseUserIds(userIdsText);
+    if (userIds.length === 0) {
+        alert('请输入有效的用户ID');
+        return;
+    }
+    
+    if (!confirm('确定要为 ' + userIds.length + ' 个用户执行VIP升级操作吗？')) {
+        return;
+    }
+    
+    const data = {
+        user_ids: userIds,
+        vip_days: parseInt(vipDays),
+        extend_existing: extendExisting,
+        preview_only: false
+    };
+    
+    // 禁用按钮防止重复提交
+    const executeBtn = document.getElementById('executeBulkVipBtn');
+    executeBtn.disabled = true;
+    executeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 执行中...';
+    
+    fetch('/admin/users/bulk-vip', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('批量VIP升级成功！\n成功: ' + result.success_count + ' 个用户\n失败: ' + result.failed_count + ' 个用户');
+            
+            // 关闭模态框
+            const modal = bootstrap.Modal.getInstance(document.getElementById('bulkVipModal'));
+            modal.hide();
+            
+            // 刷新页面
+            location.reload();
+        } else {
+            alert('批量升级失败: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+    })
+    .finally(() => {
+        // 恢复按钮状态
+        executeBtn.disabled = false;
+        executeBtn.innerHTML = '<i class="fas fa-crown"></i> 执行升级';
+    });
 }
 
 /**

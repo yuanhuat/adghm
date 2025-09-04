@@ -1711,6 +1711,162 @@ def edit_user_vip():
         }), 500
 
 
+@admin.route('/users/bulk-vip', methods=['POST'])
+@login_required
+@admin_required
+def bulk_vip_upgrade():
+    """批量VIP升级功能
+    
+    支持批量为多个用户设置VIP状态，可以选择延长现有VIP时间或重置VIP时间。
+    支持预览模式，可以在实际执行前查看操作结果。
+    """
+    try:
+        data = request.get_json()
+        user_ids = data.get('user_ids', [])
+        vip_days = data.get('vip_days')
+        extend_existing = data.get('extend_existing', True)
+        preview_only = data.get('preview_only', False)
+        
+        if not user_ids:
+            return jsonify({
+                'success': False,
+                'message': '用户ID列表不能为空'
+            }), 400
+            
+        if vip_days is None:
+            return jsonify({
+                'success': False,
+                'message': 'VIP天数不能为空'
+            }), 400
+            
+        # 验证用户ID并获取用户信息
+        valid_users = []
+        invalid_users = []
+        
+        for user_id in user_ids:
+            user = User.query.get(user_id)
+            if user:
+                valid_users.append(user)
+            else:
+                invalid_users.append(user_id)
+        
+        if not valid_users:
+            return jsonify({
+                'success': False,
+                'message': '没有找到有效的用户'
+            }), 400
+            
+        # 计算新的VIP到期时间
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        
+        preview_data = {
+            'valid_users': [],
+            'invalid_users': invalid_users,
+            'summary': ''
+        }
+        
+        success_count = 0
+        failed_count = 0
+        
+        for user in valid_users:
+            try:
+                # 计算新的到期时间
+                if vip_days == -1:
+                    # 永久VIP
+                    new_expire_time = datetime(2099, 12, 31, 23, 59, 59)
+                    new_expire_str = '永久VIP'
+                elif vip_days == 0:
+                    # 取消VIP
+                    new_expire_time = None
+                    new_expire_str = '取消VIP'
+                else:
+                    # 设置指定天数的VIP
+                    if extend_existing and user.vip_expire_time and user.vip_expire_time > now:
+                        # 在现有VIP基础上延长
+                        base_time = user.vip_expire_time
+                    else:
+                        # 从现在开始计算
+                        base_time = now
+                    
+                    new_expire_time = base_time + timedelta(days=vip_days)
+                    new_expire_str = new_expire_time.strftime('%Y-%m-%d %H:%M:%S')
+                
+                # 添加到预览数据
+                user_preview = {
+                    'id': user.id,
+                    'username': user.username,
+                    'current_vip_expire': user.vip_expire_time.strftime('%Y-%m-%d %H:%M:%S') if user.vip_expire_time else None,
+                    'new_expire_time': new_expire_str
+                }
+                preview_data['valid_users'].append(user_preview)
+                
+                # 如果不是预览模式，执行实际更新
+                if not preview_only:
+                    old_vip_status = f"VIP到期时间: {user.vip_expire_time}" if user.vip_expire_time else "非VIP用户"
+                    
+                    if new_expire_time:
+                        user.vip_expire_time = new_expire_time
+                        user.is_vip_user = True
+                    else:
+                        user.vip_expire_time = None
+                        user.is_vip_user = False
+                    
+                    # 记录操作日志
+                    log = OperationLog(
+                        user_id=current_user.id,
+                        operation_type='BULK_UPDATE',
+                        target_type='USER',
+                        target_id=str(user.id),
+                        details=f"批量修改用户 {user.username} 的VIP状态: {old_vip_status} -> {new_expire_str}"
+                    )
+                    db.session.add(log)
+                    success_count += 1
+                    
+            except Exception as e:
+                current_app.logger.error(f"处理用户 {user.id} 时出错: {str(e)}")
+                failed_count += 1
+                continue
+        
+        # 生成操作摘要
+        if vip_days == -1:
+            operation_desc = "设为永久VIP"
+        elif vip_days == 0:
+            operation_desc = "取消VIP状态"
+        else:
+            if extend_existing:
+                operation_desc = f"延长VIP {vip_days} 天（在现有基础上）"
+            else:
+                operation_desc = f"设置VIP {vip_days} 天（从现在开始）"
+        
+        preview_data['summary'] = f"将为 {len(valid_users)} 个用户{operation_desc}"
+        
+        if preview_only:
+            return jsonify({
+                'success': True,
+                'preview': preview_data
+            })
+        else:
+            # 提交数据库更改
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': f'批量VIP升级完成',
+                'success_count': success_count,
+                'failed_count': failed_count,
+                'total_count': len(valid_users)
+            })
+            
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"批量VIP升级失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'批量升级失败: {str(e)}'
+        }), 500
+
+
 @admin.route('/vip-filter-rules')
 @login_required
 @admin_required
