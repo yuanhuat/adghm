@@ -54,7 +54,7 @@
             <div class="client-list">
                 <div class="client-header">
                     <h2>我的客户端列表</h2>
-                    {% if current_user.is_vip %}
+                    {% if current_user.is_vip() %}
                     <button class="btn btn-primary" id="createClientBtn">
                         <i class="fas fa-plus"></i> 创建新客户端
                     </button>
@@ -83,7 +83,7 @@
                             </td>
                             <td>{{ mapping.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                             <td>
-                                {% if current_user.is_vip %}
+                                {% if current_user.is_vip() %}
                                 <button class="btn btn-info btn-sm" onclick="editUpstreams('{{ mapping.client_name }}', {{ mapping.id }})"
                                         title="编辑上游DNS">
                                     <i class="fas fa-cog"></i> 上游DNS
@@ -110,7 +110,7 @@
     </div>
     
     <!-- 创建客户端模态框 -->
-    {% if current_user.is_vip %}
+    {% if current_user.is_vip() %}
     <div id="createClientModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -140,7 +140,7 @@
     {% endif %}
 
     <!-- 编辑上游DNS模态框 -->
-    {% if current_user.is_vip %}
+    {% if current_user.is_vip() %}
     <div id="editUpstreamsModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
