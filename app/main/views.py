@@ -47,6 +47,14 @@ def remove_expired_vip_clients(user_id):
             client_ids = mapping.client_ids
             
             try:
+                # 删除客户端的所有自定义规则
+                for client_id in client_ids:
+                    try:
+                        adguard.remove_all_client_custom_rules(client_id)
+                        logging.info(f"已删除过期VIP客户端 {client_id} 的所有自定义规则")
+                    except Exception as e:
+                        logging.warning(f"删除过期VIP客户端 {client_id} 自定义规则失败: {str(e)}")
+                
                 # 从AdGuard Home删除客户端
                 adguard.delete_client(client_name)
                 logging.info(f"已从AdGuard Home删除过期VIP客户端: {client_name}")
@@ -2211,6 +2219,14 @@ def api_delete_client(mapping_id):
         adguard = AdGuardService()
         
         try:
+            # 删除客户端的所有自定义规则
+            for client_id in client_ids:
+                try:
+                    adguard.remove_all_client_custom_rules(client_id)
+                    logging.info(f"已删除客户端 {client_id} 的所有自定义规则")
+                except Exception as e:
+                    logging.warning(f"删除客户端 {client_id} 自定义规则失败: {str(e)}")
+            
             # 从AdGuard Home删除客户端
             adguard.delete_client(client_name)
             logging.info(f"已从AdGuard Home删除客户端: {client_name}")
@@ -2270,4 +2286,191 @@ def api_delete_client(mapping_id):
         return jsonify({
             'success': False,
             'message': '服务器内部错误'
+        }), 500
+
+
+@main.route('/api/clients/<client_id>/custom-rules', methods=['GET'])
+@login_required
+def api_get_client_custom_rules(client_id):
+    """获取客户端自定义规则API"""
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'error': '只有VIP用户才能管理自定义规则'
+            }), 403
+        
+        # 验证客户端是否属于当前用户
+        mapping = ClientMapping.query.filter(
+            ClientMapping.user_id == current_user.id,
+            ClientMapping._client_ids.contains(f'"{client_id}"')
+        ).first()
+        
+        if not mapping:
+            return jsonify({
+                'success': False,
+                'error': '客户端不存在或无权限访问'
+            }), 404
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        # 获取客户端自定义规则
+        rules = adguard.get_client_custom_rules(client_id)
+        
+        return jsonify({
+            'success': True,
+            'rules': rules
+        })
+        
+    except Exception as e:
+        logging.error(f"获取客户端自定义规则API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '服务器内部错误'
+        }), 500
+
+
+@main.route('/api/clients/<client_id>/custom-rules', methods=['POST'])
+@login_required
+def api_add_client_custom_rule(client_id):
+    """添加客户端自定义规则API"""
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'error': '只有VIP用户才能管理自定义规则'
+            }), 403
+        
+        # 验证客户端是否属于当前用户
+        mapping = ClientMapping.query.filter(
+            ClientMapping.user_id == current_user.id,
+            ClientMapping._client_ids.contains(f'"{client_id}"')
+        ).first()
+        
+        if not mapping:
+            return jsonify({
+                'success': False,
+                'error': '客户端不存在或无权限访问'
+            }), 404
+        
+        # 获取请求数据
+        data = request.get_json()
+        if not data or 'rule' not in data:
+            return jsonify({
+                'success': False,
+                'error': '缺少规则内容'
+            }), 400
+        
+        rule = data['rule'].strip()
+        if not rule:
+            return jsonify({
+                'success': False,
+                'error': '规则内容不能为空'
+            }), 400
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        # 添加客户端自定义规则
+        adguard.add_client_custom_rule(client_id, rule)
+        
+        # 记录操作日志
+        operation_log = OperationLog(
+            user_id=current_user.id,
+            operation_type='CREATE',
+            target_type='CUSTOM_RULE',
+            target_id=f'{client_id}:{rule}',
+            details=f'VIP用户为客户端 {client_id} 添加自定义规则: {rule}'
+        )
+        db.session.add(operation_log)
+        db.session.commit()
+        
+        logging.info(f"VIP用户 {current_user.username} 为客户端 {client_id} 添加自定义规则: {rule}")
+        
+        return jsonify({
+            'success': True,
+            'message': '规则添加成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"添加客户端自定义规则API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '服务器内部错误'
+        }), 500
+
+
+@main.route('/api/clients/<client_id>/custom-rules', methods=['DELETE'])
+@login_required
+def api_remove_client_custom_rule(client_id):
+    """删除客户端自定义规则API"""
+    try:
+        # 检查用户是否为VIP
+        if not current_user.is_vip:
+            return jsonify({
+                'success': False,
+                'error': '只有VIP用户才能管理自定义规则'
+            }), 403
+        
+        # 验证客户端是否属于当前用户
+        mapping = ClientMapping.query.filter(
+            ClientMapping.user_id == current_user.id,
+            ClientMapping._client_ids.contains(f'"{client_id}"')
+        ).first()
+        
+        if not mapping:
+            return jsonify({
+                'success': False,
+                'error': '客户端不存在或无权限访问'
+            }), 404
+        
+        # 获取请求数据
+        data = request.get_json()
+        if not data or 'rule' not in data:
+            return jsonify({
+                'success': False,
+                'error': '缺少规则内容'
+            }), 400
+        
+        rule = data['rule'].strip()
+        if not rule:
+            return jsonify({
+                'success': False,
+                'error': '规则内容不能为空'
+            }), 400
+        
+        # 初始化AdGuard服务
+        adguard = AdGuardService()
+        
+        # 删除客户端自定义规则
+        adguard.remove_client_custom_rule(client_id, rule)
+        
+        # 记录操作日志
+        operation_log = OperationLog(
+            user_id=current_user.id,
+            operation_type='DELETE',
+            target_type='CUSTOM_RULE',
+            target_id=f'{client_id}:{rule}',
+            details=f'VIP用户为客户端 {client_id} 删除自定义规则: {rule}'
+        )
+        db.session.add(operation_log)
+        db.session.commit()
+        
+        logging.info(f"VIP用户 {current_user.username} 为客户端 {client_id} 删除自定义规则: {rule}")
+        
+        return jsonify({
+            'success': True,
+            'message': '规则删除成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"删除客户端自定义规则API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': '服务器内部错误'
         }), 500

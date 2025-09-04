@@ -1166,3 +1166,139 @@ class AdGuardService:
             return True
         except ValueError:
             return False
+    
+    def get_filtering_status(self) -> Dict:
+        """获取过滤状态和规则
+        
+        Returns:
+            Dict: 包含过滤状态和用户自定义规则的信息
+        """
+        return self._make_request('GET', '/filtering/status')
+    
+    def set_filtering_rules(self, rules: List[str]) -> Dict:
+        """设置用户自定义过滤规则
+        
+        Args:
+            rules: 过滤规则列表
+            
+        Returns:
+            Dict: 操作结果
+        """
+        data = {"rules": rules}
+        return self._make_request('POST', '/filtering/set_rules', json=data)
+    
+    def get_client_custom_rules(self, client_id: str) -> List[str]:
+        """获取指定客户端的自定义规则
+        
+        Args:
+            client_id: 客户端ID
+            
+        Returns:
+            List[str]: 该客户端的自定义规则列表
+        """
+        try:
+            status = self.get_filtering_status()
+            user_rules = status.get('user_rules', [])
+            
+            # 查找带有客户端标签的规则
+            client_rules = []
+            client_tag = f"$ctag=client_{client_id}"
+            
+            for rule in user_rules:
+                if client_tag in rule:
+                    # 移除标签，只返回规则内容
+                    clean_rule = rule.replace(f" {client_tag}", "").replace(f"{client_tag} ", "").replace(client_tag, "")
+                    if clean_rule.strip():
+                        client_rules.append(clean_rule.strip())
+            
+            return client_rules
+        except Exception as e:
+            print(f"获取客户端自定义规则失败: {str(e)}")
+            return []
+    
+    def add_client_custom_rule(self, client_id: str, rule: str) -> Dict:
+        """为指定客户端添加自定义规则
+        
+        Args:
+            client_id: 客户端ID
+            rule: 要添加的规则
+            
+        Returns:
+            Dict: 操作结果
+        """
+        try:
+            # 获取当前所有规则
+            status = self.get_filtering_status()
+            current_rules = status.get('user_rules', [])
+            
+            # 添加客户端标签
+            client_tag = f"$ctag=client_{client_id}"
+            tagged_rule = f"{rule} {client_tag}"
+            
+            # 检查规则是否已存在
+            if tagged_rule not in current_rules:
+                current_rules.append(tagged_rule)
+                return self.set_filtering_rules(current_rules)
+            else:
+                return {"success": True, "message": "规则已存在"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def remove_client_custom_rule(self, client_id: str, rule: str) -> Dict:
+        """删除指定客户端的自定义规则
+        
+        Args:
+            client_id: 客户端ID
+            rule: 要删除的规则
+            
+        Returns:
+            Dict: 操作结果
+        """
+        try:
+            # 获取当前所有规则
+            status = self.get_filtering_status()
+            current_rules = status.get('user_rules', [])
+            
+            # 构建要删除的规则（带标签）
+            client_tag = f"$ctag=client_{client_id}"
+            tagged_rule = f"{rule} {client_tag}"
+            
+            # 删除规则
+            if tagged_rule in current_rules:
+                current_rules.remove(tagged_rule)
+                return self.set_filtering_rules(current_rules)
+            else:
+                return {"success": True, "message": "规则不存在"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def remove_all_client_custom_rules(self, client_id: str) -> Dict:
+        """删除指定客户端的所有自定义规则
+        
+        Args:
+            client_id: 客户端ID
+            
+        Returns:
+            Dict: 操作结果，包含删除的规则数量
+        """
+        try:
+            # 获取当前所有规则
+            status = self.get_filtering_status()
+            current_rules = status.get('user_rules', [])
+            
+            # 查找并删除该客户端的所有规则
+            client_tag = f"$ctag=client_{client_id}"
+            rules_to_remove = [rule for rule in current_rules if client_tag in rule]
+            
+            if rules_to_remove:
+                # 删除规则
+                for rule in rules_to_remove:
+                    current_rules.remove(rule)
+                
+                result = self.set_filtering_rules(current_rules)
+                result["removed_count"] = len(rules_to_remove)
+                return result
+            else:
+                return {"success": True, "message": "没有找到该客户端的规则", "removed_count": 0}
+        except Exception as e:
+            return {"success": False, "error": str(e), "removed_count": 0}

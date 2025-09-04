@@ -88,6 +88,10 @@
                                         title="编辑上游DNS">
                                     <i class="fas fa-cog"></i> 上游DNS
                                 </button>
+                                <button class="btn btn-warning btn-sm" onclick="manageCustomRules('{{ mapping.client_ids[0] if mapping.client_ids else '' }}', '{{ mapping.client_name }}')"
+                                        title="管理自定义规则">
+                                    <i class="fas fa-filter"></i> 自定义规则
+                                </button>
                                 {% if not loop.first %}
                                 <button class="btn btn-danger btn-sm" onclick="deleteClient({{ mapping.id }}, '{{ mapping.client_name }}')"
                                         title="删除客户端">
@@ -167,6 +171,53 @@
                         <button type="submit" class="btn btn-primary">保存配置</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 自定义规则管理模态框 -->
+    {% if current_user.is_vip() %}
+    <div id="customRulesModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>管理自定义过滤规则</h3>
+                <span class="close" id="closeCustomRulesModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>客户端信息:</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="customRulesClientName" readonly class="form-control-readonly" style="flex: 1;" placeholder="客户端名称">
+                        <input type="text" id="customRulesClientId" readonly class="form-control-readonly" style="flex: 1;" placeholder="客户端ID">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newCustomRule">添加新规则:</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <select id="ruleType" class="form-control" style="width: 120px;">
+                            <option value="block">阻止</option>
+                            <option value="allow">允许</option>
+                        </select>
+                        <input type="text" id="newCustomRule" class="form-control" style="flex: 1;" placeholder="输入域名或规则，如: example.com 或 ||ads.example.com^">
+                        <button type="button" class="btn btn-primary" onclick="addCustomRule()">添加</button>
+                    </div>
+                    <small class="form-text">支持AdGuard语法，如: ||example.com^ (阻止域名), @@||example.com^ (允许域名)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>当前规则列表:</label>
+                    <div id="customRulesList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <div class="loading-spinner" style="text-align: center; padding: 20px;">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelCustomRulesBtn">关闭</button>
+                </div>
             </div>
         </div>
     </div>
@@ -518,6 +569,210 @@
             });
         }
     }
+
+    // 自定义规则管理相关函数
+    let currentClientId = '';
+    let currentClientName = '';
+
+    /**
+     * 打开自定义规则管理模态框
+     * @param {string} clientId - 客户端ID
+     * @param {string} clientName - 客户端名称
+     */
+    function manageCustomRules(clientId, clientName) {
+        currentClientId = clientId;
+        currentClientName = clientName;
+        
+        document.getElementById('customRulesClientId').value = clientId;
+        document.getElementById('customRulesClientName').value = clientName;
+        document.getElementById('newCustomRule').value = '';
+        document.getElementById('ruleType').value = 'block';
+        
+        // 显示模态框
+        document.getElementById('customRulesModal').style.display = 'block';
+        
+        // 加载当前规则
+        loadCustomRules(clientId);
+    }
+
+    /**
+     * 加载客户端的自定义规则
+     * @param {string} clientId - 客户端ID
+     */
+    function loadCustomRules(clientId) {
+        const rulesList = document.getElementById('customRulesList');
+        rulesList.innerHTML = '<div class="loading-spinner" style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>';
+        
+        fetch(`/api/clients/${clientId}/custom-rules`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayCustomRules(data.rules);
+                } else {
+                    rulesList.innerHTML = '<div class="alert alert-danger">加载规则失败: ' + (data.error || '未知错误') + '</div>';
+                }
+            })
+            .catch(error => {
+                rulesList.innerHTML = '<div class="alert alert-danger">加载规则失败: ' + error.message + '</div>';
+            });
+    }
+
+    /**
+     * 显示自定义规则列表
+     * @param {Array} rules - 规则数组
+     */
+    function displayCustomRules(rules) {
+        const rulesList = document.getElementById('customRulesList');
+        
+        if (rules.length === 0) {
+            rulesList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 20px;">暂无自定义规则</div>';
+            return;
+        }
+        
+        let html = '<div class="rules-list">';
+        rules.forEach((rule, index) => {
+            const ruleType = rule.startsWith('@@') ? 'allow' : 'block';
+            const ruleText = rule.startsWith('@@') ? rule.substring(2) : rule;
+            const badgeClass = ruleType === 'allow' ? 'badge-success' : 'badge-danger';
+            const typeText = ruleType === 'allow' ? '允许' : '阻止';
+            
+            html += `
+                <div class="rule-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee;">
+                    <div style="flex: 1;">
+                        <span class="badge ${badgeClass}" style="margin-right: 8px;">${typeText}</span>
+                        <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">${ruleText}</code>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomRule('${rule.replace(/'/g, "\\'")}')"
+                            title="删除规则">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        rulesList.innerHTML = html;
+    }
+
+    /**
+     * 添加自定义规则
+     */
+    function addCustomRule() {
+        const ruleInput = document.getElementById('newCustomRule');
+        const ruleType = document.getElementById('ruleType').value;
+        let rule = ruleInput.value.trim();
+        
+        if (!rule) {
+            alert('请输入规则内容');
+            return;
+        }
+        
+        // 根据规则类型添加前缀
+        if (ruleType === 'allow' && !rule.startsWith('@@')) {
+            rule = '@@' + rule;
+        } else if (ruleType === 'block' && rule.startsWith('@@')) {
+            rule = rule.substring(2);
+        }
+        
+        // 如果是简单域名，转换为AdGuard格式
+        if (!rule.includes('||') && !rule.includes('^') && !rule.includes('*') && !rule.includes('/')) {
+            if (rule.startsWith('@@')) {
+                rule = '@@||' + rule.substring(2) + '^';
+            } else {
+                rule = '||' + rule + '^';
+            }
+        }
+        
+        fetch(`/api/clients/${currentClientId}/custom-rules`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rule: rule })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ruleInput.value = '';
+                loadCustomRules(currentClientId);
+            } else {
+                alert('添加规则失败: ' + (data.error || '未知错误'));
+            }
+        })
+        .catch(error => {
+            alert('添加规则失败: ' + error.message);
+        });
+    }
+
+    /**
+     * 删除自定义规则
+     * @param {string} rule - 要删除的规则
+     */
+    function removeCustomRule(rule) {
+        if (!confirm('确定要删除这条规则吗？')) {
+            return;
+        }
+        
+        fetch(`/api/clients/${currentClientId}/custom-rules`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rule: rule })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadCustomRules(currentClientId);
+            } else {
+                alert('删除规则失败: ' + (data.error || '未知错误'));
+            }
+        })
+        .catch(error => {
+            alert('删除规则失败: ' + error.message);
+        });
+    }
+
+    // 自定义规则模态框事件处理
+    document.addEventListener('DOMContentLoaded', function() {
+        const customRulesModal = document.getElementById('customRulesModal');
+        const closeCustomRulesModal = document.getElementById('closeCustomRulesModal');
+        const cancelCustomRulesBtn = document.getElementById('cancelCustomRulesBtn');
+        const newCustomRuleInput = document.getElementById('newCustomRule');
+        
+        // 关闭模态框
+        function closeCustomRulesModalFunc() {
+            customRulesModal.style.display = 'none';
+            currentClientId = '';
+            currentClientName = '';
+        }
+        
+        if (closeCustomRulesModal) {
+            closeCustomRulesModal.addEventListener('click', closeCustomRulesModalFunc);
+        }
+        
+        if (cancelCustomRulesBtn) {
+            cancelCustomRulesBtn.addEventListener('click', closeCustomRulesModalFunc);
+        }
+        
+        // 点击模态框外部关闭
+        if (customRulesModal) {
+            customRulesModal.addEventListener('click', function(e) {
+                if (e.target === customRulesModal) {
+                    closeCustomRulesModalFunc();
+                }
+            });
+        }
+        
+        // 回车键添加规则
+        if (newCustomRuleInput) {
+            newCustomRuleInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCustomRule();
+                }
+            });
+        }
+    });
 
     // 编辑上游DNS配置函数
     function editUpstreams(clientName, mappingId) {
