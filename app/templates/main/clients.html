@@ -125,7 +125,7 @@
                 <form id="createClientForm">
                     <div class="form-group">
                         <label for="clientName">客户端名称:</label>
-                        <input type="text" id="clientName" name="client_name" required placeholder="请输入客户端名称">
+                        <input type="text" id="clientName" name="client_name" required placeholder="请输入客户端名称（仅限英文字母）">
                     </div>
                     <div class="form-group">
                         <label for="clientId">客户端ID:</label>
@@ -257,6 +257,28 @@
         }
     }
     
+    // 显示客户端名称错误信息
+    function showClientNameError(inputElement, message) {
+        removeClientNameError(inputElement); // 先移除现有错误信息
+        
+        const errorMsg = document.createElement('small');
+        errorMsg.className = 'client-name-error-message';
+        errorMsg.style.color = '#dc3545';
+        errorMsg.style.display = 'block';
+        errorMsg.style.marginTop = '5px';
+        errorMsg.textContent = message;
+        
+        inputElement.parentNode.appendChild(errorMsg);
+    }
+    
+    // 移除客户端名称错误信息
+    function removeClientNameError(inputElement) {
+        const errorMsg = inputElement.parentNode.querySelector('.client-name-error-message');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+    }
+    
     // 检查客户端ID是否重复
     function checkClientIdDuplicate(clientId, inputElement) {
         // 移除之前的重复检查错误信息
@@ -335,6 +357,7 @@
         const cancelBtn = document.getElementById('cancelBtn');
         const createClientForm = document.getElementById('createClientForm');
         const clientIdInput = document.getElementById('clientId');
+        const clientNameInput = document.getElementById('clientName');
         
         // 上游DNS编辑模态框控制
         const editUpstreamsModal = document.getElementById('editUpstreamsModal');
@@ -390,6 +413,41 @@
             });
         }
         
+        // 客户端名称输入验证 - 限制只能输入英文字符
+        if (clientNameInput) {
+            clientNameInput.addEventListener('input', function(e) {
+                // 只允许英文字母（大小写）
+                const allowedPattern = /^[a-zA-Z]*$/;
+                const value = e.target.value;
+                
+                if (!allowedPattern.test(value)) {
+                    // 移除不允许的字符
+                    e.target.value = value.replace(/[^a-zA-Z]/g, '');
+                    
+                    // 显示提示信息
+                    showClientNameError(e.target, '客户端名称只能包含英文字母');
+                } else {
+                    // 移除错误信息
+                    removeClientNameError(e.target);
+                }
+            });
+            
+            // 防止粘贴不合法字符
+            clientNameInput.addEventListener('paste', function(e) {
+                setTimeout(() => {
+                    const allowedPattern = /^[a-zA-Z]*$/;
+                    const value = e.target.value;
+                    
+                    if (!allowedPattern.test(value)) {
+                        e.target.value = value.replace(/[^a-zA-Z]/g, '');
+                        showClientNameError(e.target, '客户端名称只能包含英文字母');
+                    } else {
+                        removeClientNameError(e.target);
+                    }
+                }, 0);
+            });
+        }
+        
         if (createClientBtn && createClientModal) {
             // 打开模态框
             createClientBtn.addEventListener('click', function() {
@@ -419,6 +477,13 @@
                 const formData = new FormData(createClientForm);
                 const clientName = formData.get('client_name');
                 const clientId = formData.get('client_id');
+                
+                // 提交前再次验证客户端名称
+                const clientNamePattern = /^[a-zA-Z]+$/;
+                if (!clientNamePattern.test(clientName)) {
+                    alert('客户端名称格式不正确！只能包含英文字母');
+                    return;
+                }
                 
                 // 提交前再次验证客户端ID
                 const allowedPattern = /^[a-zA-Z0-9._:-]+$/;
