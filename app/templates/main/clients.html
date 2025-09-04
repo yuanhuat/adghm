@@ -129,7 +129,7 @@
                     </div>
                     <div class="form-group">
                         <label for="clientId">客户端ID:</label>
-                        <input type="text" id="clientId" name="client_id" required placeholder="请输入客户端ID（如IP地址或设备标识）">
+                        <input type="text" id="clientId" name="client_id" required placeholder="请输入客户端ID（仅限小写字母、数字等）">
                         <small class="form-text">客户端ID用于标识设备，可以是IP地址或设备名称</small>
                     </div>
                     <!-- 客户端标签选择功能已隐藏，VIP用户默认使用user_child标签 -->
@@ -369,16 +369,16 @@
         let duplicateCheckTimeout;
         if (clientIdInput) {
             clientIdInput.addEventListener('input', function(e) {
-                // 只允许字母、数字、点号、连字符、下划线和冒号（用于IPv6）
-                const allowedPattern = /^[a-zA-Z0-9._:-]*$/;
+                // 只允许小写字母、数字、点号、连字符、下划线和冒号（用于IPv6）
+                const allowedPattern = /^[a-z0-9._:-]*$/;
                 const value = e.target.value;
                 
                 if (!allowedPattern.test(value)) {
                     // 移除不允许的字符
-                    e.target.value = value.replace(/[^a-zA-Z0-9._:-]/g, '');
+                    e.target.value = value.replace(/[^a-z0-9._:-]/g, '');
                     
                     // 显示提示信息
-                    showClientIdError(e.target, '客户端ID只能包含字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
+                    showClientIdError(e.target, '客户端ID只能包含小写字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
                 } else {
                     // 移除格式错误信息
                     removeClientIdError(e.target);
@@ -403,11 +403,11 @@
             // 防止粘贴不合法字符
             clientIdInput.addEventListener('paste', function(e) {
                 setTimeout(() => {
-                    const allowedPattern = /^[a-zA-Z0-9._:-]*$/;
+                    const allowedPattern = /^[a-z0-9._:-]*$/;
                     const value = e.target.value;
                     
                     if (!allowedPattern.test(value)) {
-                        e.target.value = value.replace(/[^a-zA-Z0-9._:-]/g, '');
+                        e.target.value = value.replace(/[^a-z0-9._:-]/g, '');
                     }
                 }, 0);
             });
@@ -486,9 +486,9 @@
                 }
                 
                 // 提交前再次验证客户端ID
-                const allowedPattern = /^[a-zA-Z0-9._:-]+$/;
+                const allowedPattern = /^[a-z0-9._:-]+$/;
                 if (!allowedPattern.test(clientId)) {
-                    alert('客户端ID格式不正确！只能包含字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
+                    alert('客户端ID格式不正确！只能包含小写字母、数字、点号(.)、连字符(-)、下划线(_)和冒号(:)');
                     return;
                 }
                 
