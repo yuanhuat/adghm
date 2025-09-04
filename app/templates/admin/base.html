@@ -51,33 +51,50 @@
                 <span></span>
             </button>
             <div class="nav-menu" id="navMenu">
-                <a href="{{ url_for('admin.users') }}" class="nav-link">用户管理</a>
-                <a href="{{ url_for('admin.announcements') }}" class="nav-link">公告管理</a>
-                <a href="{{ url_for('main.global_blocked_services_page') }}" class="nav-link">全局阻止</a>
-                <a href="{{ url_for('admin.vip_filter_rules') }}" class="nav-link">VIP专属过滤规则</a>
-                
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle">系统管理</a>
+                    <a href="#" class="nav-link dropdown-toggle">用户管理</a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{{ url_for('admin.system_config') }}">系统设置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.dns_config') }}">DNS配置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.dns_rewrite_page') }}">DNS重写管理</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.email_config') }}">邮件配置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.ai_analysis_config') }}">AI分析配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.users') }}">用户管理</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.announcements') }}">公告管理</a>
                         <a class="dropdown-item" href="{{ url_for('admin.feedbacks') }}">反馈管理</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.donation_config') }}">捐赠配置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.donation_records') }}">捐赠记录管理</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.vip_config') }}">VIP配置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.operation_logs') }}">操作日志</a>
                     </div>
                 </div>
                 
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle">查询日志</a>
+                    <a href="#" class="nav-link dropdown-toggle">过滤规则</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.global_blocked_services_page') }}">全局阻止</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.vip_filter_rules') }}">VIP专属过滤规则</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.dns_rewrite_page') }}">DNS重写管理</a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">系统配置</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('admin.system_config') }}">系统设置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.dns_config') }}">DNS配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.email_config') }}">邮件配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.ai_analysis_config') }}">AI分析配置</a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">VIP&捐赠</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('admin.vip_config') }}">VIP配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.donation_config') }}">捐赠配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.donation_records') }}">捐赠记录管理</a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">日志监控</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{{ url_for('admin.query_log') }}">原版查询日志</a>
                         <a class="dropdown-item" href="{{ url_for('admin.query_log_enhanced') }}">增强查询日志</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.operation_logs') }}">操作日志</a>
                     </div>
                 </div>
                 
@@ -120,38 +137,22 @@
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     
-                    const dropdownMenu = this.nextElementSibling;
+                    const dropdown = this.parentElement;
+                    const isActive = dropdown.classList.contains('active');
                     
-                    if (window.innerWidth <= 768) {
-                        // 移动端：切换显示状态
-                        const isVisible = dropdownMenu.style.display === 'block';
-                        
-                        // 关闭所有其他下拉菜单
-                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                            menu.style.display = 'none';
-                        });
-                        
-                        // 切换当前下拉菜单
-                        dropdownMenu.style.display = isVisible ? 'none' : 'block';
-                    } else {
-                        // 桌面端：切换显示状态
-                        const isVisible = dropdownMenu.style.display === 'block' || 
-                                        getComputedStyle(dropdownMenu).visibility === 'visible';
-                        
-                        // 关闭所有其他下拉菜单
-                        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                            menu.style.display = 'none';
-                            menu.style.opacity = '0';
-                            menu.style.visibility = 'hidden';
-                        });
-                        
-                        // 切换当前下拉菜单
-                        if (!isVisible) {
-                            dropdownMenu.style.display = 'block';
-                            dropdownMenu.style.opacity = '1';
-                            dropdownMenu.style.visibility = 'visible';
-                            dropdownMenu.style.transform = 'translateY(0)';
+                    // 关闭所有其他下拉菜单
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
                         }
+                    });
+                    
+                    // 切换当前下拉菜单
+                    if (!isActive) {
+                        dropdown.classList.add('active');
+                        this.classList.add('active');
                     }
                 });
             });
@@ -163,8 +164,12 @@
                     navToggle.classList.remove('active');
                     navMenu.classList.remove('active');
                     // 关闭所有下拉菜单
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        menu.style.display = 'none';
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
                     });
                 });
             });
@@ -175,8 +180,12 @@
                     navToggle.classList.remove('active');
                     navMenu.classList.remove('active');
                     // 关闭所有下拉菜单
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        menu.style.display = 'none';
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
                     });
                 }
             });
