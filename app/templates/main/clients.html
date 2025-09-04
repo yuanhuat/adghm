@@ -11,6 +11,90 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/clients.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    
+    <style>
+        /* 优化规则类型选择器样式 */
+        #ruleType {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        
+        #ruleType:hover {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        #ruleType:focus {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        #ruleType option {
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: #2c2c2e;
+            color: #ffffff;
+        }
+        
+        #ruleType option[value="block"] {
+            background-color: #3d1a1a;
+            color: #ff6b6b;
+        }
+        
+        #ruleType option[value="allow"] {
+            background-color: #1a3d1a;
+            color: #4caf50;
+        }
+        
+        /* 优化上游DNS配置文本框样式 */
+        #upstreamsConfig {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            color: #ffffff;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        #upstreamsConfig:hover {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        #upstreamsConfig:focus {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        #upstreamsConfig::placeholder {
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* 优化表单文本样式 */
+        .form-text {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -162,9 +246,9 @@
                     <div class="form-group">
                         <label for="upstreamsConfig">上游DNS服务器:</label>
                         <textarea id="upstreamsConfig" name="upstreams" rows="8" 
-                                  placeholder="每行一个DNS服务器，例如：&#10;8.8.8.8&#10;1.1.1.1&#10;https://dns.google/dns-query&#10;tls://dns.google"
+                                  placeholder="📡 每行一个DNS服务器，支持多种格式：&#10;&#10;🔹 普通DNS: 8.8.8.8&#10;🔹 DoH: https://dns.google/dns-query&#10;🔹 DoT: tls://dns.google&#10;🔹 IPv6: 2001:4860:4860::8888&#10;&#10;💡 留空将使用全局DNS设置"
                                   class="form-control"></textarea>
-                        <small class="form-text">每行输入一个DNS服务器地址。支持普通DNS、DoH、DoT等格式。留空使用全局设置。</small>
+                        <small class="form-text">✨ 支持普通DNS、DoH(HTTPS)、DoT(TLS)、IPv6等多种格式 | 🌐 留空将继承全局DNS配置</small>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" id="cancelUpstreamsBtn">取消</button>
@@ -196,9 +280,9 @@
                 <div class="form-group">
                     <label for="newCustomRule">添加新规则:</label>
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <select id="ruleType" class="form-control" style="width: 120px;">
-                            <option value="block">阻止</option>
-                            <option value="allow">允许</option>
+                        <select id="ruleType" class="form-select" style="width: 130px; border-radius: 8px; border: 2px solid #3a3a3c; font-weight: 500; transition: all 0.3s ease;">
+                            <option value="block" style="color: #dc3545; font-weight: 500;">🚫 阻止</option>
+                            <option value="allow" style="color: #28a745; font-weight: 500;">✅ 允许</option>
                         </select>
                         <input type="text" id="newCustomRule" class="form-control" style="flex: 1;" placeholder="输入域名或规则，如: example.com 或 ||ads.example.com^">
                         <button type="button" class="btn btn-primary" onclick="addCustomRule()">添加</button>
