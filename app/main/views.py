@@ -2068,6 +2068,62 @@ def api_check_client_duplicate():
         }), 500
 
 
+@main.route('/api/clients/check-name-duplicate', methods=['POST'])
+@login_required
+def api_check_client_name_duplicate():
+    """检查客户端名称是否重复API"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        client_name = data.get('client_name', '').strip()
+        
+        if not client_name:
+            return jsonify({
+                'success': False,
+                'message': '客户端名称不能为空'
+            }), 400
+        
+        # 检查客户端名称是否已在AdGuard Home中存在
+        adguard = AdGuardService()
+        
+        # 检查AdGuard连接
+        if not adguard.check_connection():
+            return jsonify({
+                'success': False,
+                'message': '无法连接到AdGuardHome服务器'
+            }), 500
+        
+        # 获取所有AdGuard客户端
+        all_clients = adguard.get_all_clients()
+        
+        # 检查客户端名称是否已存在
+        for client in all_clients:
+            if client.get('name') == client_name:
+                return jsonify({
+                    'success': False,
+                    'duplicate': True,
+                    'message': f'客户端名称 "{client_name}" 已被使用'
+                })
+        
+        return jsonify({
+            'success': True,
+            'duplicate': False,
+            'message': '客户端名称可用'
+        })
+        
+    except Exception as e:
+        logging.error(f"检查客户端名称重复API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误'
+        }), 500
+
+
 @main.route('/api/clients/create', methods=['POST'])
 @login_required
 def api_create_client():

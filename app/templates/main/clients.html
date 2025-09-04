@@ -435,6 +435,76 @@
             console.error('检查客户端ID重复时发生网络错误:', error);
         });
     }
+    
+    // 检查客户端名称是否重复
+    function checkClientNameDuplicate(clientName, inputElement) {
+        // 移除之前的重复检查错误信息
+        const existingDuplicateMsg = inputElement.parentNode.querySelector('.client-name-duplicate-message');
+        if (existingDuplicateMsg) {
+            existingDuplicateMsg.remove();
+        }
+        
+        fetch('/api/clients/check-name-duplicate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                client_name: clientName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.duplicate) {
+                    // 显示重复错误信息
+                    const errorMsg = document.createElement('small');
+                    errorMsg.className = 'client-name-duplicate-message';
+                    errorMsg.style.color = '#dc3545';
+                    errorMsg.style.display = 'block';
+                    errorMsg.style.marginTop = '5px';
+                    errorMsg.textContent = data.message;
+                    
+                    inputElement.parentNode.appendChild(errorMsg);
+                } else {
+                    // 显示可用信息
+                    const successMsg = document.createElement('small');
+                    successMsg.className = 'client-name-duplicate-message';
+                    successMsg.style.color = '#28a745';
+                    successMsg.style.display = 'block';
+                    successMsg.style.marginTop = '5px';
+                    successMsg.textContent = '✓ 客户端名称可用';
+                    
+                    inputElement.parentNode.appendChild(successMsg);
+                    
+                    // 3秒后移除成功信息
+                    setTimeout(() => {
+                        if (successMsg && successMsg.parentNode) {
+                            successMsg.remove();
+                        }
+                    }, 3000);
+                }
+            } else {
+                // 处理API返回的错误（包括重复检测）
+                if (data.duplicate) {
+                    // 显示重复错误信息
+                    const errorMsg = document.createElement('small');
+                    errorMsg.className = 'client-name-duplicate-message';
+                    errorMsg.style.color = '#dc3545';
+                    errorMsg.style.display = 'block';
+                    errorMsg.style.marginTop = '5px';
+                    errorMsg.textContent = data.message;
+                    
+                    inputElement.parentNode.appendChild(errorMsg);
+                } else {
+                    console.error('检查客户端名称重复失败:', data.message);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('检查客户端名称重复时发生网络错误:', error);
+        });
+    }
         }
         
         // 创建客户端模态框控制
@@ -500,7 +570,8 @@
             });
         }
         
-        // 客户端名称输入验证 - 限制只能输入英文字符
+        // 客户端名称输入验证 - 限制只能输入英文字符和重复检测
+        let nameCheckTimeout;
         if (clientNameInput) {
             clientNameInput.addEventListener('input', function(e) {
                 // 只允许英文字母（大小写）
@@ -514,8 +585,23 @@
                     // 显示提示信息
                     showClientNameError(e.target, '客户端名称只能包含英文字母');
                 } else {
-                    // 移除错误信息
+                    // 移除格式错误信息
                     removeClientNameError(e.target);
+                    
+                    // 防抖检查重复
+                    clearTimeout(nameCheckTimeout);
+                    if (e.target.value.trim().length > 0) {
+                        nameCheckTimeout = setTimeout(() => {
+                            checkClientNameDuplicate(e.target.value.trim(), e.target);
+                        }, 500); // 500ms防抖
+                    }
+                }
+            });
+            
+            // 失去焦点时也检查重复
+            clientNameInput.addEventListener('blur', function(e) {
+                if (e.target.value.trim().length > 0) {
+                    checkClientNameDuplicate(e.target.value.trim(), e.target);
                 }
             });
             
@@ -530,6 +616,14 @@
                         showClientNameError(e.target, '客户端名称只能包含英文字母');
                     } else {
                         removeClientNameError(e.target);
+                        
+                        // 粘贴后也检查重复
+                        if (e.target.value.trim().length > 0) {
+                            clearTimeout(nameCheckTimeout);
+                            nameCheckTimeout = setTimeout(() => {
+                                checkClientNameDuplicate(e.target.value.trim(), e.target);
+                            }, 500);
+                        }
                     }
                 }, 0);
             });
