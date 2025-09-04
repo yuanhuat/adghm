@@ -205,6 +205,12 @@ body::before {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     overflow: hidden;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .card:hover {
@@ -215,6 +221,12 @@ body::before {
 
 .card-body {
     padding: 24px;
+    /* CSS3硬件加速优化 */
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .card-title {
