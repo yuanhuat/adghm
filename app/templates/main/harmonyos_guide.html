@@ -26,7 +26,85 @@
             background: #fff;
         }
 
-        /* 导航栏样式已在全局CSS中定义 */
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #0071e3;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0071e3;
+            border: 1px solid #0071e3;
+        }
+
+        .btn-secondary:hover {
+            background: #0071e3;
+            color: white;
+        }
 
         /* 主要内容区域 */
         .main-content {
@@ -413,11 +491,15 @@
     <!-- 未登录用户导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
-            <a href="{{ url_for('main.landing') }}" class="logo">AdGuard Home</a>
+            <a href="{{ url_for('main.landing') }}" class="logo">
+                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+            </a>
             <ul class="nav-links">
-                <li><a href="{{ url_for('main.features') }}">功能</a></li>
-                <li><a href="{{ url_for('main.guide') }}">指南</a></li>
-                <li><a href="{{ url_for('main.about') }}">关于</a></li>
+                <li><a href="{{ url_for('main.landing') }}">首页</a></li>
+                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
+                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
+                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
+                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
             </ul>
             <div class="auth-buttons">
                 <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
