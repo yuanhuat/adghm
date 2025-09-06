@@ -2703,8 +2703,13 @@ def api_remove_client_custom_rule(client_id):
 def movies():
     """影视页面
     
-    提供用户注册OpenList账户的功能
+    提供用户注册OpenList账户的功能，仅限VIP用户访问
     """
+    # 检查用户是否为VIP
+    if not current_user.is_vip():
+        flash('您暂时无法查看', 'error')
+        return redirect(url_for('main.dashboard'))
+    
     return render_template('main/movies.html')
 
 

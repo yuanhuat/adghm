@@ -31,7 +31,11 @@
                 <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
                 <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
                 <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                {% if current_user.is_vip() %}
                 <a href="{{ url_for('main.movies') }}" class="nav-link">影视</a>
+                {% else %}
+                <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
+                {% endif %}
                 <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
                 {% if donation_config and donation_config.show_ranking %}
                 <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
@@ -379,6 +383,60 @@
 @keyframes slideIn {
     from { transform: translateY(-50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* OpenList信息模态窗样式 */
+.openlist-info-loading {
+    text-align: center;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.openlist-info-content .info-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.openlist-info-content .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #007bff;
+}
+
+.openlist-info-content .info-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+}
+
+.openlist-info-content .info-value {
+    color: #212529;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+.openlist-info-error {
+    text-align: center;
+    color: #dc3545;
+    font-size: 14px;
+    padding: 20px;
+}
+
+.openlist-info-error .error-message {
+    margin: 0;
+    padding: 15px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
 }
 
 /* 公告横幅样式 - 在header之上，挤压页面布局 */
@@ -1503,6 +1561,13 @@ function loadOpenListInfo() {
             loading.style.display = 'none';
             error.style.display = 'block';
         });
+}
+
+// VIP权限提示函数
+function showVipRequiredAlert(event) {
+    event.preventDefault();
+    alert('您暂时无法查看');
+    return false;
 }
 
 // 点击模态框外部关闭
