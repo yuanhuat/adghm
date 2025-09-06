@@ -32,7 +32,13 @@
                 <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
                 <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
                 {% if current_user.is_vip() %}
-                <a href="{{ url_for('main.movies') }}" class="nav-link">影视</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">影视</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.movies') }}">注册</a>
+                        <a href="{{ url_for('main.movies') }}">使用方法</a>
+                    </div>
+                </div>
                 {% else %}
                 <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
                 {% endif %}
@@ -490,6 +496,51 @@
 /* 苹果配置文件样式 */
 .apple-config-items {
     margin-bottom: 20px;
+}
+
+/* 移动端下拉菜单样式 */
+@media (max-width: 768px) {
+    .nav-dropdown-menu {
+        position: static;
+        opacity: 0;
+        visibility: hidden;
+        transform: none;
+        background: rgba(240, 240, 240, 0.95);
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        min-width: auto;
+        width: 100%;
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .nav-dropdown-menu.active {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+        max-height: 300px;
+    }
+    
+    .nav-dropdown-menu a {
+        color: #1d1d1f;
+        padding: 12px 40px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(240, 240, 240, 0.95);
+        text-shadow: none;
+        font-size: 14px;
+        margin-left: 0;
+    }
+    
+    .nav-dropdown-menu a:hover {
+        background: rgba(0, 122, 255, 0.1);
+        color: #007AFF;
+        transform: none;
+    }
 }
 
 .apple-config-item {
@@ -1637,6 +1688,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 navToggle.classList.remove('active');
                 navMenu.classList.remove('active');
             }
+        });
+    }
+    
+    // 下拉菜单功能
+    const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
+    const dropdownMenu = document.querySelector('.nav-dropdown-menu');
+    
+    if (dropdownToggle && dropdownMenu) {
+        dropdownToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('active');
         });
     }
 });

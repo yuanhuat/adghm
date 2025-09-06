@@ -2461,20 +2461,37 @@ tr:hover {
         visibility: visible;
     }
     
-    .nav-link {
+    .nav-dropdown {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .nav-link,
+    .nav-dropdown-toggle {
         font-size: 16px;
         padding: 16px 20px;
         width: 100%;
         text-align: left;
         border-radius: 0;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: none;
+        border: none;
+        color: #1d1d1f;
+        font-weight: 400;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0;
+        display: block;
+        box-sizing: border-box;
     }
     
-    .nav-link:last-child {
+    .nav-link:last-child,
+    .nav-dropdown:last-child .nav-dropdown-toggle {
         border-bottom: none;
     }
     
-    .nav-link:hover {
+    .nav-link:hover,
+    .nav-dropdown-toggle:hover {
         background: rgba(0, 122, 255, 0.1);
         transform: none;
     }
@@ -2548,9 +2565,17 @@ tr:hover {
         padding: 16px 0;
     }
     
-    .nav-link {
+    .nav-dropdown {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .nav-link,
+    .nav-dropdown-toggle {
         font-size: 15px;
         padding: 14px 16px;
+        display: block;
+        box-sizing: border-box;
     }
     
     .nav-brand {
