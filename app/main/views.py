@@ -626,6 +626,57 @@ def get_blocked_services():
         }), 500
 
 
+@main.route('/api/user/openlist-info')
+@login_required
+def get_user_openlist_info():
+    """获取用户的OpenList账户信息
+    
+    通过查询操作日志来获取用户的OpenList账户信息
+    """
+    try:
+        # 查询当前用户的OpenList账户创建记录
+        openlist_log = OperationLog.query.filter_by(
+            operation_type='CREATE',
+            target_type='OPENLIST_USER',
+            target_id=current_user.username
+        ).first()
+        
+        if not openlist_log:
+            return jsonify({
+                'success': False,
+                'message': '未找到OpenList账户信息'
+            })
+        
+        # 从配置中获取服务器地址
+        from app.models.openlist_config import OpenListConfig
+        openlist_config = OpenListConfig.get_config()
+        server_address = openlist_config.server_url if openlist_config else '未配置'
+        
+        # 从操作日志详情中解析密码信息
+        # 详情格式类似："用户 admin 为 testuser 创建OpenList账户，权限: ['webdav:read', 'ftp:read']，根目录: /影视"
+        details = openlist_log.details or ''
+        
+        # 由于密码不在日志中记录（安全考虑），我们需要提示用户查看注册邮件
+        # 或者从其他安全的地方获取密码信息
+        
+        return jsonify({
+            'success': True,
+            'openlist_info': {
+                'username': current_user.username,
+                'password': '请查看注册邮件',  # 出于安全考虑，不在日志中存储密码
+                'server_address': server_address,
+                'created_time': openlist_log.created_at.strftime('%Y-%m-%d %H:%M:%S') if openlist_log.created_at else '未知'
+            }
+        })
+        
+    except Exception as e:
+        logging.error(f"获取OpenList账户信息失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '获取账户信息失败'
+        }), 500
+
+
 @main.route('/global_blocked_services')
 @login_required
 @admin_required

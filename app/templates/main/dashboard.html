@@ -176,6 +176,9 @@
                             </div>
                             {% endif %}
                         </div>
+                        <div class="card-action">
+                            <button class="btn-modern" onclick="openOpenListModal()">影视</button>
+                        </div>
                     </div>
                 </div>
 
@@ -252,6 +255,40 @@
 
         </main>
     </div>
+
+<!-- OpenList信息模态窗 -->
+<div id="openListModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>OpenList影视账户信息</h3>
+            <span class="modal-close" onclick="closeOpenListModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="openlist-info-loading" id="openListLoading">
+                <p>正在加载账户信息...</p>
+            </div>
+            <div class="openlist-info-content" id="openListContent" style="display: none;">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">用户名</span>
+                        <span class="info-value" id="openListUsername">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">密码</span>
+                        <span class="info-value" id="openListPassword">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">服务器地址</span>
+                        <span class="info-value" id="openListServer">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="openlist-info-error" id="openListError" style="display: none;">
+                <p class="error-message">暂无OpenList账户信息</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 公告弹窗模态框 -->
 <div id="announcementModal" class="modal" style="display: none;">
@@ -1416,11 +1453,68 @@ function closeAnnouncementModal() {
     }
 }
 
+// OpenList模态窗相关函数
+function openOpenListModal() {
+    const modal = document.getElementById('openListModal');
+    const loading = document.getElementById('openListLoading');
+    const content = document.getElementById('openListContent');
+    const error = document.getElementById('openListError');
+    
+    // 显示模态窗和加载状态
+    modal.style.display = 'block';
+    loading.style.display = 'block';
+    content.style.display = 'none';
+    error.style.display = 'none';
+    
+    // 加载OpenList账户信息
+    loadOpenListInfo();
+}
+
+function closeOpenListModal() {
+    const modal = document.getElementById('openListModal');
+    modal.style.display = 'none';
+}
+
+function loadOpenListInfo() {
+    fetch('/api/user/openlist-info')
+        .then(response => response.json())
+        .then(data => {
+            const loading = document.getElementById('openListLoading');
+            const content = document.getElementById('openListContent');
+            const error = document.getElementById('openListError');
+            
+            loading.style.display = 'none';
+            
+            if (data.success && data.openlist_info) {
+                // 显示账户信息
+                document.getElementById('openListUsername').textContent = data.openlist_info.username || '-';
+                document.getElementById('openListPassword').textContent = data.openlist_info.password || '-';
+                document.getElementById('openListServer').textContent = data.openlist_info.server_address || '-';
+                content.style.display = 'block';
+            } else {
+                // 显示错误信息
+                error.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            console.error('加载OpenList信息失败:', err);
+            const loading = document.getElementById('openListLoading');
+            const error = document.getElementById('openListError');
+            loading.style.display = 'none';
+            error.style.display = 'block';
+        });
+}
+
 // 点击模态框外部关闭
 window.onclick = function(event) {
-    const modal = document.getElementById('announcementModal');
-    if (event.target === modal) {
+    const announcementModal = document.getElementById('announcementModal');
+    const openListModal = document.getElementById('openListModal');
+    
+    if (event.target === announcementModal) {
         closeAnnouncementModal();
+    }
+    if (event.target === openListModal) {
+        closeOpenListModal();
     }
 }
 
