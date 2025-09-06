@@ -178,6 +178,107 @@
             line-height: 1.5;
         }
         
+        /* 配置示意图样式 */
+        .config-screenshot {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .screenshot-container h5 {
+            color: #495057;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .screenshot-container h5 i {
+            margin-right: 0.5rem;
+            color: #007aff;
+        }
+        
+        .screenshot-box {
+            text-align: center;
+        }
+        
+        .config-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .config-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .screenshot-caption {
+            margin-top: 0.5rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+        
+        /* 图片模态框样式 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content-image {
+            position: relative;
+            margin: 5% auto;
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: background-color 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
         .config-example {
             background: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -231,7 +332,87 @@
         }
         
         /* 移动端下拉菜单样式 */
+        /* 下载按钮样式 */
+        .support-os {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 16px 0;
+            justify-content: flex-start;
+        }
+
+        .support-os__item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-width: 120px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .support-os__item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            text-decoration: none;
+        }
+
+        .support-os__item:visited {
+            color: white;
+        }
+
+        .support-os__item i {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .support-os__item img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .support-os__item span {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .support-os__item.open-beta {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .support-os__item.open-beta:hover {
+            background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            color: white;
+        }
+
+        .support-os__item.open-beta:visited {
+            color: white;
+        }
+
         @media (max-width: 768px) {
+            .support-os {
+                justify-content: center;
+            }
+            
+            .support-os__item {
+                min-width: 100px;
+                padding: 10px 12px;
+            }
+            
             .nav-dropdown-menu {
                 position: static;
                 opacity: 0;
@@ -376,13 +557,47 @@
                 <li class="step-item">
                     <div class="step-number">1</div>
                     <div class="step-content">
+                        <h4>下载网易爆米花</h4>
+                        <p>首先需要下载并安装网易爆米花应用，请根据您的设备选择对应的版本：</p>
+                        <div class="support-os display-flex"> 
+                            <a href="https://apps.apple.com/cn/app/%E7%BD%91%E6%98%93%E7%88%86%E7%B1%B3%E8%8A%B1-%E6%99%BA%E8%83%BD%E5%AA%92%E4%BD%93%E5%BA%93-%E5%85%A8%E8%83%BD%E4%BA%91%E7%9B%98%E7%BD%91%E7%9B%98%E6%92%AD%E6%94%BE%E5%99%A8/id6480252695" target="_blank" class="support-os__item"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-Apple_b2a1307c.png" alt="iOS" loading="lazy"> 
+                                    <span>iOS</span></i> 
+                            </a> 
+                            <a href="https://a57.gdl.netease.com/BaoMiHua-2.6.2.apk?key1=7e8c67dae7192e3e735c78efd29456f4&key2=68bd069a" target="_blank" class="support-os__item"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-Android_7d572535.png" alt="Android"> 
+                                    <span>Android</span></i> 
+                            </a> 
+                            <a href="https://a57.gdl.netease.com/BaoMiHua-TV-2.3.6.apk?key1=d007cf5faad0d53b9b1887bafd34000a&key2=68bd06d4" target="_blank" class="support-os__item"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-AndroidTV_9afff6f0.png" alt="Android TV"> 
+                                    <span>Android TV</span></i> 
+                            </a> 
+                            <a href="https://apps.apple.com/us/app/%E7%BD%91%E6%98%93%E7%88%86%E7%B1%B3%E8%8A%B1-%E6%99%BA%E8%83%BD%E5%AA%92%E4%BD%93%E5%BA%93-%E5%85%A8%E8%83%BD%E4%BA%91%E7%9B%98-%E7%BD%91%E7%9B%98%E6%92%AD%E6%94%BE%E5%99%A8/id6670539829" target="_blank" class="support-os__item"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-tvOS_5b573ad3.png" alt="Apple TV"> 
+                                    <span>Apple TV</span></i> 
+                            </a> 
+                            <a href="https://apps.apple.com/cn/app/%E7%BD%91%E6%98%93%E7%88%86%E7%B1%B3%E8%8A%B1-%E6%99%BA%E8%83%BD%E5%AA%92%E4%BD%93%E5%BA%93-%E5%85%A8%E8%83%BD%E4%BA%91%E7%9B%98-%E7%BD%91%E7%9B%98%E6%92%AD%E6%94%BE%E5%99%A8/id6553989480?mt=12" target="_blank" class="support-os__item"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-macOS_809b3988.png" alt="macOS"> 
+                                    <span>macOS</span></i> 
+                            </a> 
+                            <a href="https://a57.gdl.netease.com/BaoMiHua-0.14.2.exe?key1=7417faaaae21709d0403cd94a527e978&key2=68bd071a" target="_blank" class="support-os__item open-beta"> 
+                                <i><img src="https://filmly.res.netease.com/website/img/device-Windows_70e73d9c.png" alt="Windows"> 
+                                    <span>Windows</span></i> 
+                            </a> 
+                        </div>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
                         <h4>打开网易爆米花应用</h4>
                         <p>启动网易爆米花应用，进入主界面。</p>
                     </div>
                 </li>
                 
                 <li class="step-item">
-                    <div class="step-number">2</div>
+                    <div class="step-number">3</div>
                     <div class="step-content">
                         <h4>进入设置页面</h4>
                         <p>点击应用右上角的设置图标，或者进入"媒体库管理"页面。</p>
@@ -390,7 +605,7 @@
                 </li>
                 
                 <li class="step-item">
-                    <div class="step-number">3</div>
+                    <div class="step-number">4</div>
                     <div class="step-content">
                         <h4>添加新的媒体源</h4>
                         <p>选择"添加新的媒体源"或"添加网络存储"选项。</p>
@@ -398,7 +613,7 @@
                 </li>
                 
                 <li class="step-item">
-                    <div class="step-number">4</div>
+                    <div class="step-number">5</div>
                     <div class="step-content">
                         <h4>选择WebDAV类型</h4>
                         <p>在媒体源类型中选择"WebDAV"作为连接方式。</p>
@@ -406,7 +621,7 @@
                 </li>
                 
                 <li class="step-item">
-                    <div class="step-number">5</div>
+                    <div class="step-number">6</div>
                     <div class="step-content">
                         <h4>输入连接信息</h4>
                         <p>按照以下格式填入您在OpenList注册时获得的WebDAV连接信息：</p>
@@ -428,8 +643,22 @@
                     </div>
                 </li>
                 
+                <!-- WebDAV配置示意图 -->
+                <div class="config-screenshot">
+                    <div class="screenshot-container">
+                        <h5><i class="fas fa-image"></i> 配置界面示意图</h5>
+                        <div class="screenshot-box">
+                            <img src="{{ url_for('static', filename='BMH.jpg') }}" 
+                                 alt="网易爆米花WebDAV配置示意图" 
+                                 class="config-image" 
+                                 onclick="openImageModal(this)">
+                            <p class="screenshot-caption">点击图片查看大图</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <li class="step-item">
-                    <div class="step-number">6</div>
+                    <div class="step-number">7</div>
                     <div class="step-content">
                         <h4>保存设置并刷新</h4>
                         <p>保存WebDAV配置，然后刷新媒体库。网易爆米花将自动扫描并添加OpenList中的媒体文件。</p>
@@ -592,6 +821,45 @@
                 });
             });
         });
-    </script>
+        
+        // 图片模态框功能
+        function openImageModal(img) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'image-modal';
+            modal.innerHTML = `
+                <div class="modal-content-image">
+                    <button class="close-modal">&times;</button>
+                    <img src="${img.src}" alt="${img.alt}" class="modal-image">
+                </div>
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(modal);
+            
+            // 显示模态框
+            modal.style.display = 'block';
+            
+            // 关闭模态框事件
+            const closeBtn = modal.querySelector('.close-modal');
+            closeBtn.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // 点击背景关闭模态框
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+            
+            // ESC键关闭模态框
+             document.addEventListener('keydown', function(e) {
+                 if (e.key === 'Escape' && document.body.contains(modal)) {
+                     document.body.removeChild(modal);
+                 }
+             });
+         }
+     </script>
 </body>
 </html>
