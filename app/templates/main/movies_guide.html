@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影视使用方法 - AdGuardHome用户管理系统</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    
+    <style>
+        .guide-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .guide-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .guide-header h1 {
+            color: #1d1d1f;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .guide-header p {
+            color: #86868b;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .guide-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e5e7;
+        }
+        
+        .guide-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .guide-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .guide-icon i {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .guide-title h2 {
+            color: #1d1d1f;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .guide-description {
+            color: #515154;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .steps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f5f5f7;
+            border-radius: 8px;
+            border-left: 4px solid #007aff;
+        }
+        
+        .step-number {
+            background: #007aff;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h4 {
+            color: #1d1d1f;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .step-content p {
+            color: #515154;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .info-box {
+            background: #e8f4fd;
+            border: 1px solid #b3d9f7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .info-box h4 {
+            color: #0066cc;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-box h4 i {
+            margin-right: 0.5rem;
+        }
+        
+        .info-box p {
+            color: #0066cc;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .warning-box h4 {
+            color: #856404;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .warning-box h4 i {
+            margin-right: 0.5rem;
+        }
+        
+        .warning-box p {
+            color: #856404;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .config-example {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .config-example h5 {
+            color: #495057;
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .config-example code {
+            color: #e83e8c;
+            background: none;
+            padding: 0;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-back i {
+            margin-right: 0.5rem;
+        }
+        
+        /* 移动端下拉菜单样式 */
+        @media (max-width: 768px) {
+            .nav-dropdown-menu {
+                position: static;
+                opacity: 0;
+                visibility: hidden;
+                transform: none;
+                background: rgba(240, 240, 240, 0.95);
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+                padding: 0;
+                margin: 0;
+                min-width: auto;
+                width: 100%;
+                display: none;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            
+            .nav-dropdown-menu.active {
+                display: block;
+                opacity: 1;
+                visibility: visible;
+                max-height: 300px;
+            }
+            
+            .nav-dropdown-menu a {
+                color: #1d1d1f;
+                padding: 12px 40px;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                background: rgba(240, 240, 240, 0.95);
+                text-shadow: none;
+                font-size: 14px;
+                margin-left: 0;
+            }
+            
+            .nav-dropdown-menu a:hover {
+                background: rgba(0, 122, 255, 0.1);
+                color: #007AFF;
+                transform: none;
+            }
+            
+            .guide-container {
+                padding: 0 0.5rem;
+            }
+            
+            .guide-header h1 {
+                font-size: 2rem;
+            }
+            
+            .guide-card {
+                padding: 1.5rem;
+            }
+            
+            .step-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .step-number {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle active">影视</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.movies') }}">注册</a>
+                        <a href="{{ url_for('main.movies_guide') }}" class="active">使用方法</a>
+                    </div>
+                </div>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="guide-container">
+        <a href="{{ url_for('main.movies') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> 返回注册页面
+        </a>
+        
+        <div class="guide-header">
+            <h1>影视使用方法</h1>
+            <p>详细介绍如何在网易爆米花等客户端中配置OpenList服务</p>
+        </div>
+
+        <!-- 网易爆米花使用方法 -->
+        <div class="guide-card">
+            <div class="guide-title">
+                <div class="guide-icon">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+                <h2>网易爆米花配置方法</h2>
+            </div>
+            
+            <div class="guide-description">
+                <p>网易爆米花是一款优秀的媒体播放器，支持通过WebDAV协议访问OpenList中的影视资源。</p>
+            </div>
+            
+            <div class="info-box">
+                <h4><i class="fas fa-info-circle"></i> 前提条件</h4>
+                <p>确保您已经在OpenList中成功注册账户，并获得了WebDAV访问凭据。</p>
+            </div>
+            
+            <ol class="steps-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>打开网易爆米花应用</h4>
+                        <p>启动网易爆米花应用，进入主界面。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>进入设置页面</h4>
+                        <p>点击应用右上角的设置图标，或者进入"媒体库管理"页面。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>添加新的媒体源</h4>
+                        <p>选择"添加新的媒体源"或"添加网络存储"选项。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>选择WebDAV类型</h4>
+                        <p>在媒体源类型中选择"WebDAV"作为连接方式。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>输入连接信息</h4>
+                        <p>按照以下格式填入您在OpenList注册时获得的WebDAV连接信息：</p>
+                        <div class="config-example">
+                            <h5>网易爆米花配置示例：</h5>
+                            <p><strong>名称：</strong> <code>我的 WebDAV</code> (可自定义名称)</p>
+                            <p><strong>协议：</strong> <code>HTTPS</code> (推荐使用HTTPS)</p>
+                            <p><strong>安全：</strong> <code>HTTPS证书校验</code> (建议开启)</p>
+                            <p><strong>地址：</strong> <code>您的OpenList服务器域名</code> (如：ys.66990000.xyz)</p>
+                            <p><strong>端口：</strong> <code>443</code> (HTTPS默认端口)</p>
+                            <p><strong>用户名：</strong> <code>您的OpenList用户名</code></p>
+                            <p><strong>密码：</strong> <code>您的OpenList密码</code></p>
+                            <p><strong>路径：</strong> <code>/dav</code> (WebDAV访问路径)</p>
+                        </div>
+                        <div class="warning-box">
+                            <h4><i class="fas fa-exclamation-triangle"></i> 重要提示</h4>
+                            <p>请确保所有参数填写正确，特别注意服务器地址不要包含 http:// 或 https:// 前缀，端口号通常为443（HTTPS）或80（HTTP）。</p>
+                        </div>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h4>保存设置并刷新</h4>
+                        <p>保存WebDAV配置，然后刷新媒体库。网易爆米花将自动扫描并添加OpenList中的媒体文件。</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <!-- 验证结果 -->
+        <div class="guide-card">
+            <div class="guide-title">
+                <div class="guide-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>验证配置结果</h2>
+            </div>
+            
+            <ol class="steps-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>检查媒体库</h4>
+                        <p>确认网易爆米花的媒体库中已经显示来自OpenList的影视文件。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>测试播放功能</h4>
+                        <p>尝试播放一个媒体文件，确保可以正常播放来自OpenList的内容。</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <!-- 故障排除 -->
+        <div class="guide-card">
+            <div class="guide-title">
+                <div class="guide-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h2>故障排除</h2>
+            </div>
+            
+            <div class="warning-box">
+                <h4><i class="fas fa-exclamation-triangle"></i> 常见问题</h4>
+                <p>如果遇到连接问题，请检查以下几个方面：</p>
+            </div>
+            
+            <ol class="steps-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>检查WebDAV配置</h4>
+                        <p>确认服务器地址、用户名和密码是否正确输入，注意大小写敏感。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>验证网络连接</h4>
+                        <p>确保设备能够正常访问互联网，并且没有防火墙阻止WebDAV连接。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>检查账户权限</h4>
+                        <p>确认您的OpenList账户具有WebDAV读取权限和/影视目录的访问权限。</p>
+                    </div>
+                </li>
+                
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>尝试其他客户端</h4>
+                        <p>如果网易爆米花无法正常工作，可以尝试其他支持WebDAV的媒体播放器。</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <!-- 其他支持的客户端 -->
+        <div class="guide-card">
+            <div class="guide-title">
+                <div class="guide-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h2>其他支持的客户端</h2>
+            </div>
+            
+            <div class="guide-description">
+                <p>除了网易爆米花，还有许多其他优秀的媒体播放器支持WebDAV协议：</p>
+            </div>
+            
+            <div class="info-box">
+                <h4><i class="fas fa-list"></i> 推荐客户端</h4>
+                <p><strong>移动端：</strong> VLC、MX Player、Kodi、Plex<br>
+                <strong>桌面端：</strong> VLC、PotPlayer、Kodi、Emby<br>
+                <strong>电视端：</strong> Kodi、Plex、Emby、NOVA</p>
+            </div>
+            
+            <div class="warning-box">
+                <h4><i class="fas fa-search"></i> 获取更多信息</h4>
+                <p>您可以在网上搜索"WebDAV媒体播放器"或"OpenList客户端"来了解更多支持WebDAV的播放器配置方法。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航栏切换功能
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+            
+            // 下拉菜单功能
+            const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
+            
+            dropdownToggles.forEach(function(toggle) {
+                const dropdown = toggle.parentElement;
+                const menu = dropdown.querySelector('.nav-dropdown-menu');
+                
+                if (menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        
+                        // 关闭其他下拉菜单
+                        dropdownToggles.forEach(function(otherToggle) {
+                            if (otherToggle !== toggle) {
+                                const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
+                                if (otherMenu) {
+                                    otherMenu.classList.remove('active');
+                                }
+                            }
+                        });
+                        
+                        // 切换当前下拉菜单
+                        menu.classList.toggle('active');
+                    });
+                }
+            });
+
+            // 点击其他地方关闭下拉菜单
+            document.addEventListener('click', function() {
+                dropdownToggles.forEach(function(toggle) {
+                    const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
+                    if (menu) {
+                        menu.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

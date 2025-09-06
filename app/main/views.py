@@ -2755,6 +2755,21 @@ def movies():
     return render_template('main/movies.html')
 
 
+@main.route('/movies/guide')
+@login_required
+def movies_guide():
+    """影视使用方法页面
+    
+    显示网易爆米花等客户端的使用方法，仅限VIP用户访问
+    """
+    # 检查用户是否为VIP
+    if not current_user.is_vip():
+        flash('您暂时无法查看', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('main/movies_guide.html')
+
+
 @main.route('/api/openlist/register', methods=['POST'])
 @login_required
 def api_openlist_register():
