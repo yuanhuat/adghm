@@ -503,21 +503,29 @@
                     <div class="step-content">
                         <p>在iPhone/iPad的Safari浏览器中，下载最新的AdGuard Home DNS描述文件。</p>
                         <p><strong>重要提示：</strong>请确保您的iOS系统版本为iOS 14及以上，以获得最佳的DNS配置体验。</p>
-                        {% if current_user.is_authenticated and user_clients %}
+                        {% if current_user.is_authenticated and user_clients and dns_config and dns_config.apple_config_enabled %}
+                            {% set has_available_config = false %}
                             {% for client in user_clients %}
-                                {% if client.doh_address %}
+                                {% if client.doh_address and dns_config.doh_enabled and dns_config.apple_doh_config_enabled %}
+                                    {% set has_available_config = true %}
                                     <a href="/api/apple/doh.mobileconfig?host={{ client.doh_address.replace('https://', '').split('/')[0] }}&client_id={{ client.client_id }}" class="download-button" download>
                                         <i class="fas fa-download"></i>
                                         下载 {{ client.client_name }} DoH 描述文件
                                     </a><br>
                                 {% endif %}
-                                {% if client.dns_address %}
+                                {% if client.dns_address and dns_config.dot_enabled and dns_config.apple_dot_config_enabled %}
+                                    {% set has_available_config = true %}
                                     <a href="/api/apple/dot.mobileconfig?host={{ client.dns_address }}&client_id={{ client.client_id }}" class="download-button" download>
                                         <i class="fas fa-download"></i>
                                         下载 {{ client.client_name }} DoT 描述文件
                                     </a><br>
                                 {% endif %}
                             {% endfor %}
+                            {% if not has_available_config %}
+                                <p class="warning-text">管理员暂未开启DNS配置文件下载功能</p>
+                            {% endif %}
+                        {% elif current_user.is_authenticated and dns_config and not dns_config.apple_config_enabled %}
+                            <p class="warning-text">管理员已禁用苹果设备配置文件下载功能</p>
                         {% else %}
                             <p class="warning-text">请先登录并配置客户端后下载描述文件</p>
                         {% endif %}
