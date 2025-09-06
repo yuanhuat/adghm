@@ -226,112 +226,78 @@
             line-height: 1.6;
         }
 
-        /* 详细教程 */
-        .detailed-guide {
+        /* 平台支持展示 */
+        .platform-support {
             padding: 100px 20px;
-            background: white;
+            background: #f5f5f7;
         }
 
-        .guide-content {
-            max-width: 800px;
+        .platform-intro {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .platform-intro h2 {
+            font-size: 48px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 20px;
+        }
+
+        .platform-intro p {
+            font-size: 21px;
+            color: #86868b;
+            max-width: 600px;
             margin: 0 auto;
         }
 
-        .guide-section {
-            margin-bottom: 60px;
-            padding: 40px;
-            background: #f5f5f7;
-            border-radius: 18px;
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 0;
         }
 
-        .guide-section h3 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #1d1d1f;
+        .platform-item {
             display: flex;
+            flex-direction: column;
             align-items: center;
-        }
-
-        .guide-section h3 i {
-            margin-right: 15px;
-            color: #0071e3;
-        }
-
-        .guide-section p {
-            font-size: 17px;
-            color: #86868b;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-
-        .guide-steps {
-            list-style: none;
-            margin-top: 30px;
-        }
-
-        .guide-steps li {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding: 20px;
+            text-decoration: none;
+            padding: 30px 20px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .guide-steps .step-num {
-            min-width: 30px;
-            height: 30px;
-            background: #0071e3;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 20px;
-            font-size: 14px;
+        .platform-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
         }
 
-        .guide-steps .step-content {
-            flex: 1;
+        .platform-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
         }
 
-        .guide-steps .step-title {
-            font-size: 18px;
+        .platform-item:hover .platform-logo {
+            transform: scale(1.1);
+        }
+
+        .platform-name {
+            font-size: 16px;
             font-weight: 600;
             color: #1d1d1f;
-            margin-bottom: 8px;
+            text-align: center;
         }
 
-        .guide-steps .step-desc {
-            font-size: 16px;
-            color: #86868b;
-            line-height: 1.5;
-        }
-
-        .code-block {
-            background: #1d1d1f;
-            color: #f5f5f7;
-            padding: 20px;
-            border-radius: 12px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 14px;
-            margin: 20px 0;
-            overflow-x: auto;
-        }
-
-        .code-block .comment {
-            color: #86868b;
-        }
-
-        .code-block .keyword {
-            color: #ff9500;
-        }
-
-        .code-block .string {
-            color: #34c759;
+        .platform-item:hover .platform-name {
+            color: #0071e3;
         }
 
         /* 常见问题 */
@@ -662,143 +628,56 @@
             </div>
         </section>
 
-        <!-- 详细教程 -->
-        <section class="detailed-guide">
+        <!-- 平台支持 -->
+        <section class="platform-support">
             <div class="container">
-                <h2 class="section-title">详细教程</h2>
-                <p class="section-subtitle">
-                    深入了解如何配置和使用各项功能
-                </p>
+                <div class="platform-intro">
+                    <h2 class="animate-fade-in">🔊 AdGuard Home Manager 支持多种设备 / 平台 🥇</h2>
+                    <p class="animate-fade-in animate-delay-1">
+                        选择您的设备类型，查看详细的配置教程
+                    </p>
+                </div>
                 
-                <div class="guide-content">
-                    <div class="guide-section animate-fade-in">
-                        <h3><i class="fas fa-desktop"></i>Windows 设备配置</h3>
-                        <p>在 Windows 设备上配置 DNS 设置，享受广告拦截服务。</p>
-                        
-                        <ol class="guide-steps">
-                            <li>
-                                <div class="step-num">1</div>
-                                <div class="step-content">
-                                    <div class="step-title">打开网络设置</div>
-                                    <div class="step-desc">右键点击任务栏的网络图标，选择"打开网络和Internet设置"</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">2</div>
-                                <div class="step-content">
-                                    <div class="step-title">进入适配器选项</div>
-                                    <div class="step-desc">点击"更改适配器选项"，找到您当前使用的网络连接</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">3</div>
-                                <div class="step-content">
-                                    <div class="step-title">配置DNS服务器</div>
-                                    <div class="step-desc">右键网络连接 → 属性 → Internet协议版本4(TCP/IPv4) → 属性</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">4</div>
-                                <div class="step-content">
-                                    <div class="step-title">输入DNS地址</div>
-                                    <div class="step-desc">选择"使用下面的DNS服务器地址"，输入我们提供的DNS服务器地址</div>
-                                </div>
-                            </li>
-                        </ol>
-                        
-                        <div class="code-block">
-                            <span class="comment"># 推荐的DNS服务器地址</span><br>
-                            <span class="keyword">首选DNS服务器:</span> <span class="string">8.8.8.8</span><br>
-                            <span class="keyword">备用DNS服务器:</span> <span class="string">8.8.4.4</span>
-                        </div>
-                    </div>
-
-                    <div class="guide-section animate-fade-in animate-delay-1">
-                        <h3><i class="fas fa-mobile-alt"></i>移动设备配置</h3>
-                        <p>在 iOS 和 Android 设备上配置 DNS 设置。</p>
-                        
-                        <ol class="guide-steps">
-                            <li>
-                                <div class="step-num">1</div>
-                                <div class="step-content">
-                                    <div class="step-title">iOS 设备配置</div>
-                                    <div class="step-desc">设置 → Wi-Fi → 点击已连接网络的 (i) 图标 → 配置DNS → 手动</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">2</div>
-                                <div class="step-content">
-                                    <div class="step-title">Android 设备配置</div>
-                                    <div class="step-desc">设置 → 网络和互联网 → Wi-Fi → 长按网络名称 → 修改网络 → 高级选项</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">3</div>
-                                <div class="step-content">
-                                    <div class="step-title">输入DNS地址</div>
-                                    <div class="step-desc">在DNS设置中输入我们提供的服务器地址，保存设置</div>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
-
-                    <div class="guide-section animate-fade-in animate-delay-2">
-                        <h3><i class="fas fa-wifi"></i>路由器配置</h3>
-                        <p>在路由器上配置 DNS，为整个网络提供保护。</p>
-                        
-                        <ol class="guide-steps">
-                            <li>
-                                <div class="step-num">1</div>
-                                <div class="step-content">
-                                    <div class="step-title">登录路由器管理界面</div>
-                                    <div class="step-desc">在浏览器中输入路由器IP地址（通常是192.168.1.1或192.168.0.1）</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">2</div>
-                                <div class="step-content">
-                                    <div class="step-title">找到DNS设置</div>
-                                    <div class="step-desc">在网络设置或WAN设置中找到DNS服务器配置选项</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">3</div>
-                                <div class="step-content">
-                                    <div class="step-title">配置DNS服务器</div>
-                                    <div class="step-desc">输入我们的DNS服务器地址，保存并重启路由器</div>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
-
-                    <div class="guide-section animate-fade-in">
-                        <h3><i class="fas fa-chart-bar"></i>使用管理面板</h3>
-                        <p>了解如何使用我们的管理面板查看统计信息和配置设置。</p>
-                        
-                        <ol class="guide-steps">
-                            <li>
-                                <div class="step-num">1</div>
-                                <div class="step-content">
-                                    <div class="step-title">登录管理面板</div>
-                                    <div class="step-desc">使用您的账户登录到我们的管理面板</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">2</div>
-                                <div class="step-content">
-                                    <div class="step-title">查看统计信息</div>
-                                    <div class="step-desc">在仪表板中查看DNS查询统计、拦截记录等信息</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div class="step-num">3</div>
-                                <div class="step-content">
-                                    <div class="step-title">自定义设置</div>
-                                    <div class="step-desc">根据需要配置过滤规则、白名单等个性化设置</div>
-                                </div>
-                            </li>
-                        </ol>
-                    </div>
+                <div class="platforms-grid">
+                    <a href="#android-guide" class="platform-item animate-fade-in">
+                        <img src="{{ url_for('static', filename='images/logo/logo-android.svg') }}" alt="Android" class="platform-logo">
+                        <div class="platform-name">Android</div>
+                    </a>
+                    
+                    <a href="#harmonyos-guide" class="platform-item animate-fade-in animate-delay-1">
+                        <img src="{{ url_for('static', filename='images/logo/logo-harmonyos.svg') }}" alt="HarmonyOS" class="platform-logo">
+                        <div class="platform-name">HarmonyOS</div>
+                    </a>
+                    
+                    <a href="#ios-guide" class="platform-item animate-fade-in animate-delay-2">
+                        <img src="{{ url_for('static', filename='images/logo/logo-ios.svg') }}" alt="iOS" class="platform-logo">
+                        <div class="platform-name">iOS</div>
+                    </a>
+                    
+                    <a href="#windows-guide" class="platform-item animate-fade-in animate-delay-3">
+                        <img src="{{ url_for('static', filename='images/logo/logo-windows.svg') }}" alt="Windows" class="platform-logo">
+                        <div class="platform-name">Windows</div>
+                    </a>
+                    
+                    <a href="#macos-guide" class="platform-item animate-fade-in">
+                        <img src="{{ url_for('static', filename='images/logo/logo-mac.svg') }}" alt="macOS" class="platform-logo">
+                        <div class="platform-name">macOS</div>
+                    </a>
+                    
+                    <a href="#chrome-guide" class="platform-item animate-fade-in animate-delay-1">
+                        <img src="{{ url_for('static', filename='images/logo/logo-chrome.svg') }}" alt="Chrome" class="platform-logo">
+                        <div class="platform-name">Chrome</div>
+                    </a>
+                    
+                    <a href="#firefox-guide" class="platform-item animate-fade-in animate-delay-2">
+                        <img src="{{ url_for('static', filename='images/logo/logo-firefox.svg') }}" alt="Firefox" class="platform-logo">
+                        <div class="platform-name">Firefox</div>
+                    </a>
+                    
+                    <a href="#edge-guide" class="platform-item animate-fade-in animate-delay-3">
+                        <img src="{{ url_for('static', filename='images/logo/logo-edge.svg') }}" alt="Edge" class="platform-logo">
+                        <div class="platform-name">Edge</div>
+                    </a>
                 </div>
             </div>
         </section>
