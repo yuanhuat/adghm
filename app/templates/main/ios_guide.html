@@ -503,10 +503,24 @@
                     <div class="step-content">
                         <p>在iPhone/iPad的Safari浏览器中，下载最新的AdGuard Home DNS描述文件。</p>
                         <p><strong>重要提示：</strong>请确保您的iOS系统版本为iOS 14及以上，以获得最佳的DNS配置体验。</p>
-                        <a href="#" class="download-button">
-                            <i class="fas fa-download"></i>
-                            下载描述文件
-                        </a>
+                        {% if current_user.is_authenticated and user_clients %}
+                            {% for client in user_clients %}
+                                {% if client.doh_address %}
+                                    <a href="/api/apple/doh.mobileconfig?host={{ client.doh_address.replace('https://', '').split('/')[0] }}&client_id={{ client.client_id }}" class="download-button" download>
+                                        <i class="fas fa-download"></i>
+                                        下载 {{ client.client_name }} DoH 描述文件
+                                    </a><br>
+                                {% endif %}
+                                {% if client.dns_address %}
+                                    <a href="/api/apple/dot.mobileconfig?host={{ client.dns_address }}&client_id={{ client.client_id }}" class="download-button" download>
+                                        <i class="fas fa-download"></i>
+                                        下载 {{ client.client_name }} DoT 描述文件
+                                    </a><br>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="warning-text">请先登录并配置客户端后下载描述文件</p>
+                        {% endif %}
                     </div>
                 </div>
 

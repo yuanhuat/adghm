@@ -577,7 +577,15 @@
                         </div>
                         <div class="dns-address">
                             <div class="dns-address-label">DNS服务器地址：</div>
-                            <div class="dns-address-value">{{ current_user.dns_address if current_user and current_user.dns_address else 'your-dns-server.com' }}</div>
+                            {% if current_user.is_authenticated and user_clients %}
+                                {% for client in user_clients %}
+                                    {% if client.dns_address %}
+                                        <div class="dns-address-value">{{ client.dns_address }} ({{ client.client_name }})</div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="dns-address-value">请先登录并配置客户端</div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -622,7 +630,15 @@
                                 <li>输入DoH线路地址：</li>
                             </ol>
                             <div class="doh-address">
-                                https://{{ current_user.dns_address if current_user and current_user.dns_address else 'your-dns-server.com' }}/dns-query
+                                {% if current_user.is_authenticated and user_clients %}
+                                    {% for client in user_clients %}
+                                        {% if client.doh_address %}
+                                            {{ client.doh_address }} ({{ client.client_name }})<br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    请先登录并配置客户端
+                                {% endif %}
                             </div>
                             <p style="margin-top: 15px; color: #86868b;">返回APP首页，选择开启</p>
                         </div>

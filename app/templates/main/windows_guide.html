@@ -575,7 +575,17 @@
                                     <li>单击<strong>"DNS 服务器分配"</strong>项目上的<strong>"编辑"</strong></li>
                                     <li>将设置从<strong>自动（DHCP）</strong>切换到<strong>手动</strong></li>
                                     <li>点击<strong>IPv4</strong>按钮</li>
-                                    <li>在<strong>首选 DNS</strong>字段中输入：<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">dns.yourdomain.com</code></li>
+                                    <li>在<strong>首选 DNS</strong>字段中输入：
+                                        {% if current_user.is_authenticated and user_clients %}
+                                            {% for client in user_clients %}
+                                                {% if client.dns_address %}
+                                                    <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">{{ client.dns_address }}</code> ({{ client.client_name }})<br>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">请先登录并配置客户端</code>
+                                        {% endif %}
+                                    </li>
                                     <li>在加密选项中选择<strong>"仅加密（DNS over HTTPS）"</strong></li>
                                     <li>在<strong>备用 DNS</strong>字段中输入：<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">1.1.1.1</code></li>
                                     <li>同样选择<strong>"仅加密（DNS over HTTPS）"</strong></li>
@@ -639,7 +649,17 @@
                                     <ul>
                                         <li><strong>DNS名称：</strong>狐狸DNS</li>
                                         <li><strong>DNS协议：</strong>选择"DNS over HTTPS"</li>
-                                        <li><strong>DNS地址：</strong>dns.yourdomain.com</li>
+                                        <li><strong>DNS地址：</strong>
+                                            {% if current_user.is_authenticated and user_clients %}
+                                                {% for client in user_clients %}
+                                                    {% if client.dns_address %}
+                                                        {{ client.dns_address }} ({{ client.client_name }})<br>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                请先登录并配置客户端
+                                            {% endif %}
+                                        </li>
                                     </ul>
                                 </div>
                                 

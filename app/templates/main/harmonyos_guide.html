@@ -551,7 +551,17 @@
                         </div>
                         <div class="dns-address">
                             <div class="dns-address-label">鸿蒙系统DNS地址：</div>
-                            <div class="dns-address-value">dns.yourdomain.com</div>
+                            <div class="dns-address-value">
+                                {% if current_user.is_authenticated and user_clients %}
+                                    {% for client in user_clients %}
+                                        {% if client.dns_address %}
+                                            {{ client.dns_address }} ({{ client.client_name }})<br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    请先登录并配置客户端
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 

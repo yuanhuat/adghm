@@ -292,10 +292,32 @@ def android_guide():
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('android-guide')
     structured_data = get_structured_data('android-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/android_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/guide/harmonyos-guide')
 def harmonyos_guide():
@@ -307,10 +329,32 @@ def harmonyos_guide():
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('harmonyos-guide')
     structured_data = get_structured_data('harmonyos-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/harmonyos_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/guide/ios-guide')
 def ios_guide():
@@ -322,10 +366,32 @@ def ios_guide():
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('ios-guide')
     structured_data = get_structured_data('ios-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/ios_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/guide/windows-guide')
 def windows_guide():
@@ -337,10 +403,32 @@ def windows_guide():
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('windows-guide')
     structured_data = get_structured_data('windows-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/windows_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/guide/macos-guide')
 def macos_guide():
@@ -352,25 +440,69 @@ def macos_guide():
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('macos-guide')
     structured_data = get_structured_data('macos-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/macos_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/guide/chrome-guide')
 def chrome_guide():
-    """Chrome浏览器配置指南页面
+    """Chrome配置指南页面
     
-    提供Chrome、Edge、Firefox等浏览器DNS配置的详细教程
+    提供Chrome浏览器DNS配置的详细教程
     """
     # 获取捐赠配置（用于显示排行榜链接）
     donation_config = DonationConfig.get_config()
     seo_config = get_page_seo('chrome-guide')
     structured_data = get_structured_data('chrome-guide')
+    
+    # 获取DNS配置和用户客户端信息
+    dns_config = None
+    user_clients = []
+    if current_user.is_authenticated:
+        dns_config = DnsConfig.get_config()
+        # 获取用户的客户端映射
+        client_mappings = ClientMapping.query.filter_by(user_id=current_user.id).all()
+        if client_mappings and dns_config:
+            for mapping in client_mappings:
+                if mapping.client_ids:
+                    for client_id in mapping.client_ids:
+                        client_info = {
+                            'client_id': client_id,
+                            'client_name': mapping.client_name,
+                            'dns_address': f"{client_id}.{dns_config.dot_server}" if dns_config.dot_enabled and dns_config.dot_server else None,
+                            'doh_address': f"https://{client_id}.{dns_config.doh_server}{dns_config.doh_path or '/dns-query'}" if dns_config.doh_enabled and dns_config.doh_server else None
+                        }
+                        user_clients.append(client_info)
+    
     return render_template('main/chrome_guide.html', 
                          donation_config=donation_config,
                          seo_config=seo_config, 
-                         structured_data=structured_data)
+                         structured_data=structured_data,
+                         dns_config=dns_config,
+                         user_clients=user_clients)
 
 @main.route('/pricing')
 def pricing():
