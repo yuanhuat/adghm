@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_config.title if seo_config else 'macOS配置指南 - AdGuard Home Manager' }}</title>
+    
+    <!-- SEO Meta Tags -->
+    {% include 'components/seo_meta.html' %}
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #007aff;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .page-header p {
+            font-size: 21px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 配置步骤 */
+        .steps-section {
+            padding: 80px 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .step-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step-item {
+            background: #f5f5f7;
+            border-radius: 18px;
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .step-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .step-content {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #424245;
+            margin-bottom: 20px;
+        }
+
+        .step-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            border-radius: 12px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .download-btn i {
+            margin-right: 10px;
+        }
+
+        .verification-section {
+            background: #f5f5f7;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .verification-btn {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .verification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(52, 199, 89, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .verification-btn i {
+            margin-right: 10px;
+        }
+
+        /* FAQ部分 */
+        .faq-section {
+            padding: 80px 20px;
+            background: white;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #f5f5f7;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: #e8e8ed;
+        }
+
+        .faq-question i {
+            margin-right: 15px;
+            color: #007aff;
+        }
+
+        .faq-answer {
+            padding: 0 25px 25px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #424245;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1d1d1f;
+            padding: 60px 20px 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #a1a1a6;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #007aff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            color: #86868b;
+            font-size: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .step-item {
+                padding: 30px 20px;
+            }
+
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-number {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* Apple风格动画 */
+        .animate-fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .animate-delay-1 {
+            animation-delay: 0.2s;
+        }
+
+        .animate-delay-2 {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    {% if current_user.is_authenticated %}
+    <!-- 已登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.clients') }}" class="nav-dropdown-item">
+                            <i class="fas fa-desktop"></i>
+                            我的客户端
+                        </a>
+                        <a href="{{ url_for('main.profile') }}" class="nav-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            个人资料
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="nav-dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- 未登录用户导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.landing') }}" class="nav-brand">AdGuard Home</a>
+            <div class="nav-links">
+                <a href="{{ url_for('main.features') }}">功能</a>
+                <a href="{{ url_for('main.guide') }}">指南</a>
+                <a href="{{ url_for('main.about') }}">关于</a>
+                <a href="{{ url_for('auth.login') }}" class="nav-link nav-link-login">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link nav-link-signup">注册</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <section class="page-header">
+            <div class="container">
+                <h1>macOS 配置指南</h1>
+                <p>详细的macOS系统DNS配置教程，通过描述文件轻松配置18bit DNS，享受全局去广告功能</p>
+            </div>
+        </section>
+
+        <!-- 配置步骤 -->
+        <section class="steps-section">
+            <div class="container">
+                <h2 class="section-title">配置步骤</h2>
+                <p class="section-subtitle">macOS系统要原生体验18bit提供的去广告DNS需确保系统为macOS 11及以上版本</p>
+                
+                <div class="step-container">
+                    <!-- 第一步 -->
+                    <div class="step-item animate-fade-in">
+                        <div class="step-header">
+                            <div class="step-number">1</div>
+                            <div class="step-title">下载DNS描述文件</div>
+                        </div>
+                        <div class="step-content">
+                            在macOS的Safari浏览器中，下载最新的18bit DNS描述文件→双击描述文件→打开【系统偏好设置】→【描述文件】→选择安装描述文件
+                        </div>
+                        <a href="#" class="download-btn">
+                            <i class="fas fa-download"></i>
+                            下载描述文件
+                        </a>
+                    </div>
+
+                    <!-- 第二步 -->
+                    <div class="step-item animate-fade-in animate-delay-1">
+                        <div class="step-header">
+                            <div class="step-number">2</div>
+                            <div class="step-title">完成DNS描述文件的安装</div>
+                        </div>
+                        <div class="step-content">
+                            进入macOS【系统偏好设置】→【网络】，找到刚才下载的描述文件，选择"使服务处于启用状态"，并确认应用，即可生效
+                        </div>
+                    </div>
+
+                    <!-- 第三步 -->
+                    <div class="step-item animate-fade-in animate-delay-2">
+                        <div class="step-header">
+                            <div class="step-number">3</div>
+                            <div class="step-title">验证去广告功能生效</div>
+                        </div>
+                        <div class="step-content">
+                            18bit DNS配置后，可访问验证测试页来验证18bit DNS广告屏蔽功能是否生效，当看到红色时就大功告成了~🥰
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 验证测试 -->
+        <section class="verification-section">
+            <div class="container">
+                <h2 class="section-title">验证配置</h2>
+                <p class="section-subtitle">点击下方按钮测试DNS配置是否生效</p>
+                <a href="#" class="verification-btn">
+                    <i class="fas fa-check-circle"></i>
+                    验证测试页
+                </a>
+            </div>
+        </section>
+
+        <!-- 常见问题 -->
+        <section class="faq-section">
+            <div class="container">
+                <h2 class="section-title">常见问题</h2>
+                <div class="faq-container">
+                    <div class="faq-item animate-fade-in">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            私人DNS能否与VPN共存使用？
+                        </div>
+                        <div class="faq-answer">
+                            可以。即无需关闭私人DNS也可同时使用VPN软件，只需在VPN软件中设置"分应用代理"即可
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item animate-fade-in animate-delay-1">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            为什么有些APP不能去广告？
+                        </div>
+                        <div class="faq-answer">
+                            目前广告拦截率在63.57%。基于DNS去广告技术的优劣势、以及广告规则库的覆盖度、和广告提供者的技术更新情况，任何去广方案都做不到100%。
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item animate-fade-in animate-delay-2">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            18bit 为什么要接受赞助？
+                        </div>
+                        <div class="faq-answer">
+                            免费从来都是有成本的。虽然18bit用爱发电，但采买服务器、防火墙等等服务都是真金白银的消耗。如果你愿意现金支持我们，这将推动我们更快的发展和提高DNS运行质量
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item animate-fade-in">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            什么是"红杉计划"？
+                        </div>
+                        <div class="faq-answer">
+                            "红杉计划"是以红杉树林抱团精神为托，欢迎志同道合的同学一同共建18bit DNS，说实在点就是如果你有闲置服务器、开发能力、设计能力、网络攻防能力等，加入团队一同共建18bit DNS
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item animate-fade-in animate-delay-1">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            攻击一直都有，那18bit会持续运行下去吗？
+                        </div>
+                        <div class="faq-answer">
+                            我很愤慨攻击影响到你的体验，但也感恩你继续使用。虽然攻击我无法阻止，但我会尽可能通过各种方案、手段减少攻击的影响（有些方案也确实奏效了）。我选择坚持运行下去，毕竟这是一件有意义的事情，继续的这条路，我希望不是孤单的一个人，有你和更多同学伴行。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- 返回指南页面按钮 -->
+    <button class="back-to-guide" onclick="window.location.href='{{ url_for('main.guide') }}'">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="{{ url_for('main.landing') }}">首页</a>
+                <a href="{{ url_for('main.about') }}">关于我们</a>
+                <a href="{{ url_for('main.features') }}">功能特性</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <a href="#">隐私政策</a>
+                <a href="#">服务条款</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+
+            // 下拉菜单功能
+            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
+            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('active');
+                });
+
+                // 点击其他地方关闭下拉菜单
+                document.addEventListener('click', function() {
+                    dropdownMenu.classList.remove('active');
+                });
+            }
+
+            // 返回顶部功能
+            const backToTop = document.getElementById('backToTop');
+            if (backToTop) {
+                window.addEventListener('scroll', function() {
+                    if (window.pageYOffset > 300) {
+                        backToTop.style.display = 'block';
+                    } else {
+                        backToTop.style.display = 'none';
+                    }
+                });
+
+                backToTop.addEventListener('click', function() {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            }
+
+            // 平滑滚动到锚点
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // FAQ展开/收起功能
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', function() {
+                    const answer = this.nextElementSibling;
+                    const isOpen = answer.style.display === 'block';
+                    
+                    // 关闭所有其他答案
+                    document.querySelectorAll('.faq-answer').forEach(ans => {
+                        ans.style.display = 'none';
+                    });
+                    
+                    // 切换当前答案
+                    answer.style.display = isOpen ? 'none' : 'block';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -89,6 +89,12 @@ PAGE_SEO = {
         'keywords': 'Windows DNS配置,Windows 11 DNS,YogaDNS配置,Windows广告拦截,DoH配置,Windows网络安全,加密DNS设置',
         'og_type': 'article',
     },
+    'macos-guide': {
+        'title': 'macOS配置指南 - AdGuard Home Manager | macOS DNS设置教程',
+        'description': '详细的macOS系统DNS配置教程，通过描述文件轻松配置AdGuard Home DNS，享受全局广告拦截和隐私保护功能。',
+        'keywords': 'macOS DNS配置,Mac广告拦截,DNS设置,macOS描述文件,Safari配置,macOS网络安全',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -253,6 +259,29 @@ def get_structured_data(page_name, **kwargs):
                     "@type": "HowToStep",
                     "name": "启动DNS服务并验证",
                     "text": "启动DNS服务并访问测试页面验证广告拦截功能是否生效"
+                }
+            ]
+        })
+    elif page_name == 'macos-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "macOS DNS配置指南",
+            "description": "详细的macOS系统DNS配置教程，通过描述文件轻松配置AdGuard Home DNS",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "下载DNS描述文件",
+                    "text": "在Safari浏览器中下载AdGuard Home DNS描述文件"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "安装描述文件",
+                    "text": "双击描述文件并在系统偏好设置中完成安装"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "验证配置效果",
+                    "text": "访问测试页面验证DNS配置是否生效，确认广告拦截功能正常工作"
                 }
             ]
         })
