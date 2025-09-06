@@ -26,50 +26,7 @@
             background: #fff;
         }
 
-        /* 导航栏样式 */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-brand {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1d1d1f;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 17px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #0071e3;
-        }
+        /* 导航栏样式已在全局CSS中定义 */
 
         /* 主要内容区域 */
         .main-content {
@@ -440,7 +397,8 @@
                     <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
                     <div class="nav-dropdown-menu">
                         <a href="{{ url_for('main.clients') }}">客户端管理</a>
-                        <a href="{{ url_for('main.profile') }}">个人资料</a>
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
                         <a href="{{ url_for('auth.logout') }}">退出登录</a>
                     </div>
                 </div>

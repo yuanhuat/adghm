@@ -26,50 +26,7 @@
             background: #fff;
         }
 
-        /* 导航栏样式 */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-brand {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1d1d1f;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 17px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #007aff;
-        }
+        /* 导航栏样式已在全局CSS中定义 */
 
         /* 主要内容区域 */
         .main-content {
@@ -415,9 +372,13 @@
                             <i class="fas fa-desktop"></i>
                             我的客户端
                         </a>
-                        <a href="{{ url_for('main.profile') }}" class="nav-dropdown-item">
-                            <i class="fas fa-user"></i>
-                            个人资料
+                        <a href="{{ url_for('main.change_password_page') }}" class="nav-dropdown-item">
+                            <i class="fas fa-key"></i>
+                            修改密码
+                        </a>
+                        <a href="{{ url_for('main.change_email_page') }}" class="nav-dropdown-item">
+                            <i class="fas fa-envelope"></i>
+                            修改邮箱
                         </a>
                         <a href="{{ url_for('auth.logout') }}" class="nav-dropdown-item">
                             <i class="fas fa-sign-out-alt"></i>
