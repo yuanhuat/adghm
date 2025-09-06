@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_config.title if seo_config else '鸿蒙OS配置指南 - AdGuard Home Manager' }}</title>
+    
+    <!-- SEO Meta Tags -->
+    {% include 'components/seo_meta.html' %}
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #0071e3;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #0071e3;
+            border: 1px solid #0071e3;
+        }
+
+        .btn-secondary:hover {
+            background: #0071e3;
+            color: white;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .page-header p {
+            font-size: 21px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 配置步骤 */
+        .config-steps {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .steps-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step-item {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .step-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .step-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .step-content {
+            font-size: 17px;
+            color: #86868b;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .step-image {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .dns-address {
+            background: #e8f4fd;
+            border: 1px solid #0071e3;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .dns-address-label {
+            font-size: 16px;
+            color: #86868b;
+            margin-bottom: 10px;
+        }
+
+        .dns-address-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0071e3;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        /* 特殊说明 */
+        .special-notes {
+            padding: 100px 20px;
+            background: white;
+        }
+
+        .note-item {
+            background: #f5f5f7;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .note-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .note-title i {
+            color: #ff9500;
+            margin-right: 15px;
+        }
+
+        .note-content {
+            font-size: 17px;
+            color: #86868b;
+            line-height: 1.6;
+        }
+
+        .highlight-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .highlight-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .highlight-content {
+            font-size: 16px;
+            color: #856404;
+        }
+
+        /* 常见问题 */
+        .faq-section {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-question {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .faq-question i {
+            color: #ff6b35;
+            margin-right: 10px;
+        }
+
+        .faq-answer {
+            font-size: 16px;
+            color: #86868b;
+            line-height: 1.6;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1d1d1f;
+            color: white;
+            padding: 60px 20px 40px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #86868b;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .footer-bottom p {
+            color: #86868b;
+            font-size: 14px;
+        }
+
+        /* 返回按钮 */
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            background: #0071e3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 113, 227, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: #0077ed;
+            transform: translateY(-2px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .step-item {
+                padding: 30px 20px;
+            }
+
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-number {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        /* 动画效果 */
+        .animate-fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .animate-delay-1 {
+            animation-delay: 0.2s;
+        }
+
+        .animate-delay-2 {
+            animation-delay: 0.4s;
+        }
+
+        .animate-delay-3 {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    {% if current_user.is_authenticated %}
+    <!-- 已登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.dashboard') }}">控制面板</a>
+                        <a href="{{ url_for('main.clients') }}">客户端管理</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- 未登录用户导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.landing') }}" class="logo">AdGuard Home</a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.features') }}">功能</a></li>
+                <li><a href="{{ url_for('main.guide') }}">指南</a></li>
+                <li><a href="{{ url_for('main.about') }}">关于</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <section class="page-header">
+            <div class="container">
+                <h1 class="animate-fade-in">鸿蒙OS 配置指南</h1>
+                <p class="animate-fade-in animate-delay-1">
+                    鸿蒙系统各版本均原生支持使用AdGuard Home提供的去广告DNS
+                </p>
+            </div>
+        </section>
+
+        <!-- 配置步骤 -->
+        <section class="config-steps">
+            <div class="container">
+                <h2 class="section-title animate-fade-in">配置步骤</h2>
+                <p class="section-subtitle animate-fade-in animate-delay-1">
+                    鸿蒙系统原生支持加密DNS，配置简单快捷
+                </p>
+                
+                <div class="steps-container">
+                    <!-- 第一步 -->
+                    <div class="step-item animate-fade-in">
+                        <div class="step-header">
+                            <div class="step-number">1</div>
+                            <h3 class="step-title">打开系统设置</h3>
+                        </div>
+                        <div class="step-content">
+                            进入鸿蒙手机/平板系统设置，搜索功能"DNS"，找到【加密DNS】功能，并选择进入
+                        </div>
+                    </div>
+
+                    <!-- 第二步 -->
+                    <div class="step-item animate-fade-in animate-delay-1">
+                        <div class="step-header">
+                            <div class="step-number">2</div>
+                            <h3 class="step-title">配置AdGuard Home DNS</h3>
+                        </div>
+                        <div class="step-content">
+                            进入【加密DNS】后，选择【指定DNS加密服务】并输入AdGuard Home的DNS地址，然后保存即可
+                        </div>
+                        <div class="dns-address">
+                            <div class="dns-address-label">鸿蒙系统DNS地址：</div>
+                            <div class="dns-address-value">dns.yourdomain.com</div>
+                        </div>
+                    </div>
+
+                    <!-- 第三步 -->
+                    <div class="step-item animate-fade-in animate-delay-2">
+                        <div class="step-header">
+                            <div class="step-number">3</div>
+                            <h3 class="step-title">验证去广告功能生效</h3>
+                        </div>
+                        <div class="step-content">
+                            AdGuard Home DNS配置后，可访问测试页面来验证DNS广告屏蔽功能是否生效
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特殊说明 -->
+        <section class="special-notes">
+            <div class="container">
+                <h2 class="section-title animate-fade-in">特殊说明</h2>
+                
+                <div class="note-item animate-fade-in">
+                    <div class="note-title">
+                        <i class="fas fa-info-circle"></i>
+                        原生鸿蒙系统想体验DoH版DNS该如何操作？
+                    </div>
+                    <div class="note-content">
+                        由于鸿蒙系统目前只支持DoT协议（DNS-over-TLS）来加密和处理DNS请求，若想在原生鸿蒙系统上体验DoH协议（DNS-over-HTTPS）线路，还需要再等等~
+                    </div>
+                </div>
+
+                <div class="highlight-box animate-fade-in animate-delay-1">
+                    <div class="highlight-title">协议支持说明</div>
+                    <div class="highlight-content">
+                        鸿蒙系统原生支持DNS-over-TLS (DoT)协议，提供加密的DNS查询服务，确保您的网络请求隐私安全。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常见问题 -->
+        <section class="faq-section">
+            <div class="container">
+                <h2 class="section-title animate-fade-in">常见问题</h2>
+                
+                <div class="faq-item animate-fade-in">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        私人DNS能否与VPN共存使用？
+                    </div>
+                    <div class="faq-answer">
+                        可以。即无需关闭私人DNS也可同时使用VPN软件，只需在VPN软件中设置"分应用代理"即可
+                    </div>
+                </div>
+
+                <div class="faq-item animate-fade-in animate-delay-1">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        使用私人DNS影响免流吗？
+                    </div>
+                    <div class="faq-answer">
+                        不影响。举个亲身案例：楼主是四川移动网络，开启DNS下使用抖音，免流包正常扣减~
+                    </div>
+                </div>
+
+                <div class="faq-item animate-fade-in animate-delay-2">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        为什么有些APP不能去广告？
+                    </div>
+                    <div class="faq-answer">
+                        目前广告拦截率在63.57%。基于DNS去广告技术的优劣势、以及广告规则库的覆盖度、和广告提供者的技术更新情况，任何去广方案都做不到100%。
+                    </div>
+                </div>
+
+                <div class="faq-item animate-fade-in animate-delay-3">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        什么是DoT协议？
+                    </div>
+                    <div class="faq-answer">
+                        DNS-over-TLS (DoT) 是一种网络安全协议，通过TLS加密DNS查询，防止DNS劫持和窃听，保护用户隐私。鸿蒙系统原生支持此协议。
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 返回按钮 -->
+    <button class="back-button" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="{{ url_for('main.landing') }}">首页</a>
+                <a href="{{ url_for('main.about') }}">关于我们</a>
+                <a href="{{ url_for('main.features') }}">功能特性</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <a href="#">隐私政策</a>
+                <a href="#">服务条款</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+
+            // 下拉菜单功能
+            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
+            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function() {
+                    dropdownMenu.classList.toggle('active');
+                });
+
+                // 点击其他地方关闭下拉菜单
+                document.addEventListener('click', function(event) {
+                    if (!dropdownToggle.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                        dropdownMenu.classList.remove('active');
+                    }
+                });
+            }
+
+            // 平滑滚动动画
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // 观察所有动画元素
+            document.querySelectorAll('.animate-fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

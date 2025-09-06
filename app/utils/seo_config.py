@@ -71,6 +71,12 @@ PAGE_SEO = {
         'keywords': 'Android DNS配置,Android广告拦截,私人DNS设置,DoH配置,Android网络安全,手机DNS设置,平板DNS配置',
         'og_type': 'article',
     },
+    'harmonyos-guide': {
+        'title': '鸿蒙OS配置指南 - AdGuard Home Manager | HarmonyOS DNS设置教程',
+        'description': '详细的鸿蒙OS设备DNS配置教程，鸿蒙系统各版本均原生支持。学习如何在鸿蒙手机和平板上配置AdGuard Home DNS，支持DoT加密协议。',
+        'keywords': '鸿蒙OS DNS配置,HarmonyOS广告拦截,加密DNS设置,DoT配置,鸿蒙网络安全,华为手机DNS,鸿蒙系统配置',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -166,6 +172,29 @@ def get_structured_data(page_name, **kwargs):
                     "@type": "HowToStep",
                     "name": "输入DNS地址",
                     "text": "输入AdGuard Home的DoH地址"
+                }
+            ]
+        })
+    elif page_name == 'harmonyos-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "鸿蒙OS DNS配置指南",
+            "description": "详细的鸿蒙OS设备DNS配置教程，鸿蒙系统各版本均原生支持",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "打开系统设置",
+                    "text": "进入鸿蒙手机/平板系统设置，搜索功能DNS，找到加密DNS功能"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "配置AdGuard Home DNS",
+                    "text": "选择指定DNS加密服务并输入AdGuard Home的DNS地址"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "验证功能生效",
+                    "text": "访问测试页面验证DNS广告屏蔽功能是否生效"
                 }
             ]
         })

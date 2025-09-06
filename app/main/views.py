@@ -255,6 +255,21 @@ def android_guide():
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
+@main.route('/guide/harmonyos-guide')
+def harmonyos_guide():
+    """鸿蒙OS配置指南页面
+    
+    提供鸿蒙OS设备DNS配置的详细教程
+    """
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
+    seo_config = get_page_seo('harmonyos-guide')
+    structured_data = get_structured_data('harmonyos-guide')
+    return render_template('main/harmonyos_guide.html', 
+                         donation_config=donation_config,
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
+
 @main.route('/pricing')
 def pricing():
     """价格方案页面
