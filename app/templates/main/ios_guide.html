@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_config.title if seo_config else 'iOS配置指南 - AdGuard Home Manager' }}</title>
+    
+    <!-- SEO Meta Tags -->
+    {% include 'components/seo_meta.html' %}
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #007aff;
+        }
+
+        /* Apple风格导航栏 */
+        .apple-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 24px;
+            height: 24px;
+            color: #007aff;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #007aff;
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-toggle {
+            background: none;
+            border: none;
+            color: #1d1d1f;
+            font-size: 17px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-dropdown-toggle:hover {
+            background-color: #f5f5f7;
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 8px 0;
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background-color: #f5f5f7;
+        }
+
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .nav-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #1d1d1f;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .page-header p {
+            font-size: 21px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 配置步骤 */
+        .config-steps {
+            padding: 100px 20px;
+            background: #f5f5f7;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 21px;
+            color: #86868b;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .steps-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step-item {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .step-content {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #515154;
+            margin-bottom: 20px;
+        }
+
+        .step-image {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 17px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .download-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .download-button i {
+            font-size: 20px;
+        }
+
+        /* 常见问题 */
+        .faq-section {
+            padding: 100px 20px;
+            background: white;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: #f5f5f7;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .faq-question {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .faq-question i {
+            color: #007aff;
+        }
+
+        .faq-answer {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #515154;
+        }
+
+        /* 返回按钮 */
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 122, 255, 0.4);
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1d1d1f;
+            padding: 60px 20px 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #a1a1a6;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #007aff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            color: #86868b;
+            font-size: 15px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: white;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                padding-top: 50px;
+                transition: left 0.3s ease;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .nav-menu .nav-link {
+                font-size: 20px;
+                margin: 20px 0;
+            }
+
+            .page-header h1 {
+                font-size: 36px;
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .step-item {
+                padding: 30px 20px;
+            }
+
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-number {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .back-button {
+                bottom: 20px;
+                left: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    {% if current_user.is_authenticated %}
+    <!-- 已登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.dashboard') }}">控制面板</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.dashboard') }}">管理后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- 未登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.landing') }}" class="nav-link">首页</a>
+                <a href="{{ url_for('main.about') }}" class="nav-link">关于</a>
+                <a href="{{ url_for('main.features') }}" class="nav-link">功能</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.pricing') }}" class="nav-link">价格</a>
+                <a href="{{ url_for('auth.login') }}" class="nav-link">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link">注册</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 页面标题 -->
+    <header class="page-header">
+        <div class="container">
+            <h1>iOS 配置指南</h1>
+            <p>详细的iPhone和iPad DNS配置教程，支持iOS 14及以上版本</p>
+        </div>
+    </header>
+
+    <!-- 配置步骤 -->
+    <section class="config-steps">
+        <div class="container">
+            <h2 class="section-title">配置步骤</h2>
+            <p class="section-subtitle">按照以下步骤，轻松在您的iOS设备上配置AdGuard Home DNS</p>
+            
+            <div class="steps-container">
+                <!-- 第一步：下载DNS描述文件 -->
+                <div class="step-item">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <div class="step-title">下载DNS描述文件</div>
+                    </div>
+                    <div class="step-content">
+                        <p>在iPhone/iPad的Safari浏览器中，下载最新的AdGuard Home DNS描述文件。</p>
+                        <p><strong>重要提示：</strong>请确保您的iOS系统版本为iOS 14及以上，以获得最佳的DNS配置体验。</p>
+                        <a href="#" class="download-button">
+                            <i class="fas fa-download"></i>
+                            下载描述文件
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 第二步：安装描述文件 -->
+                <div class="step-item">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <div class="step-title">完成DNS描述文件的安装</div>
+                    </div>
+                    <div class="step-content">
+                        <p>下载完成后，按照以下步骤安装描述文件：</p>
+                        <ol style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>进入iPhone/iPad系统设置</li>
+                            <li>选择「通用」</li>
+                            <li>选择「VPN、DNS与设备管理」</li>
+                            <li>在「已下载的描述文件」中找到刚才下载的描述文件</li>
+                            <li>点击安装并按照提示完成安装过程</li>
+                        </ol>
+                        <p><strong>注意：</strong>安装后AdGuard Home DNS将直接被系统启用，无需额外配置。</p>
+                    </div>
+                </div>
+
+                <!-- 第三步：验证功能生效 -->
+                <div class="step-item">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">验证去广告功能生效</div>
+                    </div>
+                    <div class="step-content">
+                        <p>AdGuard Home DNS配置完成后，您可以通过以下方式验证功能是否正常工作：</p>
+                        <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
+                            <li>访问我们的验证测试页面，检查广告屏蔽功能</li>
+                            <li>浏览常用网站，观察广告是否被有效拦截</li>
+                            <li>在管理面板中查看实时DNS查询统计</li>
+                        </ul>
+                        <p>当您看到广告被成功拦截时，说明配置已经生效！🎉</p>
+                        <a href="http://test.dns.con/dns-test" target="_blank" class="download-button">
+                            <i class="fas fa-check-circle"></i>
+                            验证DNS功能
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 常见问题 -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">常见问题</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        私人DNS能否与VPN共存使用？
+                    </div>
+                    <div class="faq-answer">
+                        可以。即无需关闭私人DNS也可同时使用VPN软件，只需在VPN软件中设置"分应用代理"即可。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        为什么有些APP不能去广告？
+                    </div>
+                    <div class="faq-answer">
+                        基于DNS去广告技术的优劣势、以及广告规则库的覆盖度、和广告提供者的技术更新情况，任何去广告方案都做不到100%。我们会持续更新规则库以提高拦截效果。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        使用私人DNS影响免流吗？
+                    </div>
+                    <div class="faq-answer">
+                        不影响。DNS配置不会影响您的流量套餐使用，免流包会正常扣减。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        如何卸载DNS描述文件？
+                    </div>
+                    <div class="faq-answer">
+                        如需卸载，请进入系统设置→通用→VPN、DNS与设备管理→描述文件，找到AdGuard Home描述文件并选择移除即可。
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <i class="fas fa-question-circle"></i>
+                        支持哪些iOS版本？
+                    </div>
+                    <div class="faq-answer">
+                        iOS系统要原生体验AdGuard Home提供的去广告DNS需确保系统为iOS 14及以上版本。较旧版本可能无法正常使用描述文件功能。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 返回按钮 -->
+    <button class="back-button" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="{{ url_for('main.landing') }}">首页</a>
+                <a href="{{ url_for('main.about') }}">关于我们</a>
+                <a href="{{ url_for('main.features') }}">功能特性</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <a href="#">隐私政策</a>
+                <a href="#">服务条款</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+
+            // 下拉菜单功能
+            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
+            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.style.opacity = dropdownMenu.style.opacity === '1' ? '0' : '1';
+                    dropdownMenu.style.visibility = dropdownMenu.style.visibility === 'visible' ? 'hidden' : 'visible';
+                    dropdownMenu.style.transform = dropdownMenu.style.transform === 'translateY(0px)' ? 'translateY(-10px)' : 'translateY(0px)';
+                });
+
+                // 点击其他地方关闭下拉菜单
+                document.addEventListener('click', function() {
+                    dropdownMenu.style.opacity = '0';
+                    dropdownMenu.style.visibility = 'hidden';
+                    dropdownMenu.style.transform = 'translateY(-10px)';
+                });
+            }
+
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

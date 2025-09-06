@@ -77,6 +77,12 @@ PAGE_SEO = {
         'keywords': '鸿蒙OS DNS配置,HarmonyOS广告拦截,加密DNS设置,DoT配置,鸿蒙网络安全,华为手机DNS,鸿蒙系统配置',
         'og_type': 'article',
     },
+    'ios-guide': {
+        'title': 'iOS配置指南 - AdGuard Home Manager | iPhone iPad DNS设置教程',
+        'description': '详细的iOS设备DNS配置教程，支持iOS 14及以上版本。学习如何在iPhone和iPad上配置AdGuard Home DNS描述文件，实现广告拦截和网络防护。',
+        'keywords': 'iOS DNS配置,iPhone广告拦截,iPad DNS设置,iOS描述文件,私人DNS,DoH配置,iOS网络安全,苹果设备DNS',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -195,6 +201,29 @@ def get_structured_data(page_name, **kwargs):
                     "@type": "HowToStep",
                     "name": "验证功能生效",
                     "text": "访问测试页面验证DNS广告屏蔽功能是否生效"
+                }
+            ]
+        })
+    elif page_name == 'ios-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "iOS DNS配置指南",
+            "description": "详细的iOS设备DNS配置教程，支持iOS 14及以上版本",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "下载DNS描述文件",
+                    "text": "在iPhone/iPad的Safari浏览器中，下载AdGuard Home DNS描述文件"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "安装描述文件",
+                    "text": "进入系统设置→通用→VPN、DNS与设备管理，找到下载的描述文件并完成安装"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "验证功能生效",
+                    "text": "访问测试页面验证AdGuard Home DNS广告屏蔽功能是否生效"
                 }
             ]
         })

@@ -270,6 +270,21 @@ def harmonyos_guide():
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
+@main.route('/guide/ios-guide')
+def ios_guide():
+    """iOS配置指南页面
+    
+    提供iOS设备DNS配置的详细教程
+    """
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
+    seo_config = get_page_seo('ios-guide')
+    structured_data = get_structured_data('ios-guide')
+    return render_template('main/ios_guide.html', 
+                         donation_config=donation_config,
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
+
 @main.route('/pricing')
 def pricing():
     """价格方案页面
