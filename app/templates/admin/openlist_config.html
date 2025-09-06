@@ -1,0 +1,356 @@
+{% extends "admin/base.html" %}
+
+{% block title %}OpenList配置{% endblock %}
+
+{% block page_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">OpenList配置</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.index') }}">管理后台</a></li>
+        <li class="breadcrumb-item active">OpenList配置</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-cloud me-1"></i>
+            OpenList对接配置
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('admin.openlist_config') }}" id="openlistConfigForm">
+                <!-- 启用开关 -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enabled" name="enabled" {% if config.enabled %}checked{% endif %}>
+                            <label class="form-check-label" for="enabled">
+                                <strong>启用OpenList对接</strong>
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            启用后，系统将能够与OpenList服务器进行数据同步。
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 服务器配置 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="server_url" class="form-label">服务器地址 <span class="text-danger">*</span></label>
+                        <input type="url" class="form-control" id="server_url" name="server_url" 
+                               value="{{ config.server_url }}" placeholder="https://your-openlist-server.com" required>
+                        <div class="form-text text-muted">
+                            OpenList服务器的完整API地址，包含协议（http://或https://）<br>
+                            <strong>注意：</strong>请确保地址指向API服务器，而不是网页界面<br>
+                            <small class="text-info">示例：https://your-domain.com 或 http://192.168.1.100:5244</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="description" class="form-label">配置描述</label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                               value="{{ config.description }}" placeholder="可选的配置描述信息">
+                        <div class="form-text text-muted">
+                            用于标识此配置的用途或环境
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 认证信息 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               value="{{ config.username }}" placeholder="OpenList用户名" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="{% if config.password %}••••••••{% else %}OpenList密码{% endif %}">
+                        <div class="form-text text-muted">
+                            {% if config.password %}留空表示不修改当前密码{% else %}请输入OpenList登录密码{% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 同步设置 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="sync_interval" class="form-label">同步间隔（秒）</label>
+                        <input type="number" class="form-control" id="sync_interval" name="sync_interval" 
+                               value="{{ config.sync_interval }}" min="60" max="86400" step="60">
+                        <div class="form-text text-muted">
+                            自动同步的时间间隔，范围：60秒 - 86400秒（24小时）
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" id="auto_sync" name="auto_sync" {% if config.auto_sync %}checked{% endif %}>
+                            <label class="form-check-label" for="auto_sync">
+                                启用自动同步
+                            </label>
+                        </div>
+                        <div class="form-text text-muted">
+                            启用后，系统将按照设定的间隔自动同步数据
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 状态信息 -->
+                {% if config.id %}
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">当前状态</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>同步状态：</strong>
+                                        <span class="badge bg-{% if config.sync_status == '同步成功' %}success{% elif config.sync_status == '同步中' %}warning{% elif config.sync_status == '同步失败' %}danger{% else %}secondary{% endif %}">
+                                            {{ config.sync_status }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>最后同步：</strong>
+                                        {% if config.last_sync_at %}
+                                            {{ config.last_sync_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                        {% else %}
+                                            从未同步
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Token状态：</strong>
+                                        {% if config.token %}
+                                            {% if config.is_token_valid() %}
+                                                <span class="badge bg-success">有效</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">已过期</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">未获取</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>配置时间：</strong>
+                                        {% if config.updated_at %}
+                                            {{ config.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                        {% else %}
+                                            未知
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- 配置指南 -->
+                                <div class="mt-3">
+                                    <h6 class="text-muted">配置指南</h6>
+                                    <div class="alert alert-info mb-2">
+                                        <small>
+                                            <strong>常见问题解决：</strong><br>
+                                            • 如果测试连接返回HTML页面，说明服务器地址指向了网页而非API<br>
+                                            • 确保服务器地址格式正确，如：<code>https://your-domain.com</code><br>
+                                            • 检查服务器是否正常运行，可以先在浏览器中访问 <code>服务器地址/ping</code><br>
+                                            • 确认用户名和密码正确，且该用户具有API访问权限
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- 配置状态提示 -->
+                <div class="alert alert-info mb-3">
+                    <h6 class="alert-heading"><i class="fas fa-info-circle me-1"></i> 配置状态</h6>
+                    {% if not config.server_url %}
+                        <p class="mb-1">⚠️ 请先配置服务器地址才能进行连接测试</p>
+                    {% elif not config.username or not config.password %}
+                        <p class="mb-1">⚠️ 服务器地址已配置，可以测试连接，但需要完整的用户名和密码才能进行数据同步</p>
+                    {% elif not config.enabled %}
+                        <p class="mb-1">✅ 配置完整，但功能未启用。启用后可进行数据同步</p>
+                    {% else %}
+                        <p class="mb-1">✅ 配置完整且已启用，可以进行连接测试和数据同步</p>
+                    {% endif %}
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-save me-1"></i> 保存配置
+                    </button>
+                    
+                    <!-- 测试连接按钮 - 只要有服务器地址就可以测试 -->
+                    {% if config.server_url %}
+                    <button type="button" class="btn btn-info me-2" id="testConnectionBtn">
+                        <i class="fas fa-plug me-1"></i> 测试连接
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-info me-2" disabled title="请先配置服务器地址">
+                        <i class="fas fa-plug me-1"></i> 测试连接
+                    </button>
+                    {% endif %}
+                    
+                    <!-- 同步相关按钮 - 需要完整配置且启用 -->
+                    {% if config.enabled and config.server_url and config.username %}
+                    <button type="button" class="btn btn-success me-2" id="syncDataBtn">
+                        <i class="fas fa-sync me-1"></i> 立即同步
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary" id="refreshStatusBtn">
+                        <i class="fas fa-refresh me-1"></i> 刷新状态
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-success me-2" disabled title="需要完整配置且启用功能">
+                        <i class="fas fa-sync me-1"></i> 立即同步
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary" disabled title="需要完整配置且启用功能">
+                        <i class="fas fa-refresh me-1"></i> 刷新状态
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 帮助信息 -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-question-circle me-1"></i>
+            配置说明
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>基本配置</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>服务器地址必须是完整的URL</li>
+                        <li><i class="fas fa-check text-success me-2"></i>用户名和密码用于API认证</li>
+                        <li><i class="fas fa-check text-success me-2"></i>首次配置会自动获取访问令牌</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>同步功能</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-info text-info me-2"></i>自动同步需要启用定时任务</li>
+                        <li><i class="fas fa-info text-info me-2"></i>同步间隔建议不少于5分钟</li>
+                        <li><i class="fas fa-info text-info me-2"></i>可以随时手动触发同步</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 测试连接按钮
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    if (testConnectionBtn) {
+        testConnectionBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> 测试中...';
+            
+            fetch('/admin/api/openlist/test-connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', '连接测试成功：' + data.message);
+                } else {
+                    showAlert('danger', '连接测试失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', '连接测试失败：' + error.message);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
+    
+    // 同步数据按钮
+    const syncDataBtn = document.getElementById('syncDataBtn');
+    if (syncDataBtn) {
+        syncDataBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> 同步中...';
+            
+            fetch('/admin/api/openlist/sync', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', '数据同步成功：' + data.message);
+                    // 刷新页面以显示最新状态
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showAlert('danger', '数据同步失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                showAlert('danger', '数据同步失败：' + error.message);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        });
+    }
+    
+    // 刷新状态按钮
+    const refreshStatusBtn = document.getElementById('refreshStatusBtn');
+    if (refreshStatusBtn) {
+        refreshStatusBtn.addEventListener('click', function() {
+            window.location.reload();
+        });
+    }
+    
+    // 显示提示信息的函数
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+        
+        // 自动消失
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

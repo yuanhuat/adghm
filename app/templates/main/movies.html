@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影视服务 - AdGuardHome用户管理系统</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    
+    <style>
+        .movies-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .movies-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .movies-header h1 {
+            color: #1d1d1f;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .movies-header p {
+            color: #86868b;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .service-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e5e7;
+        }
+        
+        .service-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .service-icon i {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .service-title h2 {
+            color: #1d1d1f;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .service-description {
+            color: #515154;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .register-form {
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #1d1d1f;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d2d2d7;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .permissions-info {
+            background: #e8f4fd;
+            border: 1px solid #b3d9f7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .permissions-info h4 {
+            color: #0066cc;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+        }
+        
+        .permissions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .permissions-list li {
+            color: #0066cc;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .permissions-list li i {
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+        
+        .btn-register {
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .btn-register:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+        
+        .btn-register:disabled {
+            background: #d1d1d6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .status-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-info h4 {
+            color: #856404;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+        }
+        
+        .status-info p {
+            color: #856404;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.movies') }}" class="nav-link active">影视</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="movies-container">
+        <div class="movies-header">
+            <h1>影视服务</h1>
+            <p>注册OpenList账户，享受高质量的影视资源访问服务</p>
+        </div>
+
+        <div class="service-card">
+            <div class="service-title">
+                <div class="service-icon">
+                    <i class="fas fa-film"></i>
+                </div>
+                <h2>OpenList 影视服务</h2>
+            </div>
+            
+            <div class="service-description">
+                <p>OpenList 是一个专业的影视资源管理平台，提供高质量的影视内容访问服务。通过注册账户，您可以获得以下权限：</p>
+            </div>
+            
+            <div class="permissions-info">
+                <h4><i class="fas fa-key"></i> 账户权限</h4>
+                <ul class="permissions-list">
+                    <li><i class="fas fa-folder-open"></i> WebDAV 读取权限</li>
+                    <li><i class="fas fa-download"></i> FTP 读取权限</li>
+                    <li><i class="fas fa-home"></i> 根目录：/影视</li>
+                </ul>
+            </div>
+            
+            <div class="status-info">
+                <h4><i class="fas fa-info-circle"></i> 注册说明</h4>
+                <p>注册成功后，您将获得专用的访问凭据，可以通过WebDAV或FTP协议访问影视资源目录。</p>
+            </div>
+            
+            <div class="alert alert-success" id="successAlert">
+                <i class="fas fa-check-circle"></i> 注册成功！请查看您的邮箱获取访问凭据。
+            </div>
+            
+            <div class="alert alert-error" id="errorAlert">
+                <i class="fas fa-exclamation-circle"></i> <span id="errorMessage">注册失败，请重试。</span>
+            </div>
+            
+            <form class="register-form" id="registerForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="请输入用户名（建议使用当前账户名）" 
+                           value="{{ current_user.username }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">邮箱地址</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="请输入邮箱地址" 
+                           value="{{ current_user.email }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="请设置密码（至少6位）" minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
+                           placeholder="请再次输入密码">
+                </div>
+                
+                <button type="submit" class="btn-register" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> 注册 OpenList 账户
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航栏切换功能
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+            }
+            
+            // 注册表单处理
+            const registerForm = document.getElementById('registerForm');
+            const registerBtn = document.getElementById('registerBtn');
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 获取表单数据
+                const formData = new FormData(registerForm);
+                const password = formData.get('password');
+                const confirmPassword = formData.get('confirmPassword');
+                
+                // 验证密码
+                if (password !== confirmPassword) {
+                    showError('密码确认不匹配，请重新输入');
+                    return;
+                }
+                
+                // 禁用按钮
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 注册中...';
+                
+                // 隐藏之前的提示
+                hideAlerts();
+                
+                // 发送注册请求
+                fetch('/api/openlist/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: formData.get('username'),
+                        email: formData.get('email'),
+                        password: password,
+                        permissions: {
+                            webdav_read: true,
+                            ftp_read: true,
+                            root_directory: '/影视'
+                        }
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccess();
+                        registerForm.reset();
+                        // 恢复默认值
+                        document.getElementById('username').value = '{{ current_user.username }}';
+                        document.getElementById('email').value = '{{ current_user.email }}';
+                    } else {
+                        showError(data.message || '注册失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('注册错误:', error);
+                    showError('网络错误，请检查连接后重试');
+                })
+                .finally(() => {
+                    // 恢复按钮状态
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> 注册 OpenList 账户';
+                });
+            });
+            
+            function showSuccess() {
+                hideAlerts();
+                successAlert.style.display = 'block';
+                setTimeout(() => {
+                    successAlert.style.display = 'none';
+                }, 5000);
+            }
+            
+            function showError(message) {
+                hideAlerts();
+                errorMessage.textContent = message;
+                errorAlert.style.display = 'block';
+                setTimeout(() => {
+                    errorAlert.style.display = 'none';
+                }, 5000);
+            }
+            
+            function hideAlerts() {
+                successAlert.style.display = 'none';
+                errorAlert.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

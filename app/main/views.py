@@ -2645,3 +2645,140 @@ def api_remove_client_custom_rule(client_id):
             'success': False,
             'error': '服务器内部错误'
         }), 500
+
+
+@main.route('/movies')
+@login_required
+def movies():
+    """影视页面
+    
+    提供用户注册OpenList账户的功能
+    """
+    return render_template('main/movies.html')
+
+
+@main.route('/api/openlist/register', methods=['POST'])
+@login_required
+def api_openlist_register():
+    """OpenList用户注册API接口
+    
+    处理用户注册OpenList账户的请求，包括权限配置
+    
+    Returns:
+        JSON: 注册结果信息
+    """
+    try:
+        # 获取请求数据
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        # 验证必需字段
+        required_fields = ['username', 'email', 'password']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'message': f'缺少必需字段: {field}'
+                }), 400
+        
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        permissions = data.get('permissions', {})
+        
+        # 验证密码长度
+        if len(password) < 6:
+            return jsonify({
+                'success': False,
+                'message': '密码长度至少为6位'
+            }), 400
+        
+        # 验证邮箱格式
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            return jsonify({
+                'success': False,
+                'message': '邮箱格式不正确'
+            }), 400
+        
+        # 检查OpenList配置是否启用
+        from app.models.openlist_config import OpenListConfig
+        openlist_config = OpenListConfig.get_config()
+        if not openlist_config or not openlist_config.enabled:
+            return jsonify({
+                'success': False,
+                'message': 'OpenList服务未启用，请联系管理员'
+            }), 400
+        
+        # 调用OpenList API创建用户
+        from app.services.openlist_service import OpenListService
+        
+        try:
+            logging.info(f"开始为用户 {username} 创建OpenList账户")
+            openlist_service = OpenListService()
+            
+            # 设置用户权限和根目录
+            user_permissions = ['webdav:read', 'ftp:read']
+            root_path = '/影视'
+            
+            logging.info(f"调用OpenList服务创建用户: {username}, 权限: {user_permissions}, 根目录: {root_path}")
+            
+            # 调用OpenList服务创建用户
+            result = openlist_service.create_user(
+                username=username,
+                email=email,
+                password=password,
+                permissions=user_permissions,
+                root_path=root_path
+            )
+            
+            logging.info(f"OpenList服务返回结果: {result}")
+            
+            if not result['success']:
+                logging.error(f"OpenList用户创建失败: {result['message']}")
+                return jsonify({
+                    'success': False,
+                    'message': result['message']
+                }), 400
+            
+            # 记录操作日志
+            log_entry = OperationLog(
+                user_id=current_user.id,
+                operation_type='CREATE',
+                target_type='OPENLIST_USER',
+                target_id=username,
+                details=f'用户 {current_user.username} 为 {username} 创建OpenList账户，权限: {user_permissions}，根目录: {root_path}'
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': result['message'],
+                'data': {
+                    'username': username,
+                    'email': email,
+                    'permissions': ['WebDAV读取', 'FTP读取'],
+                    'root_directory': '/影视',
+                    'user_id': result.get('user_id')
+                }
+            })
+            
+        except Exception as openlist_error:
+            logging.error(f"OpenList用户注册失败: {str(openlist_error)}")
+            return jsonify({
+                'success': False,
+                'message': f'注册失败: {str(openlist_error)}'
+            }), 500
+        
+    except Exception as e:
+        logging.error(f"OpenList用户注册API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误，请稍后重试'
+        }), 500

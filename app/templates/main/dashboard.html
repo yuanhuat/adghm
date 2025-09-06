@@ -31,6 +31,7 @@
                 <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
                 <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
                 <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.movies') }}" class="nav-link">影视</a>
                 <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
                 {% if donation_config and donation_config.show_ranking %}
                 <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>

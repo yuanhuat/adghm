@@ -14,6 +14,7 @@ from app.models.email_config import EmailConfig
 from app.models.adguard_config import AdGuardConfig
 from app.models.dns_config import DnsConfig
 from app.models.system_config import SystemConfig
+from app.models.openlist_config import OpenListConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
 from app.models.vip_config import VipConfig
@@ -24,6 +25,7 @@ from app.services.email_service import EmailService
 from app.services.query_log_service import QueryLogService
 from app.services.ai_analysis_service import AIAnalysisService
 from app.services.adguard_service import AdGuardService
+from app.services.openlist_service import OpenListService
 from . import admin
 from functools import wraps
 
@@ -1635,6 +1637,235 @@ def manage_ai_analysis_config():
                 'success': False,
                 'error': str(e)
             }), 500
+
+
+@admin.route('/openlist-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def openlist_config():
+    """OpenList配置管理页面
+    
+    允许管理员配置OpenList对接参数，包括服务器地址、认证信息等。
+    """
+    config = OpenListConfig.get_config()
+    
+    if request.method == 'POST':
+        try:
+            # 获取表单数据
+            enabled = 'enabled' in request.form
+            server_url = request.form.get('server_url', '').strip()
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '').strip()
+            sync_interval = int(request.form.get('sync_interval', 3600))
+            auto_sync = 'auto_sync' in request.form
+            description = request.form.get('description', '').strip()
+            
+            # 更新配置
+            config.enabled = enabled
+            config.server_url = server_url
+            config.username = username
+            if password:  # 只有在提供新密码时才更新
+                config.password = password
+            config.sync_interval = sync_interval
+            config.auto_sync = auto_sync
+            config.description = description
+            
+            # 如果启用了配置，测试连接
+            if enabled and server_url and username and password:
+                try:
+                    service = OpenListService(config)
+                    test_result = service.test_connection()
+                    if not test_result['success']:
+                        flash(f'配置已保存，但连接测试失败: {test_result["message"]}', 'warning')
+                    else:
+                        flash('OpenList配置已保存并测试成功', 'success')
+                except Exception as e:
+                    flash(f'配置已保存，但连接测试失败: {str(e)}', 'warning')
+            else:
+                flash('OpenList配置已保存', 'success')
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_openlist_config',
+                target_type='OPENLIST',
+                target_id='openlist_config',
+                details=f'更新OpenList配置：启用={enabled}, 服务器={server_url}'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'保存配置失败: {str(e)}', 'error')
+        
+        return redirect(url_for('admin.openlist_config'))
+    
+    return render_template('admin/openlist_config.html', config=config)
+
+
+@admin.route('/api/openlist-config', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_openlist_config():
+    """管理OpenList配置API"""
+    if request.method == 'GET':
+        try:
+            config = OpenListConfig.get_config()
+            return jsonify({
+                'success': True,
+                'config': config.to_dict()
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            config = OpenListConfig.get_config()
+            
+            # 更新配置
+            if 'enabled' in data:
+                config.enabled = bool(data['enabled'])
+            if 'server_url' in data:
+                config.server_url = data['server_url'].strip()
+            if 'username' in data:
+                config.username = data['username'].strip()
+            if 'password' in data and data['password']:
+                config.password = data['password'].strip()
+            if 'sync_interval' in data:
+                config.sync_interval = int(data['sync_interval'])
+            if 'auto_sync' in data:
+                config.auto_sync = bool(data['auto_sync'])
+            if 'description' in data:
+                config.description = data['description'].strip()
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='update_openlist_config_api',
+                target_type='OPENLIST',
+                target_id='openlist_config',
+                details='通过API更新OpenList配置'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'OpenList配置已更新',
+                'config': config.to_dict()
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+
+
+@admin.route('/api/openlist/test-connection', methods=['POST'])
+@login_required
+@admin_required
+def test_openlist_connection():
+    """测试OpenList连接"""
+    try:
+        config = OpenListConfig.get_config()
+        if not config.server_url:
+            return jsonify({
+                'success': False,
+                'message': '请先配置OpenList服务器地址'
+            })
+        
+        service = OpenListService(config, skip_enabled_check=True)
+        result = service.test_connection()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='test_openlist_connection',
+            target_type='OPENLIST',
+            target_id='openlist_config',
+            details=f'测试OpenList连接: {result["message"]}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'连接测试失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/openlist/sync', methods=['POST'])
+@login_required
+@admin_required
+def sync_openlist_data():
+    """同步数据到OpenList"""
+    try:
+        config = OpenListConfig.get_config()
+        if not config.enabled:
+            return jsonify({
+                'success': False,
+                'message': 'OpenList对接未启用'
+            })
+        
+        service = OpenListService(config)
+        result = service.sync_data()
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='sync_openlist_data',
+            target_type='OPENLIST',
+            target_id='openlist_config',
+            details=f'同步数据到OpenList: {result["message"]}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'数据同步失败: {str(e)}'
+        }), 500
+
+
+@admin.route('/api/openlist/status', methods=['GET'])
+@login_required
+@admin_required
+def get_openlist_status():
+    """获取OpenList同步状态"""
+    try:
+        config = OpenListConfig.get_config()
+        if not config.enabled:
+            return jsonify({
+                'success': False,
+                'message': 'OpenList对接未启用'
+            })
+        
+        service = OpenListService(config)
+        status = service.get_sync_status()
+        
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取状态失败: {str(e)}'
+        }), 500
 
 @admin.route('/users/edit-vip', methods=['POST'])
 @login_required
