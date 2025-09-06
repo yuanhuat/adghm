@@ -240,6 +240,21 @@ def guide():
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
+@main.route('/guide/android-guide')
+def android_guide():
+    """Android配置指南页面
+    
+    提供Android设备DNS配置的详细教程
+    """
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
+    seo_config = get_page_seo('android-guide')
+    structured_data = get_structured_data('android-guide')
+    return render_template('main/android_guide.html', 
+                         donation_config=donation_config,
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
+
 @main.route('/pricing')
 def pricing():
     """价格方案页面

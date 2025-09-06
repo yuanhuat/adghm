@@ -65,6 +65,12 @@ PAGE_SEO = {
         'keywords': '捐赠支持,项目支持,开源项目,资助开发,支持我们',
         'og_type': 'website',
     },
+    'android-guide': {
+        'title': 'Android配置指南 - AdGuard Home Manager | Android DNS设置教程',
+        'description': '详细的Android设备DNS配置教程，支持Android 9及以上版本。学习如何在Android手机和平板上配置AdGuard Home DNS，实现广告拦截和网络防护。',
+        'keywords': 'Android DNS配置,Android广告拦截,私人DNS设置,DoH配置,Android网络安全,手机DNS设置,平板DNS配置',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -139,6 +145,29 @@ def get_structured_data(page_name, **kwargs):
             "@type": "HowTo",
             "name": "AdGuard Home Manager使用指南",
             "description": "详细的AdGuard Home Manager配置和使用教程"
+        })
+    elif page_name == 'android-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "Android DNS配置指南",
+            "description": "详细的Android设备DNS配置教程，支持Android 9及以上版本",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "打开系统设置",
+                    "text": "进入手机/平板系统设置，搜索功能DNS，找到私人DNS或加密DNS功能"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "选择私人DNS提供商",
+                    "text": "选择私人DNS提供商主机名选项"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "输入DNS地址",
+                    "text": "输入AdGuard Home的DoH地址"
+                }
+            ]
         })
     
     return base_data
