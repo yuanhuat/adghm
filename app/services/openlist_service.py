@@ -394,8 +394,9 @@ class OpenListService:
                 logging.info("Token有效，跳过认证")
             
             # 转换权限列表为数值（根据OpenList权限系统）
-            # 默认权限值：60 (包含基本读写权限)
-            permission_value = 60
+            # 根据testuser555用户的权限值，WebDAV读取和FTP读取权限对应1280
+            # 这个值是通过查询现有用户权限反推得出的
+            permission_value = 1280
             
             # 构建用户数据（按照OpenList API规范）
             user_data = {
