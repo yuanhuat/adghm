@@ -501,14 +501,56 @@
                         <div class="step-item">
                             <div class="step-header">
                                 <div class="step-number">1</div>
-                                <div class="step-title">Windows 11 原生配置</div>
+                                <div class="step-title">打开Windows设置</div>
                             </div>
                             <div class="step-content">
-                                <div class="highlight-box">
-                                    <p><strong>注意：</strong>Windows 11通过原生方式使用DNS。</p>
-                                </div>
-                                <p>Windows 11系统原生支持DoH（DNS over HTTPS）协议，可以直接在系统设置中配置加密DNS服务。</p>
-                                <p>请关注微信公众号【18比特】获取详细的Windows 11原生配置教程。</p>
+                                <p>按下<strong>Win + I</strong>快捷键打开Windows设置，或者点击开始菜单中的设置图标。</p>
+                                <p>在设置界面中，点击<strong>"网络和Internet"</strong>选项。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">选择网络连接类型</div>
+                            </div>
+                            <div class="step-content">
+                                <p>在网络设置页面中，根据你的连接类型选择<strong>"以太网"</strong>或<strong>"Wi-Fi"</strong>。</p>
+                                <p>点击你当前使用的网络连接名称进入详细设置页面。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">3</div>
+                                <div class="step-title">编辑DNS服务器设置</div>
+                            </div>
+                            <div class="step-content">
+                                <p>在网络详情页面中，找到<strong>"DNS服务器分配"</strong>选项。</p>
+                                <p>点击<strong>"编辑"</strong>按钮，将设置从<strong>"自动(DHCP)"</strong>切换到<strong>"手动"</strong>。</p>
+                                <p>点击<strong>IPv4</strong>按钮启用IPv4设置。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">4</div>
+                                <div class="step-title">配置DNS和DoH加密</div>
+                            </div>
+                            <div class="step-content">
+                                <p>以下是Windows 11原生DoH配置的详细步骤：</p>
+                                <ol style="margin-left: 20px; margin-top: 15px;">
+                                    <li>导航到<strong>设置 > 网络和互联网 > 以太网</strong>（有线网络）或<strong>WIFI</strong>（无线网络）</li>
+                                    <li>单击<strong>"DNS 服务器分配"</strong>项目上的<strong>"编辑"</strong></li>
+                                    <li>将设置从<strong>自动（DHCP）</strong>切换到<strong>手动</strong></li>
+                                    <li>点击<strong>IPv4</strong>按钮</li>
+                                    <li>在<strong>首选 DNS</strong>字段中输入：<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">dns.yourdomain.com</code></li>
+                                    <li>在加密选项中选择<strong>"仅加密（DNS over HTTPS）"</strong></li>
+                                    <li>在<strong>备用 DNS</strong>字段中输入：<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">1.1.1.1</code></li>
+                                    <li>同样选择<strong>"仅加密（DNS over HTTPS）"</strong></li>
+                                    <li>点击<strong>"保存"</strong>完成配置</li>
+                                </ol>
+                                <p style="margin-top: 15px;">配置完成后，你的DNS查询将通过加密通道传输，提供更好的隐私保护。</p>
                             </div>
                         </div>
                     </div>
