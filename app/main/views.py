@@ -315,6 +315,21 @@ def macos_guide():
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
+@main.route('/guide/chrome-guide')
+def chrome_guide():
+    """Chrome浏览器配置指南页面
+    
+    提供Chrome、Edge、Firefox等浏览器DNS配置的详细教程
+    """
+    # 获取捐赠配置（用于显示排行榜链接）
+    donation_config = DonationConfig.get_config()
+    seo_config = get_page_seo('chrome-guide')
+    structured_data = get_structured_data('chrome-guide')
+    return render_template('main/chrome_guide.html', 
+                         donation_config=donation_config,
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
+
 @main.route('/pricing')
 def pricing():
     """价格方案页面

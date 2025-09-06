@@ -95,6 +95,12 @@ PAGE_SEO = {
         'keywords': 'macOS DNS配置,Mac广告拦截,DNS设置,macOS描述文件,Safari配置,macOS网络安全',
         'og_type': 'article',
     },
+    'chrome-guide': {
+        'title': 'Chrome浏览器配置指南 - AdGuard Home Manager | 浏览器DNS设置教程',
+        'description': '详细的Chrome、Edge、Firefox浏览器DNS配置教程，通过安全DNS设置享受更好的去广告效果和隐私保护。',
+        'keywords': 'Chrome DNS配置,浏览器广告拦截,Edge DNS设置,Firefox DNS配置,安全DNS,浏览器隐私保护',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -282,6 +288,29 @@ def get_structured_data(page_name, **kwargs):
                     "@type": "HowToStep",
                     "name": "验证配置效果",
                     "text": "访问测试页面验证DNS配置是否生效，确认广告拦截功能正常工作"
+                }
+            ]
+        })
+    elif page_name == 'chrome-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "Chrome浏览器DNS配置指南",
+            "description": "详细的Chrome、Edge、Firefox浏览器DNS配置教程，通过安全DNS设置享受更好的去广告效果",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "进入浏览器设置",
+                    "text": "打开Chrome/Edge/Firefox浏览器，进入设置页面搜索DNS功能"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "配置安全DNS",
+                    "text": "找到安全DNS或HTTPS DNS选项，输入18bit DNS地址：https://doh.18bit.cn/dns-query"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "验证配置效果",
+                    "text": "访问验证测试页面确认DNS配置生效，享受广告拦截和隐私保护功能"
                 }
             ]
         })

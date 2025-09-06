@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo_config.title if seo_config else 'Chrome浏览器配置指南 - AdGuard Home Manager' }}</title>
+    
+    <!-- SEO Meta Tags -->
+    {% include 'components/seo_meta.html' %}
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: #fff;
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 17px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #4285f4;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            margin-top: 60px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            padding: 100px 20px 60px;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+        }
+
+        .page-header h1 {
+            font-size: 48px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .page-header p {
+            font-size: 21px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 浏览器选择 */
+        .browser-selection {
+            padding: 60px 20px;
+            background: #f8f9fa;
+        }
+
+        .browser-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .browser-tab {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .browser-tab.active {
+            border-color: #4285f4;
+            background: #4285f4;
+            color: white;
+        }
+
+        .browser-tab:hover {
+            border-color: #4285f4;
+            transform: translateY(-2px);
+        }
+
+        .browser-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* 配置步骤 */
+        .steps-section {
+            padding: 80px 20px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1d1d1f;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            text-align: center;
+            color: #666;
+            margin-bottom: 60px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .browser-content {
+            display: none;
+        }
+
+        .browser-content.active {
+            display: block;
+        }
+
+        .step-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step-item {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f0f0;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .step-content {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .step-content p {
+            margin-bottom: 15px;
+        }
+
+        .step-content strong {
+            color: #4285f4;
+            font-weight: 600;
+        }
+
+        .dns-address {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            color: #d73a49;
+            border-left: 4px solid #4285f4;
+            margin: 15px 0;
+        }
+
+        /* 验证测试 */
+        .verification-section {
+            padding: 80px 20px;
+            background: #f8f9fa;
+        }
+
+        .verification-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .verification-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            color: white;
+            font-size: 36px;
+        }
+
+        .verification-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .verification-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .test-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+        }
+
+        /* 常见问题 */
+        .faq-section {
+            padding: 80px 20px;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f0f0f0;
+        }
+
+        .faq-question {
+            padding: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            color: #4285f4;
+        }
+
+        .faq-question i {
+            color: #4285f4;
+            font-size: 20px;
+        }
+
+        .faq-answer {
+            padding: 0 25px 25px;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1d1d1f;
+            color: white;
+            padding: 60px 20px 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-copyright {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 36px;
+            }
+
+            .page-header p {
+                font-size: 18px;
+            }
+
+            .browser-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .browser-tab {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .step-item {
+                padding: 25px;
+            }
+
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .step-title {
+                font-size: 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    {% if current_user.is_authenticated %}
+    <!-- 已登录用户导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>AdGuard Home</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.profile') }}" class="nav-dropdown-item">个人资料</a>
+                        <a href="{{ url_for('auth.logout') }}" class="nav-dropdown-item">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% else %}
+    <!-- 未登录用户导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('main.index') }}" class="nav-brand">AdGuard Home Manager</a>
+            <div class="nav-links">
+                <a href="{{ url_for('main.guide') }}">指南</a>
+                <a href="{{ url_for('main.about') }}">关于</a>
+                <a href="{{ url_for('auth.login') }}" class="nav-link nav-link-login">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link nav-link-signup">注册</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <!-- 页面标题 -->
+        <section class="page-header">
+            <div class="container">
+                <h1>浏览器 DNS 配置指南</h1>
+                <p>支持Chrome、Edge、Firefox三款主流浏览器，配合广告屏蔽插件达到更好的去广告效果</p>
+            </div>
+        </section>
+
+        <!-- 浏览器选择 -->
+        <section class="browser-selection">
+            <div class="container">
+                <h2 class="section-title">选择你的浏览器</h2>
+                <p class="section-subtitle">三款浏览器DNS配置教程基本相同，但配置前，仍推荐你浏览器升级到最新版本</p>
+                
+                <div class="browser-tabs">
+                    <button class="browser-tab active" onclick="showBrowser('chrome')">
+                        <i class="fab fa-chrome browser-icon"></i>
+                        谷歌Chrome
+                    </button>
+                    <button class="browser-tab" onclick="showBrowser('edge')">
+                        <i class="fab fa-edge browser-icon"></i>
+                        微软Edge
+                    </button>
+                    <button class="browser-tab" onclick="showBrowser('firefox')">
+                        <i class="fab fa-firefox browser-icon"></i>
+                        火狐Firefox
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 配置步骤 -->
+        <section class="steps-section">
+            <div class="container">
+                <!-- Chrome配置 -->
+                <div id="chrome" class="browser-content active">
+                    <div class="step-container">
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-title">进入Chrome浏览器设置</div>
+                            </div>
+                            <div class="step-content">
+                                <p>打开Chrome浏览器，点击右上角的三个点菜单，选择<strong>"设置"</strong>。</p>
+                                <p>在设置页面的搜索框中输入<strong>"DNS"</strong>，找到<strong>"使用安全DNS"</strong>功能。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">配置18bit DNS</div>
+                            </div>
+                            <div class="step-content">
+                                <p>在"使用安全DNS"设置中，选择<strong>"使用"</strong>选项。</p>
+                                <p>在下拉菜单中选择<strong>"自定义"</strong>，然后输入18bit DNS的线路：</p>
+                                <div class="dns-address">https://doh.18bit.cn/dns-query</div>
+                                <p>点击<strong>"保存"</strong>完成配置。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edge配置 -->
+                <div id="edge" class="browser-content">
+                    <div class="step-container">
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-title">进入Edge浏览器设置</div>
+                            </div>
+                            <div class="step-content">
+                                <p>打开Edge浏览器，点击右上角的三个点菜单，选择<strong>"设置"</strong>。</p>
+                                <p>在设置页面的搜索框中输入<strong>"DNS"</strong>，找到<strong>"使用安全的DNS"</strong>功能。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">配置18bit DNS</div>
+                            </div>
+                            <div class="step-content">
+                                <p>在"使用安全的DNS"设置中，选择<strong>"开启"</strong>选项。</p>
+                                <p>在服务提供商下拉菜单中选择<strong>"自定义"</strong>，然后输入18bit DNS的线路：</p>
+                                <div class="dns-address">https://doh.18bit.cn/dns-query</div>
+                                <p>点击<strong>"保存"</strong>完成配置。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Firefox配置 -->
+                <div id="firefox" class="browser-content">
+                    <div class="step-container">
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-title">进入Firefox浏览器设置</div>
+                            </div>
+                            <div class="step-content">
+                                <p>打开Firefox浏览器，点击右上角的三条线菜单，选择<strong>"设置"</strong>。</p>
+                                <p>在设置页面的搜索框中输入<strong>"DNS"</strong>，找到<strong>"启用基于HTTPS的DNS"</strong>功能。</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">配置18bit DNS</div>
+                            </div>
+                            <div class="step-content">
+                                <p>勾选<strong>"启用基于HTTPS的DNS"</strong>选项。</p>
+                                <p>在提供商下拉菜单中选择<strong>"自定义"</strong>，然后输入18bit DNS的线路：</p>
+                                <div class="dns-address">https://doh.18bit.cn/dns-query</div>
+                                <p>设置会自动保存。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DNS验证测试 -->
+        <section class="verification-section">
+            <div class="container">
+                <div class="verification-card">
+                    <div class="verification-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 class="verification-title">DNS验证测试</h2>
+                    <p class="verification-description">
+                        浏览器加密/安全DNS配置后，可访问验证测试页来验证18bit DNS是否生效，当看到红色时就大功告成了~🥰
+                    </p>
+                    <a href="http://test.dns.con/dns-test" target="_blank" class="test-button">
+                        <i class="fas fa-external-link-alt" style="margin-right: 8px;"></i>
+                        验证测试页
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常见问题 -->
+        <section class="faq-section">
+            <div class="container">
+                <h2 class="section-title">常见问题</h2>
+                <div class="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            如电脑系统已经设置DNS了，那是否还需要再浏览器上设置DNS？
+                        </div>
+                        <div class="faq-answer">
+                            不用。一般情况下浏览器的所有DNS查询请求都会基于系统配置的18bit DNS进行加密处理。
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            浏览器上已经安装有广告屏蔽插件了，为什么还要设置DNS？
+                        </div>
+                        <div class="faq-answer">
+                            诚然浏览器上的广告屏蔽插件对于网络浏览场景已经足够，并且也足够优秀，18bit推荐2种场景让DNS和广告屏蔽插件进行配合使用：<br>
+                            1. 如果你想达到更好的去广告效果，可尝试DNS+广告屏蔽插件的互补使用<br>
+                            2. 如果你足够关注隐私，期望避免/减轻公司网络对你网络浏览行为的观察和分析，推荐在浏览器上使用18bit DNS来加密你的所有网络浏览行为
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            为什么浏览器有些广告DNS不能去掉但广告屏蔽插件可以？
+                        </div>
+                        <div class="faq-answer">
+                            目前18bit DNS广告拦截率在63.57%。18bit DNS是基于host方式去除广告，这和基于浏览器前端去除广告的方式有天然的区别，这也导致两者在技术实现和结果达成上的不同。但18bit以去广告净化网络为产品价值观，仍然推荐你使用DNS+广告屏蔽插件的互补组合来进行网络冲浪。
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <i class="fas fa-question-circle"></i>
+                            18bit 为什么要接受赞助？
+                        </div>
+                        <div class="faq-answer">
+                            免费从来都是有成本的。虽然18bit用爱发电，但采买服务器、防火墙等等服务都是真金白银的消耗。如果你愿意现金支持我们，这将推动我们更快的发展和提高DNS运行质量。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="{{ url_for('main.index') }}">首页</a>
+                <a href="{{ url_for('main.guide') }}">使用指南</a>
+                <a href="{{ url_for('main.about') }}">关于我们</a>
+                <a href="{{ url_for('main.donation') }}">支持我们</a>
+            </div>
+            <div class="footer-copyright">
+                <p>&copy; 2024 AdGuard Home Manager. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 浏览器切换功能
+        function showBrowser(browserName) {
+            // 隐藏所有浏览器内容
+            const contents = document.querySelectorAll('.browser-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的active状态
+            const tabs = document.querySelectorAll('.browser-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的浏览器内容
+            document.getElementById(browserName).classList.add('active');
+            
+            // 激活选中的标签
+            event.target.closest('.browser-tab').classList.add('active');
+        }
+
+        // 导航栏切换
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                navToggle.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
