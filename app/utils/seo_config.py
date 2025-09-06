@@ -83,6 +83,12 @@ PAGE_SEO = {
         'keywords': 'iOS DNS配置,iPhone广告拦截,iPad DNS设置,iOS描述文件,私人DNS,DoH配置,iOS网络安全,苹果设备DNS',
         'og_type': 'article',
     },
+    'windows-guide': {
+        'title': 'Windows配置指南 - AdGuard Home Manager | Windows DNS设置教程',
+        'description': '详细的Windows系统DNS配置教程，支持Windows 11原生方式和第三方软件YogaDNS。学习如何在Windows电脑上配置AdGuard Home DNS，实现全局广告拦截。',
+        'keywords': 'Windows DNS配置,Windows 11 DNS,YogaDNS配置,Windows广告拦截,DoH配置,Windows网络安全,加密DNS设置',
+        'og_type': 'article',
+    },
 }
 
 # 获取页面SEO配置
@@ -223,7 +229,30 @@ def get_structured_data(page_name, **kwargs):
                 {
                     "@type": "HowToStep",
                     "name": "验证功能生效",
-                    "text": "访问测试页面验证AdGuard Home DNS广告屏蔽功能是否生效"
+                    "text": "访问测试页面验证AdGuard Home DNS广告拦截功能是否生效"
+                }
+            ]
+        })
+    elif page_name == 'windows-guide':
+        base_data.update({
+            "@type": "HowTo",
+            "name": "Windows DNS配置指南",
+            "description": "详细的Windows系统DNS配置教程，支持Windows 11原生方式和第三方软件YogaDNS",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "name": "下载并安装YogaDNS软件",
+                    "text": "从官网下载YogaDNS软件并完成安装，选择空白模板创建DNS服务"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "添加18bit DNS服务",
+                    "text": "在YogaDNS中添加18bit DNS服务，配置DoH协议和服务地址"
+                },
+                {
+                    "@type": "HowToStep",
+                    "name": "启动DNS服务并验证",
+                    "text": "启动DNS服务并访问测试页面验证广告拦截功能是否生效"
                 }
             ]
         })
