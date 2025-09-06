@@ -2757,6 +2757,33 @@ def api_openlist_register():
             db.session.add(log_entry)
             db.session.commit()
             
+            # 发送注册成功邮件
+            try:
+                from app.services.email_service import EmailService
+                
+                # 获取OpenList服务器地址
+                server_address = openlist_config.server_url if openlist_config else '未配置'
+                
+                email_success = EmailService.send_email(
+                    to=email,
+                    subject='OpenList影视服务账户注册成功',
+                    template='openlist_registration_success',
+                    username=username,
+                    email=email,
+                    password=password,
+                    server_address=server_address,
+                    permissions=['WebDAV读取权限', 'FTP读取权限']
+                )
+                
+                if email_success:
+                    logging.info(f"注册成功邮件已发送至: {email}")
+                else:
+                    logging.warning(f"注册成功邮件发送失败: {email}")
+                    
+            except Exception as email_error:
+                logging.error(f"发送注册成功邮件时出错: {str(email_error)}")
+                # 邮件发送失败不影响注册成功的返回
+            
             return jsonify({
                 'success': True,
                 'message': result['message'],
