@@ -20,6 +20,9 @@ class User(UserMixin, db.Model):
     is_vip_user = db.Column(db.Boolean, default=False, comment='是否为VIP用户')
     vip_expire_time = db.Column(db.DateTime, nullable=True, comment='VIP到期时间')
     total_donation = db.Column(db.Numeric(10, 2), default=0.00, comment='累计捐赠金额')
+    
+    # OpenList相关字段
+    openlist_username = db.Column(db.String(100), nullable=True, comment='OpenList用户名')
 
     # 关联客户端映射
     client_mappings = db.relationship('ClientMapping', backref='user', lazy=True)

@@ -5,13 +5,14 @@ from app import db
 from app.models.client_mapping import ClientMapping
 from app.models.operation_log import OperationLog
 from app.models.announcement import Announcement
-
+from app.models.user import User
 from app.models.feedback import Feedback
 from app.models.dns_config import DnsConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
 from app.models.vip_config import VipConfig
 from app.services.adguard_service import AdGuardService
+from app.services.openlist_service import OpenListService
 from app.utils.seo_config import get_page_seo, get_structured_data
 
 from app.admin.views import admin_required
@@ -23,17 +24,56 @@ import hashlib
 
 
 def remove_expired_vip_clients(user_id):
-    """移除VIP过期用户的客户端（保留第一个客户端）
+    """移除VIP过期用户的客户端（保留第一个客户端）并删除OpenList账户
     
     Args:
         user_id: 用户ID
     """
     try:
+        # 获取用户信息
+        user = User.query.get(user_id)
+        if not user:
+            logging.warning(f"用户 {user_id} 不存在")
+            return
+            
         # 获取用户的所有客户端映射，按创建时间排序
         user_mappings = ClientMapping.query.filter_by(user_id=user_id).order_by(ClientMapping.created_at).all()
         
-        # 如果用户只有一个或没有客户端，不需要处理
+        # 删除用户的OpenList账户（如果存在）
+        try:
+            openlist_service = OpenListService()
+            if user.openlist_username:
+                # 根据用户名查找OpenList用户ID
+                users_response = openlist_service.get_users()
+                if users_response.get('success') and users_response.get('users'):
+                    openlist_users = users_response['users']
+                    target_user_id = None
+                    
+                    for openlist_user in openlist_users:
+                        if openlist_user.get('username') == user.openlist_username:
+                            target_user_id = openlist_user.get('id')
+                            break
+                    
+                    if target_user_id:
+                        delete_response = openlist_service.delete_user(target_user_id)
+                        if delete_response.get('success'):
+                            logging.info(f"已删除用户 {user.username} 的OpenList账户: {user.openlist_username}")
+                            # 清除数据库中的OpenList用户名记录
+                            user.openlist_username = None
+                            db.session.add(user)
+                        else:
+                            logging.warning(f"删除OpenList账户失败: {delete_response.get('message', '未知错误')}")
+                    else:
+                        logging.warning(f"未找到OpenList用户: {user.openlist_username}")
+                else:
+                    logging.warning(f"获取OpenList用户列表失败")
+        except Exception as e:
+            logging.warning(f"删除OpenList账户时发生错误: {str(e)}")
+        
+        # 如果用户只有一个或没有客户端，不需要处理客户端删除
         if len(user_mappings) <= 1:
+            # 但仍需要提交数据库更改（OpenList用户名清除）
+            db.session.commit()
             return
         
         # 保留第一个客户端，删除其余客户端
@@ -104,11 +144,13 @@ def remove_expired_vip_clients(user_id):
         db.session.commit()
         
         if clients_to_remove:
-            logging.info(f"用户 {user_id} VIP过期，已自动删除 {len(clients_to_remove)} 个客户端，保留主客户端")
+            logging.info(f"用户 {user_id} VIP过期，已自动删除 {len(clients_to_remove)} 个客户端，保留主客户端，并删除OpenList账户")
+        elif user.openlist_username:
+            logging.info(f"用户 {user_id} VIP过期，已删除OpenList账户")
         
     except Exception as e:
         db.session.rollback()
-        logging.error(f"自动删除过期VIP客户端失败: {str(e)}")
+        logging.error(f"自动删除过期VIP客户端和OpenList账户失败: {str(e)}")
 
 
 @main.route('/dashboard')

@@ -466,16 +466,92 @@ class OpenListService:
                 if not auth_result['success']:
                     return auth_result
             
-            response = self._make_request('GET', '/api/users')
+            response = self._make_request('GET', '/api/admin/user/list')
+            
+            # 根据API文档，数据在data.content中
+            users_data = []
+            if response.get('code') == 200 and 'data' in response:
+                users_data = response['data'].get('content', [])
             
             return {
                 'success': True,
                 'message': '获取用户列表成功',
-                'users': response.get('users', [])
+                'users': users_data
             }
             
         except Exception as e:
             return {
                 'success': False,
                 'message': f'获取用户列表失败: {str(e)}'
+            }
+    
+    def delete_user(self, user_id: str) -> Dict:
+        """删除OpenList用户
+        
+        Args:
+            user_id: 要删除的用户ID（通常是用户名）
+            
+        Returns:
+            删除结果字典
+        """
+        try:
+            import logging
+            logging.info(f"OpenList服务开始删除用户: {user_id}")
+            
+            # 确保有有效的token
+            if not self.config.is_token_valid():
+                logging.info("Token无效，开始重新认证")
+                auth_result = self.authenticate()
+                if not auth_result['success']:
+                    logging.error(f"认证失败: {auth_result['message']}")
+                    return auth_result
+                logging.info("认证成功")
+            else:
+                logging.info("Token有效，跳过认证")
+            
+            # 根据OpenList API文档，删除用户需要POST请求到/api/admin/user/delete
+            # 用户ID作为查询参数传递
+            params = {'id': user_id}
+            
+            logging.info(f"准备删除用户，参数: {params}")
+            logging.info(f"OpenList服务器地址: {self.config.server_url}")
+            
+            # 发送删除用户请求
+            response = self._make_request('POST', '/api/admin/user/delete', params=params)
+            
+            # 检查是否是401认证错误，如果是则重新认证并重试
+            if response and response.get('code') == 401:
+                logging.info("收到401错误，尝试重新认证")
+                auth_result = self.authenticate()
+                if not auth_result['success']:
+                    logging.error(f"重新认证失败: {auth_result['message']}")
+                    return auth_result
+                logging.info("重新认证成功，重试删除用户请求")
+                # 重试请求
+                response = self._make_request('POST', '/api/admin/user/delete', params=params)
+            
+            logging.info(f"API响应: {response}")
+            
+            # 检查API响应是否成功
+            if response and response.get('code') == 200:
+                logging.info(f"用户 {user_id} 删除成功")
+                return {
+                    'success': True,
+                    'message': f'用户 "{user_id}" 删除成功',
+                    'user_id': user_id
+                }
+            else:
+                # API返回错误
+                error_msg = response.get('message', '未知错误') if response else '请求失败'
+                logging.error(f"删除用户失败: {error_msg}")
+                return {
+                    'success': False,
+                    'message': f'删除用户失败: {error_msg}'
+                }
+            
+        except Exception as e:
+            logging.error(f"删除用户异常: {str(e)}")
+            return {
+                'success': False,
+                'message': f'删除用户失败: {str(e)}'
             }

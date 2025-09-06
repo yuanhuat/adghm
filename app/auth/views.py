@@ -7,7 +7,7 @@ from app.models.client_mapping import ClientMapping
 from app.models.system_config import SystemConfig
 
 from app.services.adguard_service import AdGuardService
-
+from app.services.openlist_service import OpenListService
 from app.services.email_service import EmailService
 import re
 
@@ -719,6 +719,34 @@ def delete_account():
         except Exception as e:
             print(f"无法连接到AdGuard Home服务: {str(e)}")
             # 即使AdGuard Home删除失败，也继续删除数据库记录
+        
+        # 删除用户的OpenList账户（如果存在）
+        try:
+            if current_user.openlist_username:
+                openlist_service = OpenListService()
+                # 根据用户名查找OpenList用户ID
+                users_response = openlist_service.get_users()
+                if users_response.get('success') and users_response.get('data'):
+                    openlist_users = users_response['data']
+                    target_user_id = None
+                    
+                    for openlist_user in openlist_users:
+                        if openlist_user.get('username') == current_user.openlist_username:
+                            target_user_id = openlist_user.get('id')
+                            break
+                    
+                    if target_user_id:
+                        delete_response = openlist_service.delete_user(target_user_id)
+                        if delete_response.get('success'):
+                            print(f"已删除用户 {username} 的OpenList账户: {current_user.openlist_username}")
+                        else:
+                            print(f"删除OpenList账户失败: {delete_response.get('message', '未知错误')}")
+                    else:
+                        print(f"未找到OpenList用户: {current_user.openlist_username}")
+                else:
+                    print(f"获取OpenList用户列表失败")
+        except Exception as e:
+            print(f"删除OpenList账户时发生错误: {str(e)}")
         
         # 删除客户端映射
         ClientMapping.query.filter_by(user_id=user_id).delete()
