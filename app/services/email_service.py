@@ -115,6 +115,12 @@ class EmailService:
             elif code_type == 'delete_account':
                 subject = '注销账户验证码'
                 template = 'delete_account_code'
+            elif code_type == 'change_email':
+                subject = '修改邮箱验证码'
+                template = 'change_email_code'
+            elif code_type == 'change_password':
+                subject = '修改密码验证码'
+                template = 'change_password_code'
             elif code_type.startswith('change_'):
                 subject = '账户变更验证码'
                 template = 'verification_code'

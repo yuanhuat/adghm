@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改邮箱验证码</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .verification-code {
+            background-color: #f8f9fa;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+            letter-spacing: 8px;
+            margin: 10px 0;
+        }
+        .expire-info {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .footer {
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ project_name }} 管理系统</h1>
+        </div>
+        
+        <div class="content">
+            <h2>修改邮箱验证码</h2>
+            <p>您好！</p>
+            <p>您正在修改 {{ project_name }} 管理系统账户的邮箱地址，请使用以下验证码完成邮箱修改：</p>
+            
+            <div class="verification-code">
+                <div>您的验证码是：</div>
+                <div class="code">{{ code }}</div>
+                <div class="expire-info">验证码有效期：{{ expire_minutes }} 分钟</div>
+            </div>
+            
+            <div class="warning">
+                <strong>安全提醒：</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>请勿将验证码告诉他人</li>
+                    <li>验证码仅用于本次邮箱修改，请及时使用</li>
+                    <li>如果您没有进行邮箱修改操作，请忽略此邮件</li>
+                    <li>为了账户安全，建议您定期更换密码</li>
+                </ul>
+            </div>
+            
+            <p>如果您有任何问题，请联系系统管理员。</p>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿回复。</p>
+            <p>&copy; {{ current_year }} {{ project_name }} 管理系统</p>
+        </div>
+    </div>
+</body>
+</html>
