@@ -216,7 +216,7 @@
                     </div>
                     <div class="form-group">
                         <label for="clientId">客户端ID:</label>
-                        <input type="text" id="clientId" name="client_id" required placeholder="请输入客户端ID（仅限小写字母、数字等）">
+                        <input type="text" id="clientId" name="client_id" required minlength="6" placeholder="请输入客户端ID（最少6个字符，仅限小写字母、数字等）">
                         <small class="form-text">客户端ID用于标识设备，可以是IP地址或设备名称</small>
                     </div>
                     <!-- 客户端标签选择功能已隐藏，VIP用户默认使用user_child标签 -->
@@ -540,20 +540,29 @@
                     // 移除格式错误信息
                     removeClientIdError(e.target);
                     
-                    // 防抖检查重复
-                    clearTimeout(duplicateCheckTimeout);
-                    if (e.target.value.trim().length > 0) {
+                    // 检查最小长度
+                    const trimmedValue = e.target.value.trim();
+                    if (trimmedValue.length > 0 && trimmedValue.length < 6) {
+                        showClientIdError(e.target, '客户端ID最少需要6个字符');
+                    } else if (trimmedValue.length >= 6) {
+                        // 防抖检查重复
+                        clearTimeout(duplicateCheckTimeout);
                         duplicateCheckTimeout = setTimeout(() => {
-                            checkClientIdDuplicate(e.target.value.trim(), e.target);
+                            checkClientIdDuplicate(trimmedValue, e.target);
                         }, 500); // 500ms防抖
                     }
                 }
             });
             
-            // 失去焦点时也检查重复
+            // 失去焦点时也检查长度和重复
             clientIdInput.addEventListener('blur', function(e) {
-                if (e.target.value.trim().length > 0) {
-                    checkClientIdDuplicate(e.target.value.trim(), e.target);
+                const trimmedValue = e.target.value.trim();
+                if (trimmedValue.length > 0) {
+                    if (trimmedValue.length < 6) {
+                        showClientIdError(e.target, '客户端ID最少需要6个字符');
+                    } else {
+                        checkClientIdDuplicate(trimmedValue, e.target);
+                    }
                 }
             });
             
@@ -674,8 +683,8 @@
                 }
                 
                 // 检查客户端ID长度
-                if (clientId.length < 1 || clientId.length > 100) {
-                    alert('客户端ID长度必须在1-100个字符之间！');
+                if (clientId.length < 6 || clientId.length > 100) {
+                    alert('客户端ID长度必须在6-100个字符之间！');
                     return;
                 }
                 
