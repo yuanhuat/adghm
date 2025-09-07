@@ -70,11 +70,11 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(28, 28, 30, 0.95);
             backdrop-filter: saturate(180%) blur(20px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
         
         .nav-container {
@@ -94,8 +94,8 @@
             gap: 8px;
             font-weight: 600;
             font-size: 18px;
-            color: #1d1d1f;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
             z-index: 1001;
         }
         
@@ -116,7 +116,7 @@
         .nav-toggle span {
             width: 24px;
             height: 2px;
-            background: #1d1d1f;
+            background: #ffffff;
             margin: 3px 0;
             transition: all 0.3s ease;
             border-radius: 1px;
@@ -142,7 +142,7 @@
         }
         
         .nav-link {
-            color: #1d1d1f;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -150,13 +150,88 @@
             position: relative;
             padding: 8px 12px;
             border-radius: 6px;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
         
         .nav-link:hover {
-            color: #007AFF;
-            background: rgba(0, 122, 255, 0.1);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
             transform: translateY(-1px);
+        }
+        
+        /* Apple风格下拉菜单 */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .nav-dropdown-toggle {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(28, 28, 30, 0.98);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            padding: 8px 0;
+            min-width: 160px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            margin-top: 5px;
+        }
+        
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            display: block;
+        }
+        
+        .nav-dropdown-menu a {
+            display: block;
+            padding: 8px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s ease;
+            border-radius: 0;
+            margin-left: 0;
+            font-weight: normal;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-dropdown-menu a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            text-decoration: none;
+            transform: none;
+        }
+        
+        .nav-dropdown-menu a.danger {
+            color: #ff3b30;
         }
         
         @media (max-width: 768px) {
@@ -169,17 +244,17 @@
                 top: 60px;
                 left: 0;
                 right: 0;
-                background: rgba(255, 255, 255, 0.98);
+                background: rgba(28, 28, 30, 0.98);
                 backdrop-filter: saturate(180%) blur(20px);
                 flex-direction: column;
                 gap: 0;
                 padding: 20px 0;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
                 transform: translateY(-100%);
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.3s ease;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             }
             
             .nav-menu.active {
@@ -194,7 +269,8 @@
                 width: 100%;
                 text-align: left;
                 border-radius: 0;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.8);
             }
             
             .nav-link:last-child {
@@ -202,9 +278,81 @@
             }
             
             .nav-link:hover {
-                background: rgba(0, 122, 255, 0.1);
+                background: rgba(255, 255, 255, 0.15);
+                color: #ffffff;
                 transform: none;
             }
+            
+            /* 移动端下拉菜单样式 */
+            .nav-dropdown {
+                width: 100%;
+            }
+            
+            .nav-dropdown-toggle {
+                 width: 100%;
+                 text-align: left;
+                 padding: 16px 20px;
+                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                 background: none;
+                 border: none;
+                 color: rgba(255, 255, 255, 0.8);
+                 font-size: 16px;
+                 font-weight: 500;
+                 cursor: pointer;
+                 transition: all 0.3s ease;
+                 position: relative;
+                 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+             }
+            
+            .nav-dropdown-toggle:hover {
+                 background: rgba(255, 255, 255, 0.15);
+                 color: #ffffff;
+                 transform: none;
+             }
+             
+             .nav-dropdown-toggle.active {
+                 background: rgba(255, 255, 255, 0.2);
+                 color: #ffffff;
+             }
+            
+            .nav-dropdown-menu {
+                 position: static;
+                 opacity: 1;
+                 visibility: visible;
+                 transform: none;
+                 background: rgba(40, 40, 42, 0.95);
+                 box-shadow: none;
+                 border: none;
+                 border-radius: 0;
+                 padding: 0;
+                 margin: 0;
+                 min-width: auto;
+                 width: 100%;
+                 display: none;
+                 max-height: 0;
+                 overflow: hidden;
+                 transition: max-height 0.3s ease;
+             }
+            
+            .nav-dropdown-menu.active {
+                display: block;
+                max-height: 300px;
+            }
+            
+            .nav-dropdown-menu a {
+                 color: rgba(255, 255, 255, 0.8);
+                 padding: 12px 40px;
+                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                 background: rgba(40, 40, 42, 0.95);
+                 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+                 font-size: 14px;
+             }
+            
+            .nav-dropdown-menu a:hover {
+                 background: rgba(255, 255, 255, 0.15);
+                 color: #ffffff;
+                 transform: none;
+             }
         }
         
         .back-link {
@@ -613,14 +761,34 @@
                 <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
                 <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
                 <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                {% if current_user.is_vip() %}
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">影视</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.movies') }}">注册</a>
+                        <a href="{{ url_for('main.movies_guide') }}">使用方法</a>
+                    </div>
+                </div>
+                {% else %}
+                <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
+                {% endif %}
                 <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
                 {% if donation_config and donation_config.show_ranking %}
                 <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
                 {% endif %}
-                {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.index') }}" class="nav-link">管理后台</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}" class="nav-link">退出</a>
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -806,6 +974,45 @@
                 }
             });
         }
+        
+        // 移动端下拉菜单切换
+        const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
+        
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 在移动端才处理点击事件
+                if (window.innerWidth <= 768) {
+                    const dropdown = this.parentElement;
+                    const menu = dropdown.querySelector('.nav-dropdown-menu');
+                    
+                    // 切换当前下拉菜单
+                    this.classList.toggle('active');
+                    menu.classList.toggle('active');
+                    
+                    // 关闭其他下拉菜单
+                    dropdownToggles.forEach(otherToggle => {
+                        if (otherToggle !== this) {
+                            otherToggle.classList.remove('active');
+                            const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
+                            otherMenu.classList.remove('active');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // 窗口大小改变时重置下拉菜单状态
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                dropdownToggles.forEach(toggle => {
+                    toggle.classList.remove('active');
+                    const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
+                    menu.classList.remove('active');
+                });
+            }
+        });
     });
     </script>
 </body>
