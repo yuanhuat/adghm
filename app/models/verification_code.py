@@ -64,6 +64,27 @@ class VerificationCode(db.Model):
         Returns:
             tuple: (是否验证成功, 错误信息)
         """
+        # 记录验证尝试的详细信息（用于调试）
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # 清理输入的验证码（去除空格和非数字字符）
+        if code:
+            code = ''.join(c for c in str(code) if c.isdigit())
+        
+        logger.info(f"验证码验证尝试: email={email}, code={code}, code_type={code_type}")
+        
+        # 查找所有该邮箱的验证码记录（用于调试）
+        all_codes = cls.query.filter_by(
+            email=email,
+            code_type=code_type
+        ).order_by(cls.created_at.desc()).all()
+        
+        logger.info(f"找到 {len(all_codes)} 条验证码记录")
+        for i, vc in enumerate(all_codes):
+            logger.info(f"记录{i+1}: code={vc.code}, used={vc.used}, expires_at={vc.expires_at}")
+        
+        # 查找匹配的未使用验证码
         verification_code = cls.query.filter_by(
             email=email,
             code=code,
@@ -72,15 +93,42 @@ class VerificationCode(db.Model):
         ).first()
         
         if not verification_code:
-            return False, '验证码不正确'
+            # 检查是否存在该验证码但已被使用
+            used_code = cls.query.filter_by(
+                email=email,
+                code=code,
+                code_type=code_type,
+                used=True
+            ).first()
+            
+            if used_code:
+                logger.warning(f"验证码已被使用: {code}")
+                return False, '验证码已被使用，请重新获取验证码'
+            
+            # 检查是否有未过期的验证码
+            valid_codes = cls.query.filter_by(
+                email=email,
+                code_type=code_type,
+                used=False
+            ).filter(cls.expires_at > datetime.now()).all()
+            
+            if valid_codes:
+                logger.warning(f"验证码不匹配，但存在有效验证码: {[vc.code for vc in valid_codes]}")
+                return False, '验证码不正确，请检查输入的验证码'
+            else:
+                logger.warning(f"没有找到有效的验证码")
+                return False, '验证码不正确或已过期，请重新获取验证码'
         
+        # 检查验证码是否过期
         if verification_code.expires_at < datetime.now():
-            return False, '验证码已过期'
+            logger.warning(f"验证码已过期: {code}, expires_at={verification_code.expires_at}")
+            return False, '验证码已过期，请重新获取验证码'
         
         # 标记为已使用
         verification_code.used = True
         db.session.commit()
         
+        logger.info(f"验证码验证成功: {code}")
         return True, '验证成功'
 
     def is_expired(self):
