@@ -1692,20 +1692,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 下拉菜单功能
-    const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
-    const dropdownMenu = document.querySelector('.nav-dropdown-menu');
+    const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
     
-    if (dropdownToggle && dropdownMenu) {
-        dropdownToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('active');
-        });
+    dropdownToggles.forEach(function(toggle) {
+        const dropdown = toggle.parentElement;
+        const menu = dropdown.querySelector('.nav-dropdown-menu');
+        
+        if (menu) {
+            toggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // 关闭其他下拉菜单
+                dropdownToggles.forEach(function(otherToggle) {
+                    if (otherToggle !== toggle) {
+                        const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
+                        if (otherMenu) {
+                            otherMenu.classList.remove('active');
+                        }
+                    }
+                });
+                
+                // 切换当前下拉菜单
+                menu.classList.toggle('active');
+            });
+        }
+    });
 
-        // 点击其他地方关闭下拉菜单
-        document.addEventListener('click', function() {
-            dropdownMenu.classList.remove('active');
-        });
-    }
+    // 点击其他地方关闭下拉菜单
+     document.addEventListener('click', function() {
+         dropdownToggles.forEach(function(toggle) {
+             const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
+             if (menu) {
+                 menu.classList.remove('active');
+             }
+         });
+     });
 });
 </script>
 </body>
