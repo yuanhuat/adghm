@@ -2,12 +2,12 @@
 'info':
   'contact':
     'email': 'devteam@adguard.com'
-    'name': 'AdGuard Home'
-    'url': 'https://github.com/AdguardTeam/AdGuardHome'
+    'name': '{{ project_name }}'
+    'url': 'https://github.com/AdguardTeam/{{ project_name }}'
   'description': |
     **!! WARNING!  API IS AT THE DRAFT STAGE! THINGS WILL BREAK! !!**
 
-    AdGuard Home REST API, V1 **DRAFT**.  Our administration web interface is
+    {{ project_name }} REST API, V1 **DRAFT**.  Our administration web interface is
     built on top of this REST API.
 
     This API is currently a **DRAFT** and is not covered by any stability
@@ -31,8 +31,8 @@
      *  The property `x-skip-web-api` on operations suggests API clients for
         web, like our frontend, to skip this operation in their generated code.
 
-     *  The header `Server` will be set to `AdGuardHome/<<full-version>>`.  For
-        example: `AdGuardHome/v0.107.0-a.42+abcd1234`.
+     *  The header `Server` will be set to `{{ project_name }}/<<full-version>>`.  For
+        example: `{{ project_name }}/v0.107.0-a.42+abcd1234`.
 
     ##  Conventions For API Authors
 
@@ -96,7 +96,7 @@
   'license':
     'name': 'GNU General Public License v3.0'
     'url': 'https://www.gnu.org/licenses/gpl-3.0.txt'
-  'title': 'AdGuard Home V1 DRAFT API'
+  'title': '{{ project_name }} V1 DRAFT API'
   'version': '0.108'
 
 'servers':
@@ -137,7 +137,7 @@
     Query, filtering, system, and other statistics.
   'name': 'stats'
 - 'description': >
-    Information about the AdGuard Home server and the host system.
+    Information about the {{ project_name }} server and the host system.
   'name': 'system'
 
 'paths':
@@ -1085,7 +1085,7 @@
           '$ref': '#/components/responses/UnprocessableEntityResp'
         '500':
           '$ref': '#/components/responses/InternalServerErrorResp'
-      'summary': 'Update AdGuard Home.'
+      'summary': 'Update {{ project_name }}.'
       'tags':
       - 'system'
 
@@ -1793,7 +1793,7 @@
         'WWW-Authenticate':
           'description': >
             The required WWW-Authenticate header.
-          'example': 'Basic realm="AdGuard Home", charset="UTF-8"'
+          'example': 'Basic realm="{{ project_name }}", charset="UTF-8"'
           'required': true
           'schema':
             'type': 'string'
@@ -1886,7 +1886,7 @@
 
     'Channel':
       'description': >
-        AdGuard Home release channel.
+        {{ project_name }} release channel.
       'enum':
       - 'beta'
       - 'development'
@@ -2108,20 +2108,20 @@
         'allowed_clients':
           'description': >
             CIDR or IP addresses of clients in the allowlist.  If non-empty,
-            AdGuard Home will accept requests from these IP addresses only.
+            {{ project_name }} will accept requests from these IP addresses only.
           'items':
             'type': 'string'
           'type': 'array'
         'blocked_clients':
           'description': >
             CIDR or IP addresses of clients in the blocklist.  If non-empty,
-            AdGuard Home will drop requests from these IP addresses.
+            {{ project_name }} will drop requests from these IP addresses.
           'items':
             'type': 'string'
           'type': 'array'
         'blocked_domain_rules':
           'description': >
-            AdGuard Home will drop DNS queries, if the domains in their queries
+            {{ project_name }} will drop DNS queries, if the domains in their queries
             match these rules.  Here you can specify the exact domain
             names, wildcards, and `urlfilter` rules.  Examples:
 
@@ -2708,7 +2708,7 @@
                 <key>Name</key>
                 <string>myexample.local DoH</string>
                 <key>PayloadDescription</key>
-                <string>Configures device to use AdGuard Home</string>
+                <string>Configures device to use {{ project_name }}</string>
                 <key>PayloadDisplayName</key>
                 <string>myexample.local DoH</string>
                 <key>PayloadIdentifier</key>
@@ -2722,7 +2722,7 @@
               </dict>
             </array>
             <key>PayloadDescription</key>
-            <string>Adds AdGuard Home to Big Sur and iOS 14 or newer systems</string>
+            <string>Adds {{ project_name }} to Big Sur and iOS 14 or newer systems</string>
             <key>PayloadDisplayName</key>
             <string>myexample.local DoH</string>
             <key>PayloadIdentifier</key>
@@ -2759,7 +2759,7 @@
                 <key>Name</key>
                 <string>example.com DoT</string>
                 <key>PayloadDescription</key>
-                <string>Configures device to use AdGuard Home</string>
+                <string>Configures device to use {{ project_name }}</string>
                 <key>PayloadDisplayName</key>
                 <string>example.com DoT</string>
                 <key>PayloadIdentifier</key>
@@ -2773,7 +2773,7 @@
               </dict>
             </array>
             <key>PayloadDescription</key>
-            <string>Adds AdGuard Home to Big Sur and iOS 14 or newer systems</string>
+            <string>Adds {{ project_name }} to Big Sur and iOS 14 or newer systems</string>
             <key>PayloadDisplayName</key>
             <string>myexample.local DoT</string>
             <key>PayloadIdentifier</key>
@@ -2950,7 +2950,7 @@
 
     'GetV1InstallInfoResp':
       'description': >
-        AdGuard Home addresses configuration.
+        {{ project_name }} addresses configuration.
       'example':
         'dns_port': 53
         'interfaces':
@@ -3329,7 +3329,7 @@
           'type': 'array'
         'graph_ram_resident':
           'description': >
-            AdGuard Home's resident memory usage graph information.  The size is
+            {{ project_name }}'s resident memory usage graph information.  The size is
             in bytes.  Each item is one `time_unit` long.  Sorted by time in
             descending order.
           'items':
@@ -3460,7 +3460,7 @@
 
     'GetV1SystemInfoResp':
       'description': >
-        Information about the AdGuard Home server.
+        Information about the {{ project_name }} server.
       'example':
         'arch': 'amd64'
         'channel': 'release'
@@ -3477,7 +3477,7 @@
           '$ref': '#/components/schemas/Channel'
         'new_version':
           'description': >
-            New available version of AdGuard Home to which the server can be
+            New available version of {{ project_name }} to which the server can be
             updated, if any.  If there are none, this field is absent.
           'type': 'string'
         'os':
@@ -3486,12 +3486,12 @@
           'type': 'string'
         'start':
           'description': >
-            Unix time at which AdGuard Home started working, in milliseconds.
+            Unix time at which {{ project_name }} started working, in milliseconds.
           'format': 'double'
           'type': 'number'
         'version':
           'description': >
-            Current AdGuard Home version.
+            Current {{ project_name }} version.
           'type': 'string'
       'required':
       - 'arch'
@@ -4177,7 +4177,7 @@
 
     'PostV1InstallConfigureReq':
       'description': >
-        AdGuard Home initial configuration.
+        {{ project_name }} initial configuration.
       'example':
         'dns_ip': '0.0.0.0'
         'dns_port': 53
@@ -4916,7 +4916,7 @@
           'type': 'string'
         'enabled':
           'description': >
-            If `true`,  AdGuard Home the administration interface will be served
+            If `true`,  {{ project_name }} the administration interface will be served
             over HTTPS, and the DNS server will listen requests over
             DNS-over-TLS and other protocols.
           'type': 'boolean'

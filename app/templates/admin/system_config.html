@@ -28,6 +28,19 @@
             {% endwith %}
             
             <form method="POST" action="{{ url_for('admin.system_config') }}">
+                <!-- 系统名称设置 -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="project_name" class="form-label">系统名称</label>
+                        <input type="text" class="form-control" id="project_name" 
+                               name="project_name" value="{{ config.project_name or '{{ project_name }}' }}" 
+                               placeholder="请输入系统名称" maxlength="100" required>
+                        <div class="form-text text-muted">
+                            系统名称将显示在页面标题、导航栏等位置
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-check form-switch">

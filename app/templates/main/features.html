@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '功能特性 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else '功能特性 - ' + project_name }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -484,7 +484,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -507,7 +507,7 @@
             <div class="container">
                 <h1 class="animate-fade-in">功能特性</h1>
                 <p class="animate-fade-in animate-delay-1">
-                    全面了解 AdGuard Home Manager 的强大功能和技术优势
+                    全面了解 {{ project_name }} 的强大功能和技术优势
                 </p>
             </div>
         </section>
@@ -804,7 +804,7 @@
                         <thead>
                             <tr>
                                 <th>功能特性</th>
-                                <th class="highlight">AdGuard Home Manager</th>
+                                <th class="highlight">{{ project_name }}</th>
                                 <th>传统DNS服务</th>
                                 <th>其他管理工具</th>
                             </tr>
@@ -865,7 +865,7 @@
                 <a href="#">服务条款</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

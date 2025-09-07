@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else 'iOS配置指南 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else 'iOS配置指南 - {{ project_name }}' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -429,7 +429,7 @@
                 <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>AdGuard Home</span>
+                <span>{{ project_name }}</span>
             </div>
             <button class="nav-toggle" id="navToggle">
                 <span></span>
@@ -462,7 +462,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -491,7 +491,7 @@
     <section class="config-steps">
         <div class="container">
             <h2 class="section-title">配置步骤</h2>
-            <p class="section-subtitle">按照以下步骤，轻松在您的iOS设备上配置AdGuard Home DNS</p>
+            <p class="section-subtitle">按照以下步骤，轻松在您的iOS设备上配置{{ project_name }} DNS</p>
             
             <div class="steps-container">
                 <!-- 第一步：下载DNS描述文件 -->
@@ -501,7 +501,7 @@
                         <div class="step-title">下载DNS描述文件</div>
                     </div>
                     <div class="step-content">
-                        <p>在iPhone/iPad的Safari浏览器中，下载最新的AdGuard Home DNS描述文件。</p>
+                        <p>在iPhone/iPad的Safari浏览器中，下载最新的{{ project_name }} DNS描述文件。</p>
                         <p><strong>重要提示：</strong>请确保您的iOS系统版本为iOS 14及以上，以获得最佳的DNS配置体验。</p>
                         {% if current_user.is_authenticated and user_clients and dns_config and dns_config.apple_config_enabled %}
                             {% set has_available_config = false %}
@@ -547,7 +547,7 @@
                             <li>在「已下载的描述文件」中找到刚才下载的描述文件</li>
                             <li>点击安装并按照提示完成安装过程</li>
                         </ol>
-                        <p><strong>注意：</strong>安装后AdGuard Home DNS将直接被系统启用，无需额外配置。</p>
+                        <p><strong>注意：</strong>安装后{{ project_name }} DNS将直接被系统启用，无需额外配置。</p>
                     </div>
                 </div>
 
@@ -558,7 +558,7 @@
                         <div class="step-title">验证去广告功能生效</div>
                     </div>
                     <div class="step-content">
-                        <p>AdGuard Home DNS配置完成后，您可以通过以下方式验证功能是否正常工作：</p>
+                        <p>{{ project_name }} DNS配置完成后，您可以通过以下方式验证功能是否正常工作：</p>
                         <ul style="margin: 15px 0; padding-left: 20px; line-height: 1.8;">
                             <li>访问我们的验证测试页面，检查广告屏蔽功能</li>
                             <li>浏览常用网站，观察广告是否被有效拦截</li>
@@ -616,7 +616,7 @@
                         如何卸载DNS描述文件？
                     </div>
                     <div class="faq-answer">
-                        如需卸载，请进入系统设置→通用→VPN、DNS与设备管理→描述文件，找到AdGuard Home描述文件并选择移除即可。
+                        如需卸载，请进入系统设置→通用→VPN、DNS与设备管理→描述文件，找到{{ project_name }}描述文件并选择移除即可。
                     </div>
                 </div>
                 
@@ -626,7 +626,7 @@
                         支持哪些iOS版本？
                     </div>
                     <div class="faq-answer">
-                        iOS系统要原生体验AdGuard Home提供的去广告DNS需确保系统为iOS 14及以上版本。较旧版本可能无法正常使用描述文件功能。
+                        iOS系统要原生体验{{ project_name }}提供的去广告DNS需确保系统为iOS 14及以上版本。较旧版本可能无法正常使用描述文件功能。
                     </div>
                 </div>
             </div>
@@ -650,7 +650,7 @@
                 <a href="#">服务条款</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

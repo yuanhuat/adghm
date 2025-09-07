@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else 'AdGuard Home Manager - 智能DNS管理平台' }}</title>
+    <title>{{ seo_config.title if seo_config else project_name + ' - 智能DNS管理平台' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -572,7 +572,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="#features">功能特性</a></li>
@@ -597,7 +597,7 @@
                 <h1>智能DNS管理</h1>
                 <p class="subtitle animate-fade-in animate-delay-1">新一代网络安全体验</p>
                 <p class="description animate-fade-in animate-delay-2">
-                    AdGuard Home Manager 是一款专业的DNS管理平台，集成了先进的网络安全技术。
+                    {{ project_name }} 是一款专业的DNS管理平台，集成了先进的网络安全技术。
                     我们为个人用户、家庭和企业提供全方位的DNS解决方案，
                     包括广告拦截、恶意软件防护、家长控制、DNS加密等功能。
                     让您的网络体验更安全、更纯净、更高效。
@@ -725,7 +725,7 @@
                             </div>
                         </div>
                         <p class="case-content">
-                            "自从使用AdGuard Home Manager后，家里的网络环境变得非常干净。
+                            "自从使用{{ project_name }}后，家里的网络环境变得非常干净。
                             孩子们再也不会看到不合适的广告，而且网页加载速度明显提升了。
                             家长控制功能让我可以放心让孩子们上网学习。"
                         </p>
@@ -747,7 +747,7 @@
                         </div>
                         <p class="case-content">
                             "我们公司有200多名员工，网络安全一直是我们关注的重点。
-                            AdGuard Home Manager帮助我们建立了强大的DNS防护体系，
+                            {{ project_name }}帮助我们建立了强大的DNS防护体系，
                             有效防止了恶意软件入侵，保护了公司的数据安全。"
                         </p>
                         <div class="case-stats">
@@ -831,7 +831,7 @@
                 <a href="#">联系我们</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

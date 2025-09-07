@@ -92,7 +92,7 @@ def users():
 def delete_user(user_id):
     """删除用户
     
-    同时删除用户关联的AdGuardHome客户端和映射记录
+    同时删除用户关联的{{ project_name }}客户端和映射记录
     """
     if user_id == current_user.id:
         return jsonify({'error': '不能删除当前登录的管理员账号'}), 400
@@ -102,18 +102,18 @@ def delete_user(user_id):
         return jsonify({'error': '不能删除其他管理员账号'}), 400
         
     try:
-        # 删除用户的AdGuardHome客户端
+        # 删除用户的{{ project_name }}客户端
         adguard = AdGuardService()
         client_delete_errors = []
         
-        # 先删除AdGuardHome客户端，记录错误但继续执行
+        # 先删除{{ project_name }}客户端，记录错误但继续执行
         for mapping in user.client_mappings:
             try:
                 adguard.delete_client(mapping.client_name)
             except Exception as e:
                 client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
         
-        # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+        # 从{{ project_name }}的允许客户端列表中移除用户的客户端ID
         try:
             # 获取当前的访问控制列表
             access_list = adguard._make_request('GET', '/access/list')
@@ -206,7 +206,7 @@ def delete_user(user_id):
 def delete_single_user(user_id):
     """删除单个用户
     
-    删除指定用户及其关联的AdGuardHome客户端和映射记录
+    删除指定用户及其关联的{{ project_name }}客户端和映射记录
     """
     try:
         # 获取用户
@@ -227,14 +227,14 @@ def delete_single_user(user_id):
         errors = []
         adguard = AdGuardService()
         
-        # 删除用户的AdGuardHome客户端
+        # 删除用户的{{ project_name }}客户端
         for mapping in user.client_mappings:
             try:
                 adguard.delete_client(mapping.client_name)
             except Exception as e:
                 errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
         
-        # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+        # 从{{ project_name }}的允许客户端列表中移除用户的客户端ID
         try:
             access_list = adguard._make_request('GET', '/access/list')
             allowed_clients = access_list.get('allowed_clients', [])
@@ -387,14 +387,14 @@ def bulk_delete_users():
             try:
                 client_delete_errors = []
                 
-                # 删除用户的AdGuardHome客户端
+                # 删除用户的{{ project_name }}客户端
                 for mapping in user.client_mappings:
                     try:
                         adguard.delete_client(mapping.client_name)
                     except Exception as e:
                         client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
                 
-                # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+                # 从{{ project_name }}的允许客户端列表中移除用户的客户端ID
                 try:
                     access_list = adguard._make_request('GET', '/access/list')
                     allowed_clients = access_list.get('allowed_clients', [])
@@ -558,7 +558,7 @@ def bulk_delete_users_optimized():
             for mapping in user.client_mappings:
                 all_client_names.append(mapping.client_name)
         
-        # 批量删除AdGuard Home客户端
+        # 批量删除{{ project_name }}客户端
         client_delete_errors = []
         if all_client_names:
             try:
@@ -569,7 +569,7 @@ def bulk_delete_users_optimized():
             except Exception as e:
                 client_delete_errors.append(f"批量删除AdGuard客户端失败：{str(e)}")
         
-        # 从AdGuardHome的允许客户端列表中移除所有客户端ID
+        # 从{{ project_name }}的允许客户端列表中移除所有客户端ID
         try:
             access_list = adguard._make_request('GET', '/access/list')
             allowed_clients = access_list.get('allowed_clients', [])
@@ -646,7 +646,7 @@ def bulk_delete_users_optimized():
 @login_required
 @admin_required
 def adguard_clients():
-    """查询所有AdGuard Home客户端并匹配现有用户"""
+    """查询所有{{ project_name }}客户端并匹配现有用户"""
     try:
         adguard_service = AdGuardService()
         
@@ -725,7 +725,7 @@ def adguard_clients():
     except Exception as e:
         return jsonify({
             'success': False,
-            'error': f'获取AdGuard Home客户端失败: {str(e)}'
+            'error': f'获取{{ project_name }}客户端失败: {str(e)}'
         }), 500
 
 
@@ -901,11 +901,11 @@ def delete_user_progressive(user_id):
         
         client_delete_errors = []
         
-        # 优化AdGuardHome操作，增加超时处理
+        # 优化{{ project_name }}操作，增加超时处理
         try:
             adguard = AdGuardService()
             
-            # 删除用户的AdGuardHome客户端（增加超时处理）
+            # 删除用户的{{ project_name }}客户端（增加超时处理）
             for mapping in user.client_mappings:
                 try:
                     # 设置较短的超时时间，避免长时间等待
@@ -914,7 +914,7 @@ def delete_user_progressive(user_id):
                     # 记录错误但不阻止删除流程
                     client_delete_errors.append(f"客户端 {mapping.client_name} 删除失败：{str(e)}")
             
-            # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+            # 从{{ project_name }}的允许客户端列表中移除用户的客户端ID
             try:
                 access_list = adguard._make_request('GET', '/access/list')
                 allowed_clients = access_list.get('allowed_clients', [])
@@ -936,8 +936,8 @@ def delete_user_progressive(user_id):
             except Exception as e:
                 client_delete_errors.append(f"从允许列表移除客户端ID失败：{str(e)}")
         except Exception as e:
-            # AdGuardHome服务完全不可用时，记录错误但继续删除用户
-            client_delete_errors.append(f"AdGuardHome服务不可用：{str(e)}")
+            # {{ project_name }}服务完全不可用时，记录错误但继续删除用户
+            client_delete_errors.append(f"{{ project_name }}服务不可用：{str(e)}")
         
         # 删除所有关联的客户端映射记录
         for mapping in user.client_mappings:
@@ -1004,7 +1004,7 @@ def update_client(user_id, mapping_id):
     client_ids = data.get('client_ids', [])
     
     try:
-        # 更新AdGuardHome客户端
+        # 更新{{ project_name }}客户端
         adguard = AdGuardService()
         adguard.update_client(
             name=mapping.client_name,
@@ -1057,11 +1057,11 @@ def admin_delete_client(mapping_id):
         adguard = AdGuardService()
         
         try:
-            # 从AdGuard Home删除客户端
+            # 从{{ project_name }}删除客户端
             adguard.delete_client(client_name)
-            print(f"已从AdGuard Home删除客户端: {client_name}")
+            print(f"已从{{ project_name }}删除客户端: {client_name}")
         except Exception as e:
-            print(f"从AdGuard Home删除客户端失败: {str(e)}")
+            print(f"从{{ project_name }}删除客户端失败: {str(e)}")
             # 继续执行，不影响数据库删除
         
         try:
@@ -1194,7 +1194,7 @@ def test_email_config():
             subject="邮箱配置测试",
             template='test_email',
             config_override=temp_config,
-            test_message="这是一封来自AdGuardHome Manager的测试邮件。如果您能收到此邮件，说明您的邮箱配置正确。"
+            test_message="这是一封来自{{ project_name }} Manager的测试邮件。如果您能收到此邮件，说明您的邮箱配置正确。"
         )
         
         if success:
@@ -1281,7 +1281,7 @@ def close_feedback(feedback_id):
 @login_required
 @admin_required
 def adguard_config():
-    """AdGuardHome配置页面"""
+    """{{ project_name }}配置页面"""
     config = AdGuardConfig.get_config()
     return render_template('admin/adguard_config.html', config=config)
 
@@ -1289,7 +1289,7 @@ def adguard_config():
 @login_required
 @admin_required
 def update_adguard_config():
-    """更新AdGuardHome配置"""
+    """更新{{ project_name }}配置"""
     from app.models.adguard_config import AdGuardConfig
     
     data = request.get_json()
@@ -1316,7 +1316,7 @@ def update_adguard_config():
         adguard = AdGuardService(config)
         status = adguard.get_status()
         if not status:
-            return jsonify({'error': '无法连接到AdGuardHome服务器，请检查URL、端口和认证信息是否正确'}), 400
+            return jsonify({'error': '无法连接到{{ project_name }}服务器，请检查URL、端口和认证信息是否正确'}), 400
             
         # 记录操作日志
         log = OperationLog(
@@ -1324,7 +1324,7 @@ def update_adguard_config():
             operation_type='update_config',
             target_type='adguard_config',
             target_id='1',
-            details=f'更新AdGuardHome配置：{api_base_url}'
+            details=f'更新{{ project_name }}配置：{api_base_url}'
         )
         db.session.add(log)
         
@@ -1344,7 +1344,7 @@ def update_adguard_config():
 @login_required
 @admin_required
 def query_log():
-    """查询 AdGuardHome 的日志
+    """查询 {{ project_name }} 的日志
     
     实现分页功能，每页显示50条记录
     """
@@ -1438,7 +1438,7 @@ def query_log_advanced_search():
 @login_required
 @admin_required
 def query_log_api():
-    """查询 AdGuardHome 日志的 API 接口
+    """查询 {{ project_name }} 日志的 API 接口
     
     返回 JSON 格式的日志数据，用于 AJAX 刷新
     """
@@ -1493,11 +1493,11 @@ def query_log_api():
 @login_required
 @admin_required
 def get_adguard_status():
-    """获取AdGuardHome状态信息"""
+    """获取{{ project_name }}状态信息"""
     try:
         adguard = AdGuardService()
         if not adguard.check_connection():
-            return jsonify({'error': '无法连接到AdGuardHome服务器，请检查配置是否正确'}), 503
+            return jsonify({'error': '无法连接到{{ project_name }}服务器，请检查配置是否正确'}), 503
             
         status = adguard.get_status()
         if not status:
@@ -2185,7 +2185,7 @@ def get_vip_filter_rules():
         if not response:
             return jsonify({
                 'success': False,
-                'error': 'AdGuard Home服务不可用'
+                'error': '{{ project_name }}服务不可用'
             }), 500
         
         # 解析规则，筛选出VIP专属规则（包含user_child标签的规则）
@@ -2249,7 +2249,7 @@ def add_vip_filter_rule():
         if not response:
             return jsonify({
                 'success': False,
-                'error': 'AdGuard Home服务不可用'
+                'error': '{{ project_name }}服务不可用'
             }), 500
         
         current_rules = response.get('user_rules', [])
@@ -2339,7 +2339,7 @@ def update_vip_filter_rule(rule_index):
         if not response:
             return jsonify({
                 'success': False,
-                'error': 'AdGuard Home服务不可用'
+                'error': '{{ project_name }}服务不可用'
             }), 500
         
         current_rules = response.get('user_rules', [])
@@ -2421,7 +2421,7 @@ def delete_vip_filter_rule(rule_index):
         if not response:
             return jsonify({
                 'success': False,
-                'error': 'AdGuard Home服务不可用'
+                'error': '{{ project_name }}服务不可用'
             }), 500
         
         current_rules = response.get('user_rules', [])
@@ -3100,9 +3100,20 @@ def system_config():
     if request.method == 'POST':
         # 获取表单数据
         allow_registration = 'allow_registration' in request.form
+        project_name = request.form.get('project_name', '').strip()
+        
+        # 验证项目名称
+        if not project_name:
+            flash('系统名称不能为空', 'error')
+            return render_template('admin/system_config.html', config=config)
+        
+        if len(project_name) > 100:
+            flash('系统名称长度不能超过100个字符', 'error')
+            return render_template('admin/system_config.html', config=config)
         
         # 更新配置
         config.allow_registration = allow_registration
+        config.project_name = project_name
         db.session.commit()
         
         # 记录操作日志
@@ -3111,7 +3122,7 @@ def system_config():
             operation_type='update_system_config',
             target_type='SYSTEM',
             target_id='system_config',
-            details=f'更新系统设置：允许注册={allow_registration}'
+            details=f'更新系统设置：允许注册={allow_registration}，系统名称={project_name}'
         )
         db.session.add(log)
         db.session.commit()

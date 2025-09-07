@@ -5,18 +5,18 @@ from urllib3.util.retry import Retry
 from app.models.adguard_config import AdGuardConfig
 
 class AdGuardService:
-    """AdGuardHome API服务类
+    """{{ project_name }} API服务类
     
-    用于处理所有与AdGuardHome的API交互，包括客户端管理、过滤规则配置等。
+    用于处理所有与{{ project_name }}的API交互，包括客户端管理、过滤规则配置等。
     所有方法都会自动从数据库获取API配置信息。
     """
     
     def __init__(self, config: Optional[AdGuardConfig] = None):
         """
-        初始化AdGuardHome服务实例
+        初始化{{ project_name }}服务实例
         
         Args:
-            config: AdGuardHome配置对象，如果不提供则从数据库获取
+            config: {{ project_name }}配置对象，如果不提供则从数据库获取
             
         Raises:
             Exception: 当配置验证失败时抛出异常
@@ -26,7 +26,7 @@ class AdGuardService:
         # 验证配置
         is_valid, error_msg = self.config.validate()
         if not is_valid:
-            raise Exception(f'AdGuardHome配置无效：{error_msg}')
+            raise Exception(f'{{ project_name }}配置无效：{error_msg}')
             
         # 设置API基础URL，不自动添加/control前缀
         self.base_url = self.config.api_base_url.rstrip('/')
@@ -62,7 +62,7 @@ class AdGuardService:
         json: Optional[Dict] = None,
         params: Optional[Dict] = None
     ) -> Dict:
-        """发送HTTP请求到AdGuardHome API
+        """发送HTTP请求到{{ project_name }} API
         
         Args:
             method: HTTP方法（GET、POST、PUT、DELETE）
@@ -108,7 +108,7 @@ class AdGuardService:
             elif response.status_code == 404:
                 raise Exception(f"API端点不存在：{endpoint}")
             elif response.status_code >= 500:
-                raise Exception(f"AdGuardHome服务器错误（状态码：{response.status_code}）")
+                raise Exception(f"{{ project_name }}服务器错误（状态码：{response.status_code}）")
                 
             # 尝试解析响应数据
             try:
@@ -128,9 +128,9 @@ class AdGuardService:
                 raise Exception(f"无法解析服务器响应：响应不是有效的JSON格式。状态码：{response.status_code}，内容：{error_content}...")
             
         except requests.exceptions.ConnectionError as e:
-            raise Exception(f"无法连接到AdGuardHome服务器（{self.base_url}）：{str(e)}")
+            raise Exception(f"无法连接到{{ project_name }}服务器（{self.base_url}）：{str(e)}")
         except requests.exceptions.Timeout as e:
-            raise Exception(f"连接AdGuardHome服务器超时（{self.base_url}）：{str(e)}")
+            raise Exception(f"连接{{ project_name }}服务器超时（{self.base_url}）：{str(e)}")
         except requests.exceptions.RequestException as e:
             if hasattr(e, 'response') and e.response is not None:
                 error_msg = f"状态码：{e.response.status_code}"
@@ -140,8 +140,8 @@ class AdGuardService:
                         error_msg += f"，错误信息：{error_data['error']}"
                 except:
                     pass
-                raise Exception(f"请求AdGuardHome API失败：{error_msg}")
-            raise Exception(f"请求AdGuardHome API失败：{str(e)}")
+                raise Exception(f"请求{{ project_name }} API失败：{error_msg}")
+            raise Exception(f"请求{{ project_name }} API失败：{str(e)}")
 
     def get_query_log(self, older_than: Optional[str] = None, limit: int = 100, 
                      offset: Optional[int] = None, search: Optional[str] = None,
@@ -222,7 +222,7 @@ class AdGuardService:
         """在Python端根据提供的过滤器过滤日志
         
         Args:
-            logs: 从AdGuardHome获取的原始日志列表
+            logs: 从{{ project_name }}获取的原始日志列表
             filters: 包含所有过滤条件的字典
 
         Returns:
@@ -309,7 +309,7 @@ class AdGuardService:
         ignore_statistics: bool = False
     ) -> Dict:
         # 静默处理客户端创建请求
-        """创建新的AdGuardHome客户端
+        """创建新的{{ project_name }}客户端
         
         Args:
             name: 客户端名称
@@ -332,7 +332,7 @@ class AdGuardService:
         # 如果没有提供ids，使用名称作为唯一标识
         if ids is None:
             # 使用客户端名称作为ID，确保唯一性
-            # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+            # 使用连字符替代下划线，因为{{ project_name }}不接受下划线作为客户端ID
             ids = [f"default-{name}"]
             print(f"未提供客户端ID，使用名称生成唯一ID: {ids}")
             
@@ -357,20 +357,20 @@ class AdGuardService:
         if tags is not None:
             data["tags"] = tags
         
-        print(f"准备创建AdGuardHome客户端，数据: {data}")
+        print(f"准备创建{{ project_name }}客户端，数据: {data}")
         
         try:
             result = self._make_request('POST', '/clients/add', json=data)
-            print(f"成功创建AdGuardHome客户端: {result}")
+            print(f"成功创建{{ project_name }}客户端: {result}")
             return result
         except Exception as e:
-            print(f"创建AdGuardHome客户端失败: {str(e)}")
+            print(f"创建{{ project_name }}客户端失败: {str(e)}")
             raise
     
     def get_blocked_services_all(self) -> Dict:
         """获取所有可用的阻止服务列表
         
-        根据AdGuardHome API文档，使用/control/blocked_services/all接口获取所有可用的阻止服务及其详细信息
+        根据{{ project_name }} API文档，使用/control/blocked_services/all接口获取所有可用的阻止服务及其详细信息
         
         Returns:
             包含所有可用阻止服务的信息，包括图标、ID、名称和规则
@@ -380,7 +380,7 @@ class AdGuardService:
     def get_blocked_services(self) -> Dict:
         """获取当前的阻止服务配置
         
-        根据AdGuardHome API文档，使用/control/blocked_services/get接口获取当前的阻止服务配置
+        根据{{ project_name }} API文档，使用/control/blocked_services/get接口获取当前的阻止服务配置
         
         Returns:
             当前的阻止服务配置，包括计划和服务ID列表
@@ -390,7 +390,7 @@ class AdGuardService:
     def update_blocked_services(self, schedule: Optional[Dict] = None, ids: List[str] = None) -> Dict:
         """更新阻止服务配置
         
-        根据AdGuardHome API文档，使用PUT /control/blocked_services/update接口更新阻止服务配置
+        根据{{ project_name }} API文档，使用PUT /control/blocked_services/update接口更新阻止服务配置
         
         Args:
             schedule: 阻止服务的计划配置，符合Schedule模式
@@ -423,7 +423,7 @@ class AdGuardService:
         ignore_querylog: bool = False,
         ignore_statistics: bool = False
     ) -> Dict:
-        """更新现有的AdGuardHome客户端
+        """更新现有的{{ project_name }}客户端
         
         Args:
             name: 客户端名称
@@ -538,7 +538,7 @@ class AdGuardService:
         max_retries: int = 3,
         retry_delay: int = 2
     ) -> Dict:
-        """带重试机制的创建AdGuardHome客户端方法
+        """带重试机制的创建{{ project_name }}客户端方法
         
         Args:
             name: 客户端名称
@@ -582,22 +582,22 @@ class AdGuardService:
                     ignore_querylog=ignore_querylog,
                     ignore_statistics=ignore_statistics
                 )
-                print(f"成功创建AdGuardHome客户端: {name}")
+                print(f"成功创建{{ project_name }}客户端: {name}")
                 return result
                 
             except Exception as e:
                 error_msg = str(e)
                 if attempt < max_retries:
-                    print(f"创建AdGuardHome客户端失败（第{attempt + 1}次尝试）: {error_msg}，{retry_delay}秒后重试...")
+                    print(f"创建{{ project_name }}客户端失败（第{attempt + 1}次尝试）: {error_msg}，{retry_delay}秒后重试...")
                     time.sleep(retry_delay)
                 else:
-                    print(f"创建AdGuardHome客户端最终失败（已重试{max_retries}次）: {error_msg}")
+                    print(f"创建{{ project_name }}客户端最终失败（已重试{max_retries}次）: {error_msg}")
                     raise Exception(f"创建客户端失败，已重试 {max_retries} 次: {error_msg}")
         
         raise Exception(f"创建客户端失败，已重试 {max_retries} 次")
 
     def delete_client(self, name: str, check_exists: bool = True) -> Dict:
-        """删除AdGuardHome客户端
+        """删除{{ project_name }}客户端
         
         Args:
             name: 要删除的客户端名称
@@ -619,7 +619,7 @@ class AdGuardService:
         return self._make_request('POST', '/clients/delete', json=data)
     
     def batch_delete_clients(self, names: List[str], skip_missing: bool = True) -> Dict:
-        """批量删除AdGuardHome客户端
+        """批量删除{{ project_name }}客户端
         
         Args:
             names: 要删除的客户端名称列表
@@ -669,7 +669,7 @@ class AdGuardService:
         self,
         search_criteria: Union[str, List[str]]
     ) -> Dict:
-        """搜索AdGuardHome客户端
+        """搜索{{ project_name }}客户端
         
         Args:
             search_criteria: 搜索条件，可以是单个字符串或字符串列表
@@ -685,7 +685,7 @@ class AdGuardService:
         return self._make_request('POST', '/clients/find', json=data)
         
     def find_client(self, name: str) -> Optional[Dict]:
-        """根据名称查找AdGuardHome客户端
+        """根据名称查找{{ project_name }}客户端
         
         Args:
             name: 客户端名称
@@ -732,51 +732,51 @@ class AdGuardService:
             return None
     
     def get_status(self) -> Optional[Dict]:
-        """获取AdGuardHome服务器状态和版本信息
+        """获取{{ project_name }}服务器状态和版本信息
         
         Returns:
             Optional[Dict]: 包含服务器状态和版本信息的字典，如果请求失败则返回None
         """
         try:
-            print("尝试获取AdGuardHome服务器状态信息...")
+            print("尝试获取{{ project_name }}服务器状态信息...")
             status = self._make_request('GET', '/status')
-            print(f"成功获取AdGuardHome服务器状态信息: {status}")
+            print(f"成功获取{{ project_name }}服务器状态信息: {status}")
             return status
         except Exception as e:
-            print(f"获取AdGuardHome服务器状态信息失败: {str(e)}")
+            print(f"获取{{ project_name }}服务器状态信息失败: {str(e)}")
             return None
         
     def check_connection(self) -> bool:
-        """检查与AdGuardHome服务器的连接和认证状态
+        """检查与{{ project_name }}服务器的连接和认证状态
 
         Returns:
             bool: 连接和认证是否成功
         """
         try:
-            print("开始检查AdGuardHome连接状态...")
+            print("开始检查{{ project_name }}连接状态...")
             # 首先验证配置
             is_valid, error_msg = self.config.validate()
             if not is_valid:
-                print(f"AdGuardHome配置验证失败: {error_msg}")
+                print(f"{{ project_name }}配置验证失败: {error_msg}")
                 return False
                 
             # 尝试获取状态信息来验证连接和认证
-            print(f"尝试连接AdGuardHome服务器: {self.base_url}")
+            print(f"尝试连接{{ project_name }}服务器: {self.base_url}")
             status = self.get_status()
             if status is not None:
-                print(f"成功连接到AdGuardHome服务器，版本: {status.get('version', '未知')}")
+                print(f"成功连接到{{ project_name }}服务器，版本: {status.get('version', '未知')}")
                 return True
             else:
-                print("连接AdGuardHome服务器失败: 获取状态信息返回None")
+                print("连接{{ project_name }}服务器失败: 获取状态信息返回None")
                 return False
         except Exception as e:
-             print(f"连接AdGuardHome服务器时发生异常: {str(e)}")
+             print(f"连接{{ project_name }}服务器时发生异常: {str(e)}")
              return False
              
     
     
     def get_all_clients(self) -> List[Dict]:
-        """获取所有已配置的AdGuardHome客户端
+        """获取所有已配置的{{ project_name }}客户端
 
         Returns:
             List[Dict]: 包含所有客户端信息的列表
@@ -789,7 +789,7 @@ class AdGuardService:
             return []
 
     def get_stats(self) -> Dict:
-        """获取AdGuardHome统计数据
+        """获取{{ project_name }}统计数据
         
         获取DNS服务器的统计信息，包括查询数量、阻止数量、客户端统计等
         
@@ -803,7 +803,7 @@ class AdGuardService:
         try:
             return self._make_request('GET', '/stats')
         except Exception as e:
-            print(f"获取AdGuardHome统计数据失败: {str(e)}")
+            print(f"获取{{ project_name }}统计数据失败: {str(e)}")
             return {}
     
     # DNS重写相关方法
@@ -1112,7 +1112,7 @@ class AdGuardService:
         - domain.com 192.168.1.1
         - domain.com=192.168.1.1
         - domain.com -> 192.168.1.1
-        - AdGuard Home格式的hosts文件
+        - {{ project_name }}格式的hosts文件
         
         Args:
             content: 文本内容

@@ -2,9 +2,9 @@
 
 {% block page_content %}
 <div class="container mt-4">
-    <h2>AdGuardHome 配置</h2>
+    <h2>{{ project_name }} 配置</h2>
     <div class="alert alert-info" id="versionInfo" style="display: none;">
-        <strong>AdGuardHome 版本：</strong><span id="versionText"></span>
+        <strong>{{ project_name }} 版本：</strong><span id="versionText"></span>
     </div>
     <div class="card">
         <div class="card-body">
@@ -29,7 +29,7 @@
 </div>
 
 <script>
-// 获取AdGuardHome状态信息
+// 获取{{ project_name }}状态信息
 async function getAdGuardStatus() {
     try {
         const response = await fetch('/admin/adguard-status');

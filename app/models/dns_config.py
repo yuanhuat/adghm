@@ -62,7 +62,7 @@ class DnsConfig(db.Model):
         self.doh_description = 'DNS-over-HTTPS通过HTTPS协议提供安全的DNS查询'
         
         self.display_title = 'DNS配置信息'
-        self.display_description = '以下是AdGuardHome的DNS配置信息，您可以在设备上配置这些DNS服务器来使用AdGuardHome的广告拦截和隐私保护功能。'
+        self.display_description = '以下是{{ project_name }}的DNS配置信息，您可以在设备上配置这些DNS服务器来使用{{ project_name }}的广告拦截和隐私保护功能。'
         
         self.apple_config_enabled = True
         self.apple_doh_config_enabled = True

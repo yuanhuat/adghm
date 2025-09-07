@@ -70,7 +70,7 @@ def check_first_user():
 def register():
     """用户注册视图
     
-    处理用户注册请求，创建新用户并自动为其创建AdGuardHome客户端。
+    处理用户注册请求，创建新用户并自动为其创建{{ project_name }}客户端。
     注册成功后自动登录并重定向到主页。
     第一个注册的用户将自动成为管理员。
     如果系统配置不允许注册，则重定向到登录页面。
@@ -199,13 +199,13 @@ def register():
             
             # 检查是否为第一个用户（管理员）
             if user.is_admin:
-                # 管理员用户不需要立即创建AdGuardHome客户端
+                # 管理员用户不需要立即创建{{ project_name }}客户端
                 login_user(user)
-                flash('注册成功！请先在后台配置AdGuardHome设置。', 'success')
+                flash('注册成功！请先在后台配置{{ project_name }}设置。', 'success')
                 return redirect(url_for('main.index'))
             else:
                 try:
-                    # 检查AdGuardHome配置是否已设置并可用
+                    # 检查{{ project_name }}配置是否已设置并可用
                     adguard = AdGuardService()
                     
                     # 验证配置格式
@@ -213,14 +213,14 @@ def register():
                     if not is_valid:
                         # 配置格式无效，提示等待管理员配置
                         login_user(user)
-                        flash('注册成功！但AdGuardHome配置无效，请等待管理员完成配置后再使用。', 'warning')
+                        flash('注册成功！但{{ project_name }}配置无效，请等待管理员完成配置后再使用。', 'warning')
                         return redirect(url_for('main.index'))
                     
                     # 检查连接和认证状态
                     if not adguard.check_connection():
                         # 无法连接或认证失败，提示等待管理员配置
                         login_user(user)
-                        flash('注册成功！但无法连接到AdGuardHome服务器，请等待管理员完成配置后再使用。', 'warning')
+                        flash('注册成功！但无法连接到{{ project_name }}服务器，请等待管理员完成配置后再使用。', 'warning')
                         return redirect(url_for('main.index'))
                     
                     try:
@@ -236,7 +236,7 @@ def register():
                                 # 只使用用户名作为客户端ID
                                 if device_info and len(device_info) > 0:
                                     # 只使用用户名，确保唯一性
-                                    # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+                                    # 使用连字符替代下划线，因为{{ project_name }}不接受下划线作为客户端ID
                                     client_ids = [f"{username}"]  # 只使用用户名
                                     print(f"使用用户名作为客户端ID: {client_ids[0]}")
                             except Exception as e:
@@ -246,11 +246,11 @@ def register():
                         # 如果没有设备平台信息，则只使用用户名作为客户端ID
                         if len(client_ids) == 0 or client_ids[0] == '192.168.31.1':
                             # 只使用用户名作为客户端ID，确保唯一性
-                            # 使用连字符替代下划线，因为AdGuardHome不接受下划线作为客户端ID
+                            # 使用连字符替代下划线，因为{{ project_name }}不接受下划线作为客户端ID
                             client_ids = [f"{username}"]  # 只使用用户名
                             print(f"使用用户名作为客户端ID: {client_ids[0]}")
                         
-                        # 创建AdGuardHome客户端，使用更安全的默认配置
+                        # 创建{{ project_name }}客户端，使用更安全的默认配置
                         # 获取设备型号并添加到客户端名称中
                         device_platform = "unknown"
                         if device_info_json:
@@ -321,11 +321,11 @@ def register():
                         error_msg = str(e)
                         # 检查是否为JSON格式错误
                         if "无法解析服务器响应" in error_msg:
-                            flash('注册成功！但创建AdGuardHome客户端失败：AdGuardHome服务器返回了非预期的响应格式。请联系管理员检查AdGuardHome配置。', 'warning')
+                            flash('注册成功！但创建{{ project_name }}客户端失败：{{ project_name }}服务器返回了非预期的响应格式。请联系管理员检查{{ project_name }}配置。', 'warning')
                         else:
-                            flash(f'注册成功！但创建AdGuardHome客户端失败：{error_msg}', 'warning')
+                            flash(f'注册成功！但创建{{ project_name }}客户端失败：{error_msg}', 'warning')
                         # 记录详细错误信息到控制台
-                        print(f"创建AdGuardHome客户端失败：{error_msg}")
+                        print(f"创建{{ project_name }}客户端失败：{error_msg}")
                         return redirect(url_for('main.index'))
                         
                 except Exception as e:
@@ -670,25 +670,25 @@ def delete_account():
         user_id = current_user.id
         username = current_user.username
         
-        # 获取用户的客户端映射，准备删除AdGuard Home中的客户端
+        # 获取用户的客户端映射，准备删除{{ project_name }}中的客户端
         client_mappings = ClientMapping.query.filter_by(user_id=user_id).all()
         
-        # 尝试从AdGuard Home删除客户端和允许列表
+        # 尝试从{{ project_name }}删除客户端和允许列表
         try:
             adguard = AdGuardService()
             client_delete_errors = []
             
-            # 先删除AdGuardHome客户端，记录错误但继续执行
+            # 先删除{{ project_name }}客户端，记录错误但继续执行
             for mapping in client_mappings:
                 try:
                     adguard.delete_client(mapping.client_name)
-                    print(f"已从AdGuard Home删除客户端: {mapping.client_name}")
+                    print(f"已从{{ project_name }}删除客户端: {mapping.client_name}")
                 except Exception as e:
                     error_msg = f"客户端 {mapping.client_name} 删除失败：{str(e)}"
                     client_delete_errors.append(error_msg)
-                    print(f"删除AdGuard Home客户端失败 {mapping.client_name}: {str(e)}")
+                    print(f"删除{{ project_name }}客户端失败 {mapping.client_name}: {str(e)}")
             
-            # 从AdGuardHome的允许客户端列表中移除用户的客户端ID
+            # 从{{ project_name }}的允许客户端列表中移除用户的客户端ID
             try:
                 # 获取当前的访问控制列表
                 access_list = adguard._make_request('GET', '/access/list')
@@ -717,8 +717,8 @@ def delete_account():
                 print(f"从允许列表移除客户端ID失败: {str(e)}")
                 
         except Exception as e:
-            print(f"无法连接到AdGuard Home服务: {str(e)}")
-            # 即使AdGuard Home删除失败，也继续删除数据库记录
+            print(f"无法连接到{{ project_name }}服务: {str(e)}")
+            # 即使{{ project_name }}删除失败，也继续删除数据库记录
         
         # 删除用户的OpenList账户（如果存在）
         try:

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AdGuardHome 用户管理系统 - 管理后台</title>
+    <title>{{ project_name }} - 管理后台</title>
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}" rel="stylesheet">
@@ -73,7 +73,7 @@
                     <a href="#" class="nav-link dropdown-toggle">系统配置</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{{ url_for('admin.system_config') }}">系统设置</a>
-                        <a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">AdGuardHome配置</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.adguard_config') }}">{{ project_name }}配置</a>
                         <a class="dropdown-item" href="{{ url_for('admin.dns_config') }}">DNS配置</a>
                         <a class="dropdown-item" href="{{ url_for('admin.email_config') }}">邮件配置</a>
                         <a class="dropdown-item" href="{{ url_for('admin.ai_analysis_config') }}">AI分析配置</a>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '关于我们 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else '关于我们 - {{ project_name }}' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -426,7 +426,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -461,7 +461,7 @@
                     <div class="intro-text animate-fade-in">
                         <h2>我们的故事</h2>
                         <p>
-                            AdGuard Home Manager 诞生于对网络安全和用户隐私保护的深度关注。
+                            {{ project_name }} 诞生于对网络安全和用户隐私保护的深度关注。
                             我们的团队由来自网络安全、软件开发和用户体验设计领域的专家组成，
                             共同致力于创造一个更安全、更纯净的网络环境。
                         </p>
@@ -601,7 +601,7 @@
                             <i class="fas fa-envelope"></i>
                         </div>
                         <h3>邮箱联系</h3>
-                        <p>support@adguard-manager.com<br>business@adguard-manager.com</p>
+                        <p>support@{{ project_name }}.com<br>business@{{ project_name }}.com</p>
                     </div>
                     
                     <div class="contact-item animate-fade-in animate-delay-1">
@@ -636,7 +636,7 @@
                 <a href="#">服务条款</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

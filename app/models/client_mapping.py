@@ -3,7 +3,7 @@ from app import db
 from app.utils.timezone import beijing_time
 
 class ClientMapping(db.Model):
-    """AdGuardHome客户端映射模型"""
+    """{{ project_name }}客户端映射模型"""
     __tablename__ = 'client_mappings'
 
     id = db.Column(db.Integer, primary_key=True)

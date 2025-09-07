@@ -1,13 +1,13 @@
 'openapi': '3.0.3'
 'info':
-  'title': 'AdGuard Home'
+  'title': '{{ project_name }}'
   'description': >
-    AdGuard Home REST-ish API.  Our admin web interface is built on top of this
+    {{ project_name }} REST-ish API.  Our admin web interface is built on top of this
     REST-ish API.
   'version': '0.107'
   'contact':
-    'name': 'AdGuard Home'
-    'url': 'https://github.com/AdguardTeam/AdGuardHome'
+    'name': '{{ project_name }}'
+    'url': 'https://github.com/AdguardTeam/{{ project_name }}'
 
 'servers':
 - 'url': '/control'
@@ -23,13 +23,13 @@
 - 'name': 'filtering'
   'description': 'Rule-based filtering'
 - 'name': 'global'
-  'description': 'AdGuard Home server general settings and controls'
+  'description': '{{ project_name }} server general settings and controls'
 - 'name': 'i18n'
   'description': 'Application localization'
 - 'name': 'install'
   'description': 'First-time install configuration handlers'
 - 'name': 'log'
-  'description': 'AdGuard Home query log'
+  'description': '{{ project_name }} query log'
 - 'name': 'mobileconfig'
   'description': 'Apple .mobileconfig'
 - 'name': 'parental'
@@ -39,9 +39,9 @@
 - 'name': 'safesearch'
   'description': 'Enforce family-friendly results in search engines'
 - 'name': 'stats'
-  'description': 'AdGuard Home statistics'
+  'description': '{{ project_name }} statistics'
 - 'name': 'tls'
-  'description': 'AdGuard Home HTTPS/DoH/DoQ/DoT settings'
+  'description': '{{ project_name }} HTTPS/DoH/DoQ/DoT settings'
 
 'paths':
   '/status':
@@ -1423,7 +1423,7 @@
   'schemas':
     'ServerStatus':
       'type': 'object'
-      'description': 'AdGuard Home server status and configuration'
+      'description': '{{ project_name }} server status and configuration'
       'required':
       - 'dns_addresses'
       - 'dns_port'
@@ -1812,7 +1812,7 @@
     'VersionInfo':
       'type': 'object'
       'description': >
-        Information about the latest available version of AdGuard Home.
+        Information about the latest available version of {{ project_name }}.
       'required':
       - 'disabled'
       'properties':
@@ -1825,11 +1825,11 @@
           'example': 'v0.9'
         'announcement':
           'type': 'string'
-          'example': 'AdGuard Home v0.9 is now available!'
+          'example': '{{ project_name }} v0.9 is now available!'
         'announcement_url':
           'type': 'string'
           'example': >
-            https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.9
+            https://github.com/AdguardTeam/{{ project_name }}/releases/tag/v0.9
         'can_autoupdate':
           'type': 'boolean'
     'Stats':
@@ -2571,7 +2571,7 @@
           'example': 53
     'AddressesInfo':
       'type': 'object'
-      'description': 'AdGuard Home addresses configuration'
+      'description': '{{ project_name }} addresses configuration'
       'required':
       - 'dns_port'
       - 'interfaces'
@@ -3118,7 +3118,7 @@
     'InitialConfiguration':
       'type': 'object'
       'description': >
-        AdGuard Home initial configuration for the first-install wizard.
+        {{ project_name }} initial configuration for the first-install wizard.
       'required':
       - 'dns'
       - 'web'

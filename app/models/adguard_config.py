@@ -3,9 +3,9 @@ from urllib.parse import urlparse
 from app.utils.timezone import beijing_time
 
 class AdGuardConfig(db.Model):
-    """AdGuardHome配置模型
+    """{{ project_name }}配置模型
     
-    用于存储和管理AdGuardHome的API配置信息，包括API基础URL和认证信息。
+    用于存储和管理{{ project_name }}的API配置信息，包括API基础URL和认证信息。
     提供配置验证和默认值管理功能。
     """
     __tablename__ = 'adguard_config'
@@ -25,7 +25,7 @@ class AdGuardConfig(db.Model):
         """初始化配置对象
         
         Args:
-            api_base_url: AdGuardHome API的基础URL
+            api_base_url: {{ project_name }} API的基础URL
             auth_username: API认证用户名
             auth_password: API认证密码
         """

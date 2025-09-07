@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '使用指南 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else '使用指南 - ' + project_name }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -516,7 +516,7 @@
                 <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>AdGuard Home</span>
+                <span>{{ project_name }}</span>
             </div>
             <button class="nav-toggle" id="navToggle">
                 <span></span>
@@ -551,7 +551,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -575,7 +575,7 @@
             <div class="container">
                 <h1 class="animate-fade-in">使用指南</h1>
                 <p class="animate-fade-in animate-delay-1">
-                    快速上手 AdGuard Home Manager，轻松管理您的DNS安全
+                    快速上手 {{ project_name }}，轻松管理您的DNS安全
                 </p>
             </div>
         </section>
@@ -632,7 +632,7 @@
         <section class="platform-support">
             <div class="container">
                 <div class="platform-intro">
-                    <h2 class="animate-fade-in">🔊 AdGuard Home Manager 支持多种设备 / 平台 🥇</h2>
+                    <h2 class="animate-fade-in">🔊 {{ project_name }} 支持多种设备 / 平台 🥇</h2>
                     <p class="animate-fade-in animate-delay-1">
                         选择您的设备类型，查看详细的配置教程
                     </p>
@@ -800,7 +800,7 @@
                 <a href="#">服务条款</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

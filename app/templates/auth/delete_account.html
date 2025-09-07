@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>注销账户 - AdGuardHome用户管理系统</title>
+    <title>注销账户 - {{ project_name }}用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -467,7 +467,7 @@
                     <li>删除所有客户端配置信息</li>
                     <li>清除所有相关的操作记录</li>
                     <li>无法恢复任何已删除的数据</li>
-                    <li>同步删除AdGuard Home中的客户端配置</li>
+                    <li>同步删除{{ project_name }}中的客户端配置</li>
                 </ul>
                 <p><strong>请确保您已经备份了重要的配置信息！</strong></p>
             </div>

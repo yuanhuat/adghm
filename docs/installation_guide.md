@@ -1,4 +1,4 @@
-# AdGuardHome 管理系统安装指南
+# {{ project_name }} 管理系统安装指南
 
 ## 目录
 
@@ -8,7 +8,7 @@
    - [手动部署](#手动部署)
 3. [系统配置](#系统配置)
    - [初始化配置](#初始化配置)
-   - [AdGuardHome 配置](#adguardhome-配置)
+   - [{{ project_name }} 配置](#{{ project_name }}-配置)
    - [阿里云域名配置](#阿里云域名配置)
 4. [升级指南](#升级指南)
 5. [故障排除](#故障排除)
@@ -30,14 +30,14 @@
 - **软件要求**：
   - Python 3.11 或更高版本
   - pip 包管理器
-  - 运行中的 AdGuardHome 实例
+  - 运行中的 {{ project_name }} 实例
   - 阿里云账号（用于域名解析）
 
 ### 前置条件
 
-1. **AdGuardHome 安装**：
-   - 确保已安装并配置 AdGuardHome
-   - 记录 AdGuardHome 管理界面的 URL、用户名和密码
+1. **{{ project_name }} 安装**：
+   - 确保已安装并配置 {{ project_name }}
+   - 记录 {{ project_name }} 管理界面的 URL、用户名和密码
 
 2. **阿里云准备**：
    - 拥有已备案的域名
@@ -45,7 +45,7 @@
 
 3. **网络环境**：
    - 确保服务器可以访问互联网
-   - 如果在内网部署，确保可以访问 AdGuardHome 实例
+   - 如果在内网部署，确保可以访问 {{ project_name }} 实例
 
 ## 安装方式
 
@@ -233,14 +233,14 @@ server {
    - 使用刚创建的管理员账号登录
    - 进入管理员后台（`/admin`）
 
-### AdGuardHome 配置
+### {{ project_name }} 配置
 
-1. **配置 AdGuardHome API**：
-   - 在管理员后台，导航至「系统配置」>「AdGuardHome 配置」
+1. **配置 {{ project_name }} API**：
+   - 在管理员后台，导航至「系统配置」>「{{ project_name }} 配置」
    - 填写以下信息：
-     - API 基础 URL：AdGuardHome 管理界面的 URL（例如：`http://192.168.1.100:3000`）
-     - 认证用户名：AdGuardHome 管理员用户名
-     - 认证密码：AdGuardHome 管理员密码
+     - API 基础 URL：{{ project_name }} 管理界面的 URL（例如：`http://192.168.1.100:3000`）
+     - 认证用户名：{{ project_name }} 管理员用户名
+     - 认证密码：{{ project_name }} 管理员密码
    - 点击「保存」按钮
    - 系统会自动测试连接并显示结果
 
@@ -329,10 +329,10 @@ gunicorn -c gunicorn_config.py "app:create_app()"
    - 问题：启动时出现数据库相关错误
    - 解决方案：检查数据库文件权限，确保应用有读写权限
 
-2. **无法连接 AdGuardHome API**：
-   - 问题：系统无法连接到 AdGuardHome API
+2. **无法连接 {{ project_name }} API**：
+   - 问题：系统无法连接到 {{ project_name }} API
    - 解决方案：
-     - 确认 AdGuardHome 实例正在运行
+     - 确认 {{ project_name }} 实例正在运行
      - 检查 API URL 是否正确
      - 验证认证信息
      - 检查网络连接和防火墙设置

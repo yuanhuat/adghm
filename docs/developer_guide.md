@@ -1,4 +1,4 @@
-# AdGuardHome 管理系统开发者指南
+# {{ project_name }} 管理系统开发者指南
 
 ## 目录
 
@@ -16,7 +16,7 @@
 
 ### 技术栈概述
 
-AdGuardHome 管理系统（ADGHM）基于以下技术栈构建：
+{{ project_name }} 管理系统（ADGHM）基于以下技术栈构建：
 
 - **后端框架**：Flask 2.3.x
 - **ORM**：SQLAlchemy 2.0.x
@@ -26,7 +26,7 @@ AdGuardHome 管理系统（ADGHM）基于以下技术栈构建：
 - **数据库**：SQLite（默认，可扩展）
 - **任务调度**：Flask-APScheduler
 - **API 集成**：
-  - AdGuardHome API
+  - {{ project_name }} API
   - 阿里云域名解析 API
 
 ### 架构设计
@@ -46,7 +46,7 @@ AdGuardHome 管理系统（ADGHM）基于以下技术栈构建：
 - Python 3.11 或更高版本
 - Git
 - 文本编辑器或 IDE（推荐 VS Code、PyCharm）
-- AdGuardHome 实例（用于测试）
+- {{ project_name }} 实例（用于测试）
 - 阿里云账号（用于测试域名解析功能）
 
 ### 环境设置步骤
@@ -196,12 +196,12 @@ adghm/
 
 服务模块封装与外部 API 的交互逻辑。主要文件：
 
-- `app/services/adguard_service.py`：AdGuardHome API 服务
+- `app/services/adguard_service.py`：{{ project_name }} API 服务
 - `app/services/domain_service.py`：阿里云域名解析服务
 
 关键功能：
 
-- AdGuardHome 客户端管理
+- {{ project_name }} 客户端管理
 - 域名解析记录管理
 - IP 地址检测
 
@@ -220,9 +220,9 @@ adghm/
 
 系统 API 文档使用 OpenAPI 规范定义，位于 `openapi/` 目录。
 
-### AdGuardHome API
+### {{ project_name }} API
 
-AdGuardHome API 的详细文档可在 `openapi/openapi.yaml` 文件中找到。主要端点包括：
+{{ project_name }} API 的详细文档可在 `openapi/openapi.yaml` 文件中找到。主要端点包括：
 
 - 客户端管理
 - 过滤规则配置
@@ -288,7 +288,7 @@ class DomainMapping(db.Model):
 
 ### 配置模型
 
-- `AdGuardConfig`：存储 AdGuardHome API 配置
+- `AdGuardConfig`：存储 {{ project_name }} API 配置
 - `DomainConfig`：存储阿里云域名解析配置
 
 ### 日志模型（OperationLog）
@@ -500,4 +500,4 @@ Closes #123
 
 ---
 
-感谢您对 AdGuardHome 管理系统的贡献！如有任何问题，请联系项目维护者。
+感谢您对 {{ project_name }} 管理系统的贡献！如有任何问题，请联系项目维护者。

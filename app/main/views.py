@@ -95,11 +95,11 @@ def remove_expired_vip_clients(user_id):
                     except Exception as e:
                         logging.warning(f"删除过期VIP客户端 {client_id} 自定义规则失败: {str(e)}")
                 
-                # 从AdGuard Home删除客户端
+                # 从{{ project_name }}删除客户端
                 adguard.delete_client(client_name)
-                logging.info(f"已从AdGuard Home删除过期VIP客户端: {client_name}")
+                logging.info(f"已从{{ project_name }}删除过期VIP客户端: {client_name}")
             except Exception as e:
-                logging.warning(f"从AdGuard Home删除客户端失败: {str(e)}")
+                logging.warning(f"从{{ project_name }}删除客户端失败: {str(e)}")
                 # 继续执行，不影响数据库删除
             
             try:
@@ -160,7 +160,7 @@ def dashboard():
     
     显示用户的客户端列表和基本信息，以及域名映射信息
     """
-    # 获取当前用户的AdGuardHome客户端请求数量和总DNS查询数量
+    # 获取当前用户的{{ project_name }}客户端请求数量和总DNS查询数量
     user_request_count = 0
     total_dns_queries = 0
     total_blocked_queries = 0
@@ -201,7 +201,7 @@ def dashboard():
                             user_request_count += request_count
                         
     except Exception as e:
-        logging.error(f"获取AdGuardHome统计数据失败: {str(e)}")
+        logging.error(f"获取{{ project_name }}统计数据失败: {str(e)}")
         user_request_count = 0
         total_dns_queries = 0
         total_blocked_queries = 0
@@ -560,7 +560,7 @@ def change_email_page():
 @main.route('/api/stats')
 @login_required
 def api_stats():
-    """获取AdGuardHome统计数据的API接口
+    """获取{{ project_name }}统计数据的API接口
     
     返回JSON格式的统计数据，用于前端动态更新
     
@@ -628,7 +628,7 @@ def api_stats():
                             user_ranking = total_clients
                         
     except Exception as e:
-        logging.error(f"API获取AdGuardHome统计数据失败: {str(e)}")
+        logging.error(f"API获取{{ project_name }}统计数据失败: {str(e)}")
         user_request_count = 0
         total_dns_queries = 0
         total_blocked_queries = 0
@@ -654,7 +654,7 @@ def client_list():
 @main.route('/api/client_ranking')
 @login_required
 def api_client_ranking():
-    """获取AdGuardHome客户端排行数据的API接口
+    """获取{{ project_name }}客户端排行数据的API接口
     
     返回JSON格式的客户端排行数据，显示请求数量最多的客户端
     
@@ -738,13 +738,13 @@ def api_client_ranking():
 def get_blocked_services():
     """获取可用的阻止服务列表
     
-    从AdGuardHome API获取所有可用的阻止服务列表
+    从{{ project_name }} API获取所有可用的阻止服务列表
     
     Returns:
         JSON响应，包含可用的阻止服务列表
     """
     try:
-        # 从AdGuardHome API获取可用的阻止服务列表
+        # 从{{ project_name }} API获取可用的阻止服务列表
         adguard = AdGuardService()
         response = adguard.get_blocked_services_all()
         
@@ -759,7 +759,7 @@ def get_blocked_services():
         
         # 如果API返回为空，使用备用静态列表
         if not services:
-            logging.warning("从AdGuardHome API获取阻止服务列表为空，使用备用列表")
+            logging.warning("从{{ project_name }} API获取阻止服务列表为空，使用备用列表")
             services = [
                 {"id": "facebook", "name": "Facebook"},
                 {"id": "twitter", "name": "Twitter"},
@@ -940,7 +940,7 @@ def client_details(mapping_id):
     
     if request.method == 'GET':
         try:
-            # 获取AdGuardHome客户端信息
+            # 获取{{ project_name }}客户端信息
             adguard = AdGuardService()
             client_info = adguard.find_client(mapping.client_name)
             
@@ -997,7 +997,7 @@ def client_details(mapping_id):
             client_ids = mapping.client_ids
         
         try:
-            # 更新AdGuardHome客户端
+            # 更新{{ project_name }}客户端
             adguard = AdGuardService()
             adguard.update_client(
                 name=mapping.client_name,
@@ -1242,7 +1242,7 @@ def apple_doh_mobileconfig():
     """生成DNS-over-HTTPS的苹果配置文件
     
     为当前用户生成DoH的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
-    根据AdGuard Home API要求，host参数现在是必需的
+    根据{{ project_name }} API要求，host参数现在是必需的
     
     Returns:
         .mobileconfig文件下载
@@ -1299,7 +1299,7 @@ def apple_doh_mobileconfig():
             # 使用用户的第一个客户端ID作为默认值
             client_id = all_user_client_ids[0]
         
-        # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
+        # 验证客户端ID格式（{{ project_name }}要求：[0-9a-z-]{1,64}）
         import re
         if not re.match(r'^[0-9a-z-]{1,64}$', client_id):
             return jsonify({
@@ -1341,11 +1341,11 @@ def apple_doh_mobileconfig():
                 <string>{doh_url}</string>
             </dict>
             <key>PayloadDescription</key>
-            <string>Configures device to use AdGuard Home DNS-over-HTTPS</string>
+            <string>Configures device to use {{ project_name }} DNS-over-HTTPS</string>
             <key>PayloadDisplayName</key>
-            <string>AdGuard Home DoH</string>
+            <string>{{ project_name }} DoH</string>
             <key>PayloadIdentifier</key>
-            <string>com.adguardhome.doh.{client_id}</string>
+            <string>com.{{ project_name }}.doh.{client_id}</string>
             <key>PayloadType</key>
             <string>com.apple.dnsSettings.managed</string>
             <key>PayloadUUID</key>
@@ -1355,11 +1355,11 @@ def apple_doh_mobileconfig():
         </dict>
     </array>
     <key>PayloadDescription</key>
-    <string>AdGuard Home DNS-over-HTTPS configuration for {current_user.username}</string>
+    <string>{{ project_name }} DNS-over-HTTPS configuration for {current_user.username}</string>
     <key>PayloadDisplayName</key>
-    <string>AdGuard Home DoH - {current_user.username}</string>
+    <string>{{ project_name }} DoH - {current_user.username}</string>
     <key>PayloadIdentifier</key>
-    <string>com.adguardhome.profile.doh.{client_id}</string>
+    <string>com.{{ project_name }}.profile.doh.{client_id}</string>
     <key>PayloadRemovalDisallowed</key>
     <false/>
     <key>PayloadType</key>
@@ -1377,7 +1377,7 @@ def apple_doh_mobileconfig():
             mobileconfig_content,
             mimetype='application/x-apple-aspen-config',
             headers={
-                'Content-Disposition': f'attachment; filename="AdGuardHome-DoH-{client_id}.mobileconfig"'
+                'Content-Disposition': f'attachment; filename="{{ project_name }}-DoH-{client_id}.mobileconfig"'
             }
         )
         
@@ -1407,7 +1407,7 @@ def apple_dot_mobileconfig():
     """生成DNS-over-TLS的苹果配置文件
     
     为当前用户生成DoT的.mobileconfig文件，使用管理员设置的域名和用户的客户端ID
-    根据AdGuard Home API要求，host参数现在是必需的
+    根据{{ project_name }} API要求，host参数现在是必需的
     
     Returns:
         .mobileconfig文件下载
@@ -1465,7 +1465,7 @@ def apple_dot_mobileconfig():
             # 使用用户的第一个客户端ID作为默认值
             client_id = all_client_ids[0]
         
-        # 验证客户端ID格式（AdGuard Home要求：[0-9a-z-]{1,64}）
+        # 验证客户端ID格式（{{ project_name }}要求：[0-9a-z-]{1,64}）
         import re
         if not re.match(r'^[0-9a-z-]{1,64}$', client_id):
             return jsonify({
@@ -1474,7 +1474,7 @@ def apple_dot_mobileconfig():
         
         # 构建DoT服务器地址（使用host参数）
         # 注意：与DoH不同，DoT协议不支持路径参数，因此无法使用路径格式 (server:port/path/client_id)
-        # 根据AdGuard Home的实际格式，DoT使用客户端ID+域名格式 (client_id.server:port)
+        # 根据{{ project_name }}的实际格式，DoT使用客户端ID+域名格式 (client_id.server:port)
         dot_server = f"{client_id}.{host.strip()}"
         dot_port = config.dot_port or 853
         
@@ -1502,7 +1502,7 @@ def apple_dot_mobileconfig():
 					<string>{dot_server}</string>
 				</dict>
 				<key>PayloadDescription</key>
-				<string>Configures device to use AdGuard Home</string>
+				<string>Configures device to use {{ project_name }}</string>
 				<key>PayloadDisplayName</key>
 				<string>{host.strip()} DoT</string>
 				<key>PayloadIdentifier</key>
@@ -1516,7 +1516,7 @@ def apple_dot_mobileconfig():
 			</dict>
 		</array>
 		<key>PayloadDescription</key>
-		<string>Adds AdGuard Home to macOS Big Sur and iOS 14 or newer systems</string>
+		<string>Adds {{ project_name }} to macOS Big Sur and iOS 14 or newer systems</string>
 		<key>PayloadDisplayName</key>
 		<string>{host.strip()} DoT</string>
 		<key>PayloadIdentifier</key>
@@ -1538,7 +1538,7 @@ def apple_dot_mobileconfig():
             mobileconfig_content,
             mimetype='application/x-apple-aspen-config',
             headers={
-                'Content-Disposition': f'attachment; filename="AdGuardHome-DoT-{client_id}.mobileconfig"'
+                'Content-Disposition': f'attachment; filename="{{ project_name }}-DoT-{client_id}.mobileconfig"'
             }
         )
         
@@ -1814,7 +1814,7 @@ def create_donation():
 @login_required
 @admin_required
 def api_adguard_blocked_services():
-    """获取AdGuard Home可用的阻止服务列表
+    """获取{{ project_name }}可用的阻止服务列表
     
     Returns:
         JSON响应，包含可用的阻止服务列表
@@ -1921,7 +1921,7 @@ def api_adguard_client_update(client_name):
             'data': data
         }
         
-        # 调用AdGuard Home API更新客户端
+        # 调用{{ project_name }} API更新客户端
         result = adguard.update_client(update_data)
         
         if result:
@@ -1973,14 +1973,14 @@ def api_get_client_upstreams(client_name):
                 'message': '客户端不存在或您没有权限访问'
             }), 404
         
-        # 从AdGuard Home获取客户端配置
+        # 从{{ project_name }}获取客户端配置
         adguard = AdGuardService()
         client = adguard.find_client(client_name)
         
         if not client:
             return jsonify({
                 'success': False,
-                'message': f'在AdGuard Home中未找到客户端：{client_name}'
+                'message': f'在{{ project_name }}中未找到客户端：{client_name}'
             }), 404
         
         # 获取上游DNS配置
@@ -2054,10 +2054,10 @@ def api_update_client_upstreams(client_name):
         if not current_client:
             return jsonify({
                 'success': False,
-                'message': f'在AdGuard Home中未找到客户端：{client_name}'
+                'message': f'在{{ project_name }}中未找到客户端：{client_name}'
             }), 404
         
-        # 调用AdGuard Home API更新客户端，传递正确的参数
+        # 调用{{ project_name }} API更新客户端，传递正确的参数
         try:
             # 构建更新数据，保持与当前客户端配置一致
             update_data = {
@@ -2347,14 +2347,14 @@ def api_check_client_duplicate():
                 'message': '客户端ID不能为空'
             }), 400
         
-        # 检查客户端ID是否已在AdGuard Home中存在
+        # 检查客户端ID是否已在{{ project_name }}中存在
         adguard = AdGuardService()
         
         # 检查AdGuard连接
         if not adguard.check_connection():
             return jsonify({
                 'success': False,
-                'message': '无法连接到AdGuardHome服务器'
+                'message': '无法连接到{{ project_name }}服务器'
             }), 500
         
         # 获取所有AdGuard客户端
@@ -2403,14 +2403,14 @@ def api_check_client_name_duplicate():
                 'message': '客户端名称不能为空'
             }), 400
         
-        # 检查客户端名称是否已在AdGuard Home中存在
+        # 检查客户端名称是否已在{{ project_name }}中存在
         adguard = AdGuardService()
         
         # 检查AdGuard连接
         if not adguard.check_connection():
             return jsonify({
                 'success': False,
-                'message': '无法连接到AdGuardHome服务器'
+                'message': '无法连接到{{ project_name }}服务器'
             }), 500
         
         # 获取所有AdGuard客户端
@@ -2494,7 +2494,7 @@ def api_create_client():
         if not adguard.check_connection():
             return jsonify({
                 'success': False,
-                'message': '无法连接到AdGuardHome服务器，请联系管理员'
+                'message': '无法连接到{{ project_name }}服务器，请联系管理员'
             }), 500
         
         try:
@@ -2504,7 +2504,7 @@ def api_create_client():
             # 根据标签设置客户端配置
             parental_enabled = 'user_child' in tags  # 如果包含user_child标签，启用家长控制
             
-            # 创建AdGuardHome客户端，使用安全的默认配置（带重试机制）
+            # 创建{{ project_name }}客户端，使用安全的默认配置（带重试机制）
             client_response = adguard.create_client_with_retry(
                 name=client_name,
                 ids=client_ids,
@@ -2623,11 +2623,11 @@ def api_delete_client(mapping_id):
                 except Exception as e:
                     logging.warning(f"删除客户端 {client_id} 自定义规则失败: {str(e)}")
             
-            # 从AdGuard Home删除客户端
+            # 从{{ project_name }}删除客户端
             adguard.delete_client(client_name)
-            logging.info(f"已从AdGuard Home删除客户端: {client_name}")
+            logging.info(f"已从{{ project_name }}删除客户端: {client_name}")
         except Exception as e:
-            logging.warning(f"从AdGuard Home删除客户端失败: {str(e)}")
+            logging.warning(f"从{{ project_name }}删除客户端失败: {str(e)}")
             # 继续执行，不影响数据库删除
         
         try:

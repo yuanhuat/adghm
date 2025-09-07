@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '价格方案 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else '价格方案 - {{ project_name }}' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -384,7 +384,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -507,7 +507,7 @@
     <!-- 页脚 -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 AdGuard Home Manager. 保护您的网络安全。</p>
+            <p>&copy; 2024 {{ project_name }}. 保护您的网络安全。</p>
         </div>
     </footer>
 

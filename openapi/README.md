@@ -1,6 +1,6 @@
-# AdGuard Home OpenAPI
+# {{ project_name }} OpenAPI
 
-We are using [OpenAPI specification](https://swagger.io/docs/specification/about/) to generate AdGuard Home API specification.
+We are using [OpenAPI specification](https://swagger.io/docs/specification/about/) to generate {{ project_name }} API specification.
 
 ## How to edit the API spec
 
@@ -12,7 +12,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) where we keep track of all non-compatible cha
 
 ## Authentication
 
-If AdGuard Home’s web user is password-protected, a web client must use authentication mechanism when sending requests to server. Basic access authentication is the most simple method: a client must pass `Authorization` HTTP header along with all requests:
+If {{ project_name }}’s web user is password-protected, a web client must use authentication mechanism when sending requests to server. Basic access authentication is the most simple method: a client must pass `Authorization` HTTP header along with all requests:
 
 ```http
 Authorization: Basic BASE64_DATA

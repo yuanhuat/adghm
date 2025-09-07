@@ -65,7 +65,7 @@ class EmailService:
             mail.init_app(app)
             
             msg = Message(
-                subject=f'[AdGuardHome管理系统] {subject}',
+                subject=f'[{{ project_name }}管理系统] {subject}',
                 recipients=[to],
                 html=render_template(f'email/{template}.html', current_year=datetime.now().year, **kwargs),
                 sender=email_config.mail_default_sender or email_config.mail_username

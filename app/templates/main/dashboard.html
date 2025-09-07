@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '主页 - AdGuardHome用户管理系统' }}</title>
+    <title>{{ seo_config.title if seo_config else '主页 - {{ project_name }}用户管理系统' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -20,7 +20,7 @@
                 <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>AdGuard Home</span>
+                <span>{{ project_name }}</span>
             </div>
             <button class="nav-toggle" id="navToggle">
                 <span></span>
@@ -1287,7 +1287,7 @@ function updateAppleConfig(dnsData) {
         html += '<li>点击下载按钮获取配置文件</li>';
         html += '<li>在设备上打开下载的.mobileconfig文件</li>';
         html += '<li>按照系统提示安装配置文件</li>';
-        html += '<li>安装完成后，您的设备将自动使用AdGuard Home的DNS服务</li>';
+        html += '<li>安装完成后，您的设备将自动使用{{ project_name }}的DNS服务</li>';
         html += '</ol>';
         html += '</div>';
     } else {

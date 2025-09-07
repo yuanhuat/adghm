@@ -186,7 +186,7 @@
                     <strong>警告：</strong>此操作将永久删除选中的用户及其所有关联数据，包括：
                     <ul class="mt-2 mb-0">
                         <li>用户账号信息</li>
-                        <li>AdGuardHome客户端配置</li>
+                        <li>{{ project_name }}客户端配置</li>
                         <li>客户端映射记录</li>
                         <li>用户反馈记录</li>
                     </ul>
@@ -701,7 +701,7 @@ async function bulkDeleteUsers() {
                  if (data.success) {
                      return data;
                  } else {
-                     // 如果是AdGuard Home相关错误，继续重试
+                     // 如果是{{ project_name }}相关错误，继续重试
                      if (data.message && (data.message.includes('AdGuard') || data.message.includes('timeout') || data.message.includes('连接'))) {
                          if (attempt === maxRetries) {
                              throw new Error(`${data.message} (重试${maxRetries}次后跳过)`);
@@ -719,7 +719,7 @@ async function bulkDeleteUsers() {
                  if (attempt === maxRetries) {
                      throw error;
                  }
-                 // 重试前等待，AdGuard Home相关错误等待适中时间
+                 // 重试前等待，{{ project_name }}相关错误等待适中时间
                  const isAdGuardError = error.message && (error.message.includes('AdGuard') || error.message.includes('timeout') || error.message.includes('连接'));
                  const waitTime = isAdGuardError ? 2000 * attempt : 1000 * attempt;
                  await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -1188,7 +1188,7 @@ function deleteUnmatchedClients(data) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="adguardClientsModalLabel">
-                    <i class="fas fa-network-wired"></i> AdGuard Home 客户端列表
+                    <i class="fas fa-network-wired"></i> {{ project_name }} 客户端列表
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

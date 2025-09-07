@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 - AdGuardHome用户管理系统</title>
+    <title>登录 - {{ project_name }}用户管理系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,7 +65,7 @@
                 <div class="logo">
                     <img src="{{ url_for('static', filename='images/logo-icon.svg') }}" alt="Logo" width="64" height="64">
                 </div>
-                <h1>AdGuardHome</h1>
+                <h1>{{ project_name }}</h1>
                 <p class="subtitle">登录您的账户</p>
             </div>
 

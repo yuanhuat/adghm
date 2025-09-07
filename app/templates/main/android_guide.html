@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else 'Android配置指南 - AdGuard Home Manager' }}</title>
+    <title>{{ seo_config.title if seo_config else 'Android配置指南 - {{ project_name }}' }}</title>
     
     <!-- SEO Meta Tags -->
     {% include 'components/seo_meta.html' %}
@@ -479,7 +479,7 @@
                 <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>AdGuard Home</span>
+                <span>{{ project_name }}</span>
             </div>
             <button class="nav-toggle" id="navToggle">
                 <span></span>
@@ -517,7 +517,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> AdGuard Home Manager
+                <i class="fas fa-shield-alt"></i> {{ project_name }}
             </a>
             <ul class="nav-links">
                 <li><a href="{{ url_for('main.landing') }}">首页</a></li>
@@ -550,7 +550,7 @@
             <div class="container">
                 <h2 class="section-title animate-fade-in">配置步骤</h2>
                 <p class="section-subtitle animate-fade-in animate-delay-1">
-                    Android系统原生使用AdGuard Home DNS需确保系统为Android 9及以上版本
+                    Android系统原生使用{{ project_name }} DNS需确保系统为Android 9及以上版本
                 </p>
                 
                 <div class="steps-container">
@@ -570,10 +570,10 @@
                     <div class="step-item animate-fade-in animate-delay-1">
                         <div class="step-header">
                             <div class="step-number">2</div>
-                            <h3 class="step-title">配置AdGuard Home DNS</h3>
+                            <h3 class="step-title">配置{{ project_name }} DNS</h3>
                         </div>
                         <div class="step-content">
-                            进入【加密DNS】或【私人DNS】设置页，选择【指定DNS服务】输入AdGuard Home的DNS地址，然后保存。如果系统支持会提示"已连接"
+                            进入【加密DNS】或【私人DNS】设置页，选择【指定DNS服务】输入{{ project_name }}的DNS地址，然后保存。如果系统支持会提示"已连接"
                         </div>
                         <div class="dns-address">
                             <div class="dns-address-label">DNS服务器地址：</div>
@@ -596,7 +596,7 @@
                             <h3 class="step-title">验证去广告功能生效</h3>
                         </div>
                         <div class="step-content">
-                            AdGuard Home DNS配置后，可访问测试页面来验证DNS广告屏蔽功能是否生效，当看到拦截效果时就大功告成了！🥰
+                            {{ project_name }} DNS配置后，可访问测试页面来验证DNS广告屏蔽功能是否生效，当看到拦截效果时就大功告成了！🥰
                         </div>
                         <a href="http://test.dns.con/dns-test" target="_blank" class="btn btn-primary" style="display: inline-block; margin-top: 15px;">
                             <i class="fas fa-external-link-alt"></i>
@@ -615,10 +615,10 @@
                 <div class="note-item animate-fade-in animate-delay-1">
                     <h3 class="note-title">
                         <i class="fas fa-question-circle"></i>
-                        Android 9以下系统如何使用AdGuard Home DNS？
+                        Android 9以下系统如何使用{{ project_name }} DNS？
                     </h3>
                     <div class="note-content">
-                        <p>加密DNS是Android 9以后才被原生支持的系统特性，若Android 9之前的系统想体验AdGuard Home DNS的去广告效果，则需借助第三方APP。</p>
+                        <p>加密DNS是Android 9以后才被原生支持的系统特性，若Android 9之前的系统想体验{{ project_name }} DNS的去广告效果，则需借助第三方APP。</p>
                         <p>这里推荐的APP为【Intra】</p>
                         
                         <div class="app-download">
@@ -736,7 +736,7 @@
                 <a href="#">服务条款</a>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AdGuard Home Manager. 保留所有权利。</p>
+                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
             </div>
         </div>
     </footer>

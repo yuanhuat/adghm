@@ -12,5 +12,6 @@ from .vip_config import VipConfig
 from .feedback import Feedback
 from .verification_code import VerificationCode
 from .email_config import EmailConfig
+from .system_config import SystemConfig
 
-__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'VipConfig', 'Feedback', 'VerificationCode', 'EmailConfig']
+__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'VipConfig', 'Feedback', 'VerificationCode', 'EmailConfig', 'SystemConfig']

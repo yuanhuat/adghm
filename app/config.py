@@ -11,7 +11,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(project_root, 'instance', 'adghm.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # AdGuardHome API配置
+    # {{ project_name }} API配置
     ADGUARD_API_BASE_URL = os.environ.get('ADGUARD_API_BASE_URL')
     ADGUARD_USERNAME = os.environ.get('ADGUARD_USERNAME')
     ADGUARD_PASSWORD = os.environ.get('ADGUARD_PASSWORD')

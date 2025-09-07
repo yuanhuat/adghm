@@ -1,4 +1,4 @@
-# AdGuardHome 管理系统 (ADGHM) | AdGuardHome Management System
+# {{ project_name }} 管理系统 (ADGHM) | {{ project_name }} Management System
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
@@ -12,13 +12,13 @@
 
 ## 中文
 
-一个专为简化 AdGuardHome 管理而设计的现代化 Web 应用程序，支持多用户管理、AI智能分析、VIP会员系统、捐赠支持、OpenList对接等丰富功能。
+一个专为简化 {{ project_name }} 管理而设计的现代化 Web 应用程序，支持多用户管理、AI智能分析、VIP会员系统、捐赠支持、OpenList对接等丰富功能。
 
 ---
 
 ## English
 
-A modern web application designed to simplify AdGuardHome management, featuring multi-user support, AI intelligent analysis, VIP membership system, donation support, OpenList integration, and many other rich features.
+A modern web application designed to simplify {{ project_name }} management, featuring multi-user support, AI intelligent analysis, VIP membership system, donation support, OpenList integration, and many other rich features.
 
 ## 🌟 主要功能 | Main Features
 
@@ -36,7 +36,7 @@ A modern web application designed to simplify AdGuardHome management, featuring 
 *注册页面 - 用户友好的注册表单*
 
 ### 🖥️ 客户端管理 | Client Management
-- **客户端创建** | **Client Creation**：支持创建和管理 AdGuardHome 客户端 | Support for creating and managing AdGuardHome clients
+- **客户端创建** | **Client Creation**：支持创建和管理 {{ project_name }} 客户端 | Support for creating and managing {{ project_name }} clients
 - **客户端配置** | **Client Configuration**：可配置过滤规则、安全浏览、家长控制等设置 | Configure filtering rules, safe browsing, parental controls, and other settings
 - **批量操作** | **Batch Operations**：支持批量管理多个客户端 | Support for batch management of multiple clients
 - **状态监控** | **Status Monitoring**：实时显示客户端状态和统计信息 | Real-time display of client status and statistics
@@ -45,7 +45,7 @@ A modern web application designed to simplify AdGuardHome management, featuring 
 *用户主页 - 显示用户统计信息和DNS配置*
 
 ![客户端管理](screenshots/04-client-management.png)
-*客户端管理页面 - 管理用户的AdGuardHome客户端*
+*客户端管理页面 - 管理用户的{{ project_name }}客户端*
 
 
 ### 📊 查询日志增强 | Enhanced Query Logs
@@ -100,7 +100,7 @@ A modern web application designed to simplify AdGuardHome management, featuring 
 *邮件配置页面 - 配置SMTP邮件服务器*
 
 ### 🔧 系统配置 | System Configuration
-- **AdGuardHome 配置** | **AdGuardHome Config**：管理 AdGuardHome API 连接 | Manage AdGuardHome API connections
+- **{{ project_name }} 配置** | **{{ project_name }} Config**：管理 {{ project_name }} API 连接 | Manage {{ project_name }} API connections
 - **DNS 配置** | **DNS Configuration**：支持 DNS-over-QUIC、DNS-over-TLS、DNS-over-HTTPS 配置 | Support DNS-over-QUIC, DNS-over-TLS, DNS-over-HTTPS configuration
 - **邮件配置** | **Email Configuration**：SMTP 邮件服务器配置 | SMTP email server configuration
 - **系统设置** | **System Settings**：各种系统参数配置 | Various system parameter configuration
@@ -111,8 +111,8 @@ A modern web application designed to simplify AdGuardHome management, featuring 
 ![用户管理](screenshots/06-user-management.png)
 *用户管理页面 - 管理系统用户*
 
-![AdGuardHome配置](screenshots/07-adguard-config.png)
-*AdGuardHome配置页面 - 配置API连接*
+![{{ project_name }}配置](screenshots/07-adguard-config.png)
+*{{ project_name }}配置页面 - 配置API连接*
 
 ![DNS配置](screenshots/08-dns-config.png)
 *DNS配置页面 - 配置DNS-over-QUIC/TLS/HTTPS*
@@ -148,7 +148,7 @@ A modern web application designed to simplify AdGuardHome management, featuring 
 - **操作系统** | **Operating System**: Linux、Windows、macOS
 - **内存** | **Memory**: 至少 2GB RAM（推荐 4GB）| At least 2GB RAM (4GB recommended)
 - **存储** | **Storage**: 至少 1GB 可用空间 | At least 1GB available space
-- **网络** | **Network**: 需要访问 AdGuardHome API 和互联网（用于 AI 分析）| Need access to AdGuardHome API and internet (for AI analysis)
+- **网络** | **Network**: 需要访问 {{ project_name }} API 和互联网（用于 AI 分析）| Need access to {{ project_name }} API and internet (for AI analysis)
 
 ### 安装方式 | Installation Methods
 
@@ -223,12 +223,12 @@ python run.py
 
 ### 初始配置 | Initial Configuration
 
-1. **环境变量配置** | **Environment Variables Configuration**：在系统后台配置必要的环境变量（SECRET_KEY、AdGuardHome连接信息等）| Configure necessary environment variables in system backend (SECRET_KEY, AdGuardHome connection info, etc.)
+1. **环境变量配置** | **Environment Variables Configuration**：在系统后台配置必要的环境变量（SECRET_KEY、{{ project_name }}连接信息等）| Configure necessary environment variables in system backend (SECRET_KEY, {{ project_name }} connection info, etc.)
 2. **访问系统** | **Access System**：打开浏览器访问 `http://localhost:5000` | Open browser and visit `http://localhost:5000`
 3. **注册管理员** | **Register Administrator**：注册第一个用户账号（将自动成为管理员）| Register the first user account (will automatically become administrator)
-4. **配置 AdGuardHome** | **Configure AdGuardHome**：在管理员后台配置 AdGuardHome API 连接 | Configure AdGuardHome API connection in admin backend
+4. **配置 {{ project_name }}** | **Configure {{ project_name }}**：在管理员后台配置 {{ project_name }} API 连接 | Configure {{ project_name }} API connection in admin backend
 
-> **注意** | **Note**：所有环境变量配置（如SECRET_KEY、AdGuardHome连接信息、邮件服务配置等）都应该在系统后台进行设置，而不是通过配置文件。详细的环境变量说明请参考下方的「配置说明」部分。| All environment variable configurations (such as SECRET_KEY, AdGuardHome connection info, email service configuration, etc.) should be set in the system backend, not through configuration files. For detailed environment variable descriptions, please refer to the "Configuration Instructions" section below.
+> **注意** | **Note**：所有环境变量配置（如SECRET_KEY、{{ project_name }}连接信息、邮件服务配置等）都应该在系统后台进行设置，而不是通过配置文件。详细的环境变量说明请参考下方的「配置说明」部分。| All environment variable configurations (such as SECRET_KEY, {{ project_name }} connection info, email service configuration, etc.) should be set in the system backend, not through configuration files. For detailed environment variable descriptions, please refer to the "Configuration Instructions" section below.
 
 ## 📖 使用指南
 
@@ -249,7 +249,7 @@ python run.py
 
 3. **基础配置** | **Basic Configuration**
    - 登录后进入管理员后台 | Enter admin backend after login
-   - 配置 AdGuardHome API 连接信息 | Configure AdGuardHome API connection information
+   - 配置 {{ project_name }} API 连接信息 | Configure {{ project_name }} API connection information
    - 设置域名解析服务（可选）| Set domain resolution service (optional)
    - 配置邮件服务（可选）| Configure email service (optional)
 
@@ -323,12 +323,12 @@ python run.py
 
 #### 系统配置管理
 
-**AdGuardHome 配置**
-1. 进入管理员后台 → 系统配置 → AdGuardHome 配置
+**{{ project_name }} 配置**
+1. 进入管理员后台 → 系统配置 → {{ project_name }} 配置
 2. 填写连接信息：
-   - **API 地址**：AdGuardHome 的 API 地址（如：http://192.168.1.100:3000）
-   - **用户名**：AdGuardHome 管理员用户名
-   - **密码**：AdGuardHome 管理员密码
+   - **API 地址**：{{ project_name }} 的 API 地址（如：http://192.168.1.100:3000）
+   - **用户名**：{{ project_name }} 管理员用户名
+   - **密码**：{{ project_name }} 管理员密码
 3. 点击「测试连接」验证配置
 4. 保存配置
 
@@ -390,7 +390,7 @@ python run.py
 2. 查看系统操作记录：
    - **用户操作**：登录、注册、配置修改等
    - **系统操作**：自动任务执行、错误记录等
-   - **API 调用**：与 AdGuardHome 的交互记录
+   - **API 调用**：与 {{ project_name }} 的交互记录
 3. 可按时间、用户、操作类型进行过滤
 
 **系统统计信息**
@@ -468,8 +468,8 @@ python run.py
 
 #### 连接问题
 
-**无法连接 AdGuardHome**
-1. 检查 AdGuardHome 服务是否正常运行
+**无法连接 {{ project_name }}**
+1. 检查 {{ project_name }} 服务是否正常运行
 2. 验证 API 地址是否正确（注意端口号）
 3. 确认用户名和密码是否正确
 4. 检查网络连接和防火墙设置
@@ -671,7 +671,7 @@ adghm/
 ### 核心特性 | Core Features
 
 - ✅ **多用户支持** | **Multi-user Support**：独立账户和权限管理，支持管理员和普通用户角色 | Independent account and permission management, supporting administrator and regular user roles
-- ✅ **客户端管理** | **Client Management**：AdGuardHome 客户端的创建、配置和监控 | Creation, configuration and monitoring of AdGuardHome clients
+- ✅ **客户端管理** | **Client Management**：{{ project_name }} 客户端的创建、配置和监控 | Creation, configuration and monitoring of {{ project_name }} clients
 - ✅ **DNS 配置管理** | **DNS Configuration Management**：支持 DNS-over-QUIC、DNS-over-TLS、DNS-over-HTTPS | Support for DNS-over-QUIC, DNS-over-TLS, DNS-over-HTTPS
 - ✅ **AI 智能分析** | **AI Intelligent Analysis**：集成 DeepSeek AI 进行域名威胁分析 | Integrate DeepSeek AI for domain threat analysis
 - ✅ **VIP会员系统** | **VIP Membership System**：多层级会员权益管理 | Multi-tier membership benefits management
@@ -691,7 +691,7 @@ adghm/
 - 🔒 **密码安全** | **Password Security**：使用 Werkzeug 2.3.7 安全哈希算法 | Using Werkzeug 2.3.7 secure hashing algorithms
 - 🔒 **会话管理** | **Session Management**：Flask-Login 0.6.2 安全会话控制 | Flask-Login 0.6.2 secure session control
 - 🔒 **权限控制** | **Access Control**：基于角色的访问控制（RBAC）| Role-based access control (RBAC)
-- 🔒 **API 安全** | **API Security**：AdGuardHome API 认证和授权 | AdGuardHome API authentication and authorization
+- 🔒 **API 安全** | **API Security**：{{ project_name }} API 认证和授权 | {{ project_name }} API authentication and authorization
 - 🔒 **数据保护** | **Data Protection**：敏感配置信息加密存储 | Encrypted storage of sensitive configuration information
 - 🔒 **输入验证** | **Input Validation**：WTForms 3.0.1 表单验证和 CSRF 保护 | WTForms 3.0.1 form validation and CSRF protection
 - 🔒 **SQL 注入防护** | **SQL Injection Protection**：SQLAlchemy 2.0.23 ORM 安全查询 | SQLAlchemy 2.0.23 ORM secure queries
@@ -751,7 +751,7 @@ adghm/
 ### v1.0.0 (2023-10-01)
 - 🎉 首次正式发布 | First official release
 - ✨ 完整的用户管理系统 | Complete user management system
-- ✨ AdGuard Home 集成 | AdGuard Home integration
+- ✨ {{ project_name }} 集成 | {{ project_name }} integration
 - ✨ DNS 配置管理 | DNS configuration management
 - ✨ 查询日志功能 | Query log functionality
 
@@ -772,7 +772,7 @@ adghm/
 感谢以下开源项目的支持： | Thanks to the following open source projects for their support:
 
 - [Flask](https://flask.palletsprojects.com/) - Web 框架 | Web Framework
-- [AdGuardHome](https://adguardhome.adguard.com/) - DNS 服务器 | DNS Server
+- [{{ project_name }}](https://{{ project_name }}.adguard.com/) - DNS 服务器 | DNS Server
 - [Bootstrap](https://getbootstrap.com/) - CSS 框架 | CSS Framework
 - [DeepSeek](https://platform.deepseek.com/) - AI 服务 | AI Service
 - [OpenList](https://openlist.cc/) - 域名列表服务 | Domain List Service

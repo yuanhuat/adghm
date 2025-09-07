@@ -1,4 +1,4 @@
-# AdGuard Home API Change Log
+# {{ project_name }} API Change Log
 
 <!-- TODO(a.garipov): Reformat in accordance with the KeepAChangelog spec. -->
 
@@ -65,7 +65,7 @@
 
 ### The new fields `"upstreams_cache_enabled"` and `"upstreams_cache_size"` in `Client` object
 
-- The new field `"upstreams_cache_enabled"` in `GET /control/clients`, `GET /control/clients/find`, `POST /control/clients/add`, and `POST /control/clients/update` methods shows if client’s DNS cache is enabled for the client.  If not set AdGuard Home will use default value (false).
+- The new field `"upstreams_cache_enabled"` in `GET /control/clients`, `GET /control/clients/find`, `POST /control/clients/add`, and `POST /control/clients/update` methods shows if client’s DNS cache is enabled for the client.  If not set {{ project_name }} will use default value (false).
 
 - The new field `"upstreams_cache_size"` in `GET /control/clients`, `GET /control/clients/find`, `POST /control/clients/add`, and `POST /control/clients/update` methods is the size of client’s DNS cache in bytes.
 
@@ -210,19 +210,19 @@ The new field `blocked_services_schedule` has been added to JSON objects.  It ha
 
 ### `GET /control/clients` And `GET /control/clients/find`
 
-- The new optional fields `"ignore_querylog"` and `"ignore_statistics"` are set if AdGuard Home excludes client activity from query log or statistics.
+- The new optional fields `"ignore_querylog"` and `"ignore_statistics"` are set if {{ project_name }} excludes client activity from query log or statistics.
 
 ### `POST /control/clients/add` And `POST /control/clients/update`
 
-- The new optional fields `"ignore_querylog"` and `"ignore_statistics"` make AdGuard Home exclude client activity from query log or statistics.  If not set AdGuard Home will use default value (false).  It can be changed in the future versions.
+- The new optional fields `"ignore_querylog"` and `"ignore_statistics"` make {{ project_name }} exclude client activity from query log or statistics.  If not set {{ project_name }} will use default value (false).  It can be changed in the future versions.
 
 ## v0.107.27: API changes
 
 ### The new optional fields `"edns_cs_use_custom"` and `"edns_cs_custom_ip"` in `DNSConfig`
 
-- The new optional fields `"edns_cs_use_custom"` and `"edns_cs_custom_ip"` in `POST /control/dns_config` method makes AdGuard Home use or not use the custom IP for EDNS Client Subnet.
+- The new optional fields `"edns_cs_use_custom"` and `"edns_cs_custom_ip"` in `POST /control/dns_config` method makes {{ project_name }} use or not use the custom IP for EDNS Client Subnet.
 
-- The new optional fields `"edns_cs_use_custom"` and `"edns_cs_custom_ip"` in `GET /control/dns_info` method are set if AdGuard Home uses custom IP for EDNS Client Subnet.
+- The new optional fields `"edns_cs_use_custom"` and `"edns_cs_custom_ip"` in `GET /control/dns_info` method are set if {{ project_name }} uses custom IP for EDNS Client Subnet.
 
 ### Deprecated statistics APIs
 
@@ -371,7 +371,7 @@ The following experimental beta APIs have been removed:
 - `POST /control/install/check_config_beta`;
 - `POST /control/install/configure_beta`.
 
-They never quite worked properly, and the future new version of AdGuard Home API will probably be different.
+They never quite worked properly, and the future new version of {{ project_name }} API will probably be different.
 
 ## v0.107.22: API changes
 
@@ -415,7 +415,7 @@ Use `GET /control/blocked_services/all`.
 
 ## v0.107.15: `POST` Requests Without Bodies
 
-As an additional CSRF protection measure, AdGuard Home now ensures that requests that change its state but have no body do not have a `Content-Type` header set on them.
+As an additional CSRF protection measure, {{ project_name }} now ensures that requests that change its state but have no body do not have a `Content-Type` header set on them.
 
 This concerns the following APIs:
 
@@ -497,7 +497,7 @@ Previously, the API accepted the name of the network interface as a plain-text s
 
 ### The new field `"version"` in `AddressesInfo`
 
-- The new field `"version"` in `GET /install/get_addresses` is the version of the AdGuard Home instance.
+- The new field `"version"` in `GET /install/get_addresses` is the version of the {{ project_name }} instance.
 
 ## v0.107.0: API changes
 
@@ -535,9 +535,9 @@ Previously, the API accepted the name of the network interface as a plain-text s
 
 ### The new field `"cache_optimistic"` in DNS configuration
 
-- The new optional field `"cache_optimistic"` in `POST /control/dns_config` method makes AdGuard Home use or not use the optimistic cache mechanism.
+- The new optional field `"cache_optimistic"` in `POST /control/dns_config` method makes {{ project_name }} use or not use the optimistic cache mechanism.
 
-- The new field `"cache_optimistic"` in `GET /control/dns_info` method is true if AdGuard Home uses the optimistic cache mechanism.
+- The new field `"cache_optimistic"` in `GET /control/dns_info` method is true if {{ project_name }} uses the optimistic cache mechanism.
 
 ### New possible value of `"interval"` field in `QueryLogConfig`
 
@@ -573,7 +573,7 @@ Previously, the API accepted the name of the network interface as a plain-text s
 
 ### The new field `"default_local_ptr_upstreams"` in `GET /control/dns_info`
 
-- The new optional field `"default_local_ptr_upstreams"` is the list of IP addresses AdGuard Home would use by default to resolve PTR request for addresses from locally-served networks.
+- The new optional field `"default_local_ptr_upstreams"` is the list of IP addresses {{ project_name }} would use by default to resolve PTR request for addresses from locally-served networks.
 
 ### The field `"use_private_ptr_resolvers"` in DNS configuration
 
@@ -670,7 +670,7 @@ Previously, the API accepted the name of the network interface as a plain-text s
 
   As well as other documentation fixes.
 
-[Identifying clients]: https://github.com/AdguardTeam/AdGuardHome/wiki/Clients#idclient
+[Identifying clients]: https://github.com/AdguardTeam/{{ project_name }}/wiki/Clients#idclient
 
 ## v0.103: API changes
 
@@ -688,7 +688,7 @@ Previously, the API accepted the name of the network interface as a plain-text s
 
 - Added optional "offset" and "limit" parameters.
 
-  We are still using "older_than" approach in AdGuard Home UI, but we realize that it’s easier to use offset/limit so here is this option now.
+  We are still using "older_than" approach in {{ project_name }} UI, but we realize that it’s easier to use offset/limit so here is this option now.
 
 ## v0.102: API changes
 
@@ -924,7 +924,7 @@ Replaces the `POST /control/enable_protection` and `POST /control/disable_protec
 
 ### A note about web user authentication
 
-If AdGuard Home’s web user is password-protected, a web client must use authentication mechanism when sending requests to server.  Basic access authentication is the most simple method - a client must pass `Authorization` HTTP header along with all requests:
+If {{ project_name }}’s web user is password-protected, a web client must use authentication mechanism when sending requests to server.  Basic access authentication is the most simple method - a client must pass `Authorization` HTTP header along with all requests:
 
   ```http
   Authorization: Basic BASE64_DATA

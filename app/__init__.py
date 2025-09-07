@@ -46,6 +46,20 @@ def create_app():
     with app.app_context():
         db.create_all()
     
+    # 添加全局模板上下文处理器
+    @app.context_processor
+    def inject_global_vars():
+        """注入全局模板变量
+        
+        Returns:
+            dict: 包含全局变量的字典
+        """
+        from app.models import SystemConfig
+        config = SystemConfig.get_config() if hasattr(SystemConfig, 'get_config') else None
+        return {
+            'project_name': config.project_name if config and hasattr(config, 'project_name') else '{{ project_name }}'
+        }
+    
     # 初始化调度器
     scheduler.init_app(app)
     scheduler.start()

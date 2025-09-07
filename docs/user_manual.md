@@ -1,4 +1,4 @@
-# AdGuardHome 管理系统使用手册
+# {{ project_name }} 管理系统使用手册
 
 ## 目录
 
@@ -17,7 +17,7 @@
 
 ## 系统概述
 
-AdGuardHome 管理系统（ADGHM）是一个专为简化 AdGuardHome 管理而设计的 Web 应用程序。本系统允许多用户管理各自的 AdGuardHome 客户端，并通过阿里云域名解析服务自动更新动态 IP 地址，实现远程访问和管理。
+{{ project_name }} 管理系统（ADGHM）是一个专为简化 {{ project_name }} 管理而设计的 Web 应用程序。本系统允许多用户管理各自的 {{ project_name }} 客户端，并通过阿里云域名解析服务自动更新动态 IP 地址，实现远程访问和管理。
 
 ### 系统特点
 
@@ -104,10 +104,10 @@ AdGuardHome 管理系统（ADGHM）是一个专为简化 AdGuardHome 管理而�
 
 ### 系统配置
 
-#### AdGuardHome API 配置
+#### {{ project_name }} API 配置
 
 1. 登录管理员账户
-2. 访问"管理员后台" > "系统配置" > "AdGuardHome 配置"
+2. 访问"管理员后台" > "系统配置" > "{{ project_name }} 配置"
 3. 输入以下信息：
    - API 基础 URL（例如：http://your-adguard-home:3000）
    - 认证用户名
@@ -183,29 +183,29 @@ AdGuardHome 管理系统（ADGHM）是一个专为简化 AdGuardHome 管理而�
 #### 问题：域名解析成功但无法访问
 
 **可能原因**：
-- AdGuardHome 实例未运行
+- {{ project_name }} 实例未运行
 - 防火墙阻止连接
 - 端口未开放
 
 **解决方案**：
-1. 确认 AdGuardHome 实例正在运行
+1. 确认 {{ project_name }} 实例正在运行
 2. 检查防火墙设置
 3. 确认相关端口已开放
 
-### AdGuardHome 连接问题
+### {{ project_name }} 连接问题
 
-#### 问题：无法连接 AdGuardHome API
+#### 问题：无法连接 {{ project_name }} API
 
 **可能原因**：
 - API URL 错误
 - 认证信息错误
-- AdGuardHome 实例未运行
+- {{ project_name }} 实例未运行
 
 **解决方案**：
 1. 检查 API URL 是否正确
 2. 确认认证用户名和密码
-3. 确认 AdGuardHome 实例正在运行
-4. 尝试直接访问 AdGuardHome 管理界面
+3. 确认 {{ project_name }} 实例正在运行
+4. 尝试直接访问 {{ project_name }} 管理界面
 
 ### 用户账户问题
 
@@ -221,12 +221,12 @@ AdGuardHome 管理系统（ADGHM）是一个专为简化 AdGuardHome 管理而�
 
 - 支持的浏览器：Chrome、Firefox、Edge（最新版本）
 - 网络要求：稳定的互联网连接
-- AdGuardHome 版本要求：v0.107.0 或更高版本
+- {{ project_name }} 版本要求：v0.107.0 或更高版本
 
 ### 术语表
 
-- **AdGuardHome**：一个网络范围内的广告和跟踪器拦截 DNS 服务器
-- **客户端**：在 AdGuardHome 中定义的设备或网络
+- **{{ project_name }}**：一个网络范围内的广告和跟踪器拦截 DNS 服务器
+- **客户端**：在 {{ project_name }} 中定义的设备或网络
 - **域名映射**：将子域名与特定 IP 地址关联的记录
 - **AccessKey**：阿里云 API 的访问凭证
 
