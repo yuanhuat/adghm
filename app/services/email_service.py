@@ -51,6 +51,11 @@ class EmailService:
                 current_app.logger.error(f'邮箱配置无效: {error_msg}')
                 return False
             
+            # 获取系统配置中的项目名称
+            from app.models.system_config import SystemConfig
+            system_config = SystemConfig.get_config()
+            project_name = system_config.project_name if system_config.project_name != '{{ project_name }}' else 'AdGuard Home'
+            
             # 动态更新Flask Mail配置
             app.config.update(
                 MAIL_SERVER=email_config.mail_server,
@@ -65,9 +70,9 @@ class EmailService:
             mail.init_app(app)
             
             msg = Message(
-                subject=f'[{{ project_name }}管理系统] {subject}',
+                subject=f'[{project_name}管理系统] {subject}',
                 recipients=[to],
-                html=render_template(f'email/{template}.html', current_year=datetime.now().year, **kwargs),
+                html=render_template(f'email/{template}.html', current_year=datetime.now().year, project_name=project_name, **kwargs),
                 sender=email_config.mail_default_sender or email_config.mail_username
             )
             

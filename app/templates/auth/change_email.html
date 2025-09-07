@@ -242,7 +242,7 @@
             button.disabled = true;
             button.textContent = '发送中...';
             
-            fetch('/auth/send-verification-code-for-change', {
+            fetch('/send-verification-code-for-change', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
