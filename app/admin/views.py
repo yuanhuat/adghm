@@ -18,6 +18,7 @@ from app.models.openlist_config import OpenListConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
 from app.models.vip_config import VipConfig
+from app.models.sdk import Sdk
 from app.models.query_log_analysis import QueryLogAnalysis, QueryLogExport
 
 from app.services.email_service import EmailService
@@ -1692,7 +1693,331 @@ def manage_ai_analysis_config():
             return jsonify({
                 'success': False,
                 'error': str(e)
+            })
+
+
+@admin.route('/sdk-generate', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def sdk_generate():
+    """SDK生成页面
+    
+    允许管理员生成SDK充值码，支持单个生成和批量生成。
+    """
+    if request.method == 'POST':
+        # 检查是否是AJAX请求
+        is_ajax = request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        try:
+            # 获取表单数据
+            if is_ajax:
+                data = request.get_json()
+                vip_days = int(data.get('vip_days', 30))
+                count = int(data.get('count', 1))
+                description = data.get('description', '').strip()
+            else:
+                vip_days = int(request.form.get('vip_days', 30))
+                count = int(request.form.get('count', 1))
+                description = request.form.get('description', '').strip()
+            
+            # 验证参数
+            if vip_days <= 0:
+                if is_ajax:
+                    return jsonify({'success': False, 'message': 'VIP天数必须大于0'}), 400
+                flash('VIP天数必须大于0', 'error')
+                return redirect(url_for('admin.sdk_generate'))
+            
+            if count <= 0 or count > 1000:
+                if is_ajax:
+                    return jsonify({'success': False, 'message': '生成数量必须在1-1000之间'}), 400
+                flash('生成数量必须在1-1000之间', 'error')
+                return redirect(url_for('admin.sdk_generate'))
+            
+            # 批量生成SDK
+            sdks = Sdk.batch_create(
+                vip_days=vip_days,
+                count=count,
+                created_by=current_user.id,
+                description=description
+            )
+            
+            db.session.commit()
+            
+            # 记录操作日志
+            log = OperationLog(
+                user_id=current_user.id,
+                operation_type='generate_sdk',
+                target_type='SDK',
+                target_id='batch',
+                details=f'生成{count}个SDK充值码，每个{vip_days}天VIP'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            # 返回结果
+            if is_ajax:
+                result = {
+                    'success': True,
+                    'message': f'成功生成{count}个SDK充值码',
+                    'data': {
+                        'count': count,
+                        'vip_days': vip_days,
+                        'sdks': [{'sdk_code': sdk.sdk_code, 'id': sdk.id} for sdk in sdks]
+                    }
+                }
+                
+                # 如果是单个生成，在消息中显示SDK码
+                if count == 1:
+                    result['data']['single_sdk_code'] = sdks[0].sdk_code
+                
+                return jsonify(result)
+            else:
+                flash(f'成功生成{count}个SDK充值码', 'success')
+                
+                # 如果是单个生成，显示生成的SDK码
+                if count == 1:
+                    flash(f'生成的SDK码：{sdks[0].sdk_code}', 'info')
+                
+                return redirect(url_for('admin.sdk_manage'))
+            
+        except Exception as e:
+            db.session.rollback()
+            if is_ajax:
+                return jsonify({'success': False, 'message': f'生成失败：{str(e)}'}), 500
+            flash(f'生成失败：{str(e)}', 'error')
+    
+    return render_template('admin/sdk_generate.html')
+
+
+@admin.route('/sdk-manage')
+@login_required
+@admin_required
+def sdk_manage():
+    """SDK管理页面
+    
+    显示所有SDK充值码，支持查看、删除、导出等操作。
+    """
+    # 如果是AJAX请求，返回JSON数据
+    if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
+        try:
+            page = request.args.get('page', 1, type=int)
+            status_filter = request.args.get('status', 'all')
+            search = request.args.get('search', '').strip()
+            
+            # 构建查询
+            query = Sdk.query
+            
+            # 状态过滤
+            if status_filter and status_filter != 'all':
+                query = query.filter(Sdk.status == status_filter)
+            
+            # 搜索过滤
+            if search:
+                query = query.filter(
+                    db.or_(
+                        Sdk.sdk_code.contains(search),
+                        Sdk.description.contains(search)
+                    )
+                )
+            
+            # 分页
+            sdks = query.order_by(Sdk.created_at.desc()).paginate(
+                page=page, per_page=20, error_out=False
+            )
+            
+            # 统计信息
+            total_days = db.session.query(db.func.sum(Sdk.vip_days)).scalar() or 0
+            stats = {
+                'total': Sdk.query.count(),
+                'unused': Sdk.get_unused_count(),
+                'used': Sdk.get_used_count(),
+                'total_days': total_days
+            }
+            
+            # 转换为JSON格式
+            sdk_list = []
+            for sdk in sdks.items:
+                # 获取使用者用户名
+                used_by_username = None
+                if sdk.used_by:
+                    user = User.query.get(sdk.used_by)
+                    if user:
+                        used_by_username = user.username
+                
+                sdk_data = {
+                    'id': sdk.id,
+                    'sdk_code': sdk.sdk_code,
+                    'vip_days': sdk.vip_days,
+                    'status': sdk.status,
+                    'description': sdk.description or '',
+                    'created_at': sdk.created_at.strftime('%Y-%m-%d %H:%M:%S') if sdk.created_at else '',
+                    'used_at': sdk.used_at.strftime('%Y-%m-%d %H:%M:%S') if sdk.used_at else '',
+                    'used_by': used_by_username
+                }
+                sdk_list.append(sdk_data)
+            
+            return jsonify({
+                'success': True,
+                'data': {
+                    'sdks': sdk_list,
+                    'pagination': {
+                        'page': sdks.page,
+                        'pages': sdks.pages,
+                        'per_page': sdks.per_page,
+                        'total': sdks.total,
+                        'has_prev': sdks.has_prev,
+                        'has_next': sdks.has_next
+                    },
+                    'stats': stats
+                }
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': f'获取数据失败：{str(e)}'
             }), 500
+    
+    # 普通请求返回HTML页面
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', 'all')
+    search = request.args.get('search', '').strip()
+    
+    # 构建查询
+    query = Sdk.query
+    
+    # 状态过滤
+    if status_filter and status_filter != 'all':
+        query = query.filter(Sdk.status == status_filter)
+    
+    # 搜索过滤
+    if search:
+        query = query.filter(
+            db.or_(
+                Sdk.sdk_code.contains(search),
+                Sdk.description.contains(search)
+            )
+        )
+    
+    # 分页
+    sdks = query.order_by(Sdk.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    # 统计信息
+    total_days = db.session.query(db.func.sum(Sdk.vip_days)).scalar() or 0
+    stats = {
+        'total': Sdk.query.count(),
+        'unused': Sdk.get_unused_count(),
+        'used': Sdk.get_used_count(),
+        'total_days': total_days
+    }
+    
+    return render_template('admin/sdk_manage.html', 
+                         sdks=sdks, 
+                         stats=stats, 
+                         status_filter=status_filter,
+                         search=search)
+
+
+@admin.route('/sdk-delete/<int:sdk_id>', methods=['POST'])
+@login_required
+@admin_required
+def sdk_delete(sdk_id):
+    """删除SDK
+    
+    Args:
+        sdk_id: SDK ID
+    """
+    try:
+        sdk = Sdk.query.get_or_404(sdk_id)
+        
+        # 只能删除未使用的SDK
+        if sdk.status != 'unused':
+            return jsonify({
+                'success': False,
+                'message': '只能删除未使用的SDK'
+            })
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='delete_sdk',
+            target_type='SDK',
+            target_id=str(sdk_id),
+            details=f'删除SDK充值码：{sdk.sdk_code}'
+        )
+        db.session.add(log)
+        
+        db.session.delete(sdk)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'SDK已删除'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'删除失败：{str(e)}'
+        })
+
+
+@admin.route('/sdk-export')
+@login_required
+@admin_required
+def sdk_export():
+    """导出SDK列表
+    
+    导出未使用的SDK充值码为CSV文件。
+    """
+    try:
+        from flask import make_response
+        import csv
+        from io import StringIO
+        
+        # 获取未使用的SDK
+        sdks = Sdk.query.filter_by(status='unused').order_by(Sdk.created_at.desc()).all()
+        
+        # 创建CSV内容
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # 写入表头
+        writer.writerow(['SDK充值码', 'VIP天数', '创建时间', '备注'])
+        
+        # 写入数据
+        for sdk in sdks:
+            writer.writerow([
+                sdk.sdk_code,
+                sdk.vip_days,
+                sdk.created_at.strftime('%Y-%m-%d %H:%M:%S') if sdk.created_at else '',
+                sdk.description or ''
+            ])
+        
+        # 创建响应
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+        response.headers['Content-Disposition'] = f'attachment; filename=sdk_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        
+        # 记录操作日志
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='export_sdk',
+            target_type='SDK',
+            target_id='export',
+            details=f'导出{len(sdks)}个未使用的SDK充值码'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return response
+        
+    except Exception as e:
+        flash(f'导出失败：{str(e)}', 'error')
+        return redirect(url_for('admin.sdk_manage')), 500
 
 
 @admin.route('/openlist-config', methods=['GET', 'POST'])

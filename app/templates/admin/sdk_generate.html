@@ -1,0 +1,229 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">SDK生成</h3>
+                </div>
+                <div class="card-body">
+                    <!-- 单个生成 -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">单个生成</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="singleGenerateForm">
+                                        <div class="mb-3">
+                                            <label for="singleDays" class="form-label">VIP天数</label>
+                                            <input type="number" class="form-control" id="singleDays" name="days" min="1" max="3650" value="30" required>
+                                            <div class="form-text">设置SDK可兑换的VIP天数（1-3650天）</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">生成SDK</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 批量生成 -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">批量生成</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="batchGenerateForm">
+                                        <div class="mb-3">
+                                            <label for="batchDays" class="form-label">VIP天数</label>
+                                            <input type="number" class="form-control" id="batchDays" name="days" min="1" max="3650" value="30" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="batchCount" class="form-label">生成数量</label>
+                                            <input type="number" class="form-control" id="batchCount" name="count" min="1" max="1000" value="10" required>
+                                            <div class="form-text">一次最多生成1000个SDK</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">批量生成</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 生成结果 -->
+                    <div id="generateResult" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">生成结果</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="resultContent"></div>
+                                <div class="mt-3">
+                                    <button id="copyAllBtn" class="btn btn-outline-primary">复制所有SDK</button>
+                                    <button id="downloadBtn" class="btn btn-outline-success">下载为文本文件</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 单个生成表单提交
+    $('#singleGenerateForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const days = $('#singleDays').val();
+        
+        $.ajax({
+            url: '/admin/sdk-generate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                vip_days: parseInt(days),
+                count: 1
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showGenerateResult(response.data.sdks);
+                    showAlert('success', '生成成功！');
+                } else {
+                    showAlert('danger', response.message || '生成失败');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showAlert('danger', response?.message || '生成失败，请稍后重试');
+            }
+        });
+    });
+    
+    // 批量生成表单提交
+    $('#batchGenerateForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const days = $('#batchDays').val();
+        const count = $('#batchCount').val();
+        
+        if (count > 1000) {
+            showAlert('warning', '一次最多生成1000个SDK');
+            return;
+        }
+        
+        // 显示加载状态
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.text();
+        submitBtn.prop('disabled', true).text('生成中...');
+        
+        $.ajax({
+            url: '/admin/sdk-generate',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                vip_days: parseInt(days),
+                count: parseInt(count)
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showGenerateResult(response.data.sdks);
+                    showAlert('success', `成功生成 ${response.data.sdks.length} 个SDK！`);
+                } else {
+                    showAlert('danger', response.message || '生成失败');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showAlert('danger', response?.message || '生成失败，请稍后重试');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+    
+    // 显示生成结果
+    function showGenerateResult(sdks) {
+        let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>SDK码</th><th>VIP天数</th><th>创建时间</th></tr></thead><tbody>';
+        
+        sdks.forEach(function(sdk) {
+            html += `<tr><td><code>${sdk.sdk_code}</code></td><td>${sdk.vip_days || sdk.days}天</td><td>${new Date().toLocaleString()}</td></tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        $('#resultContent').html(html);
+        $('#generateResult').show();
+        
+        // 存储SDK数据用于复制和下载
+        window.generatedSdks = sdks;
+    }
+    
+    // 复制所有SDK
+    $('#copyAllBtn').on('click', function() {
+        if (!window.generatedSdks) return;
+        
+        const sdkCodes = window.generatedSdks.map(sdk => sdk.sdk_code).join('\n');
+        
+        navigator.clipboard.writeText(sdkCodes).then(function() {
+            showAlert('success', '已复制到剪贴板');
+        }).catch(function() {
+            // 降级方案
+            const textArea = document.createElement('textarea');
+            textArea.value = sdkCodes;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showAlert('success', '已复制到剪贴板');
+        });
+    });
+    
+    // 下载为文本文件
+    $('#downloadBtn').on('click', function() {
+        if (!window.generatedSdks) return;
+        
+        const sdkCodes = window.generatedSdks.map(sdk => `${sdk.sdk_code} (${sdk.vip_days || sdk.days}天)`).join('\n');
+        const blob = new Blob([sdkCodes], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SDK_${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showAlert('success', '文件下载已开始');
+    });
+    
+    // 显示提示信息
+    function showAlert(type, message) {
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // 移除现有的alert
+        $('.alert').remove();
+        
+        // 添加新的alert
+        $('.container-fluid').prepend(alertHtml);
+        
+        // 3秒后自动消失
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

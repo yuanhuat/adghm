@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDK兑换 - {{ project_name }}用户管理系统</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="apple-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>{{ project_name }}</span>
+            </div>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
+                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
+                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                {% if current_user.is_vip() %}
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">影视</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.movies') }}">注册</a>
+                        <a href="{{ url_for('main.movies_guide') }}">使用方法</a>
+                    </div>
+                </div>
+                {% else %}
+                <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
+                {% endif %}
+                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
+                {% if donation_config and donation_config.show_ranking %}
+                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
+                {% endif %}
+                <a href="{{ url_for('main.sdk_redeem') }}" class="nav-link active">SDK兑换</a>
+                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
+                    <div class="nav-dropdown-menu">
+                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
+                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- SDK兑换页面内容 -->
+            <section class="sdk-redeem-section">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <svg class="page-icon" viewBox="0 0 24 24" width="32" height="32">
+                            <path fill="currentColor" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        SDK兑换
+                    </h1>
+                    <p class="page-subtitle">使用SDK码兑换VIP会员服务</p>
+                </div>
+
+                <div class="sdk-redeem-container">
+                    <div class="sdk-redeem-card">
+                        <div class="card-header">
+                            <h3>兑换SDK码</h3>
+                            <p>请输入有效的SDK码来兑换VIP服务</p>
+                        </div>
+                        
+                        <form id="sdk-redeem-form" class="modern-form">
+                            <div class="form-group">
+                                <label for="sdk-code">SDK码</label>
+                                <input type="text" id="sdk-code" name="sdk_code" required 
+                                       placeholder="请输入SDK码" maxlength="50">
+                                <small class="form-help">SDK码通常为字母数字组合</small>
+                            </div>
+                            
+                            <button type="submit" class="btn-modern primary" id="redeem-btn">
+                                <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                立即兑换
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="sdk-info-card">
+                        <div class="card-header">
+                            <h3>兑换说明</h3>
+                        </div>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <svg class="info-icon" viewBox="0 0 24 24" width="20" height="20">
+                                    <path fill="currentColor" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <div>
+                                    <h4>VIP特权</h4>
+                                    <p>兑换成功后可享受VIP用户的所有特权服务</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <svg class="info-icon" viewBox="0 0 24 24" width="20" height="20">
+                                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                <div>
+                                    <h4>一次性使用</h4>
+                                    <p>每个SDK码只能使用一次，请妥善保管</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <svg class="info-icon" viewBox="0 0 24 24" width="20" height="20">
+                                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                </svg>
+                                <div>
+                                    <h4>有效期限</h4>
+                                    <p>SDK码有有效期限制，请及时使用</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 多模态弹窗 -->
+    <div id="sdkModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader">
+                <h3 id="modalTitle">提示</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon" id="modalIcon"></div>
+                <div id="modalMessage">消息内容</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#sdk-redeem-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const sdkCode = $('#sdk-code').val().trim();
+                const redeemBtn = $('#redeem-btn');
+                
+                if (!sdkCode) {
+                    alert('请输入SDK码');
+                    return;
+                }
+                
+                // 禁用按钮，防止重复提交
+                redeemBtn.prop('disabled', true).text('兑换中...');
+                
+                $.ajax({
+                    url: '{{ url_for("main.api_sdk_redeem") }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        sdk_code: sdkCode
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            showModal('兑换成功', 'SDK兑换成功！已为您添加 ' + response.data.days + ' 天VIP服务', 'success');
+                            $('#sdk-code').val('');
+                            // 3秒后重定向到主页
+                            setTimeout(function() {
+                                window.location.href = '{{ url_for("main.dashboard") }}';
+                            }, 3000);
+                        } else {
+                            showModal('兑换失败', response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        showModal('兑换失败', '网络错误，请稍后重试', 'error');
+                    },
+                    complete: function() {
+                        // 恢复按钮状态
+                        redeemBtn.prop('disabled', false).html('<svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>立即兑换');
+                    }
+                });
+            });
+        });
+        
+        // 显示模态框函数
+        function showModal(title, message, type) {
+            const modal = $('#sdkModal');
+            const modalTitle = $('#modalTitle');
+            const modalMessage = $('#modalMessage');
+            const modalIcon = $('#modalIcon');
+            const modalHeader = $('#modalHeader');
+            
+            modalTitle.text(title);
+            modalMessage.text(message);
+            
+            // 根据类型设置样式
+            modalHeader.removeClass('success error warning info').addClass(type);
+            modalIcon.removeClass('success error warning info').addClass(type);
+            
+            // 设置图标
+            if (type === 'success') {
+                modalIcon.html('<svg viewBox="0 0 24 24" width="48" height="48"><path fill="#28a745" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>');
+            } else if (type === 'error') {
+                modalIcon.html('<svg viewBox="0 0 24 24" width="48" height="48"><path fill="#dc3545" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>');
+            }
+            
+            modal.show();
+        }
+        
+        // 关闭模态框函数
+        function closeModal() {
+            $('#sdkModal').hide();
+        }
+        
+        // 点击模态框外部关闭
+        $(document).on('click', '#sdkModal', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+
+    <style>
+        .sdk-redeem-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-icon {
+            color: #007bff;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .sdk-redeem-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .sdk-redeem-card, .sdk-info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-header p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .info-icon {
+            color: #007bff;
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+        }
+        
+        .info-item h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-item p {
+            color: #6c757d;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .btn-icon {
+            margin-right: 0.5rem;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            padding: 1.5rem 2rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header.success {
+            border-bottom-color: #28a745;
+        }
+        
+        .modal-header.error {
+            border-bottom-color: #dc3545;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-close:hover {
+            color: #000;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .modal-icon {
+            margin-bottom: 1rem;
+        }
+        
+        .modal-footer {
+            padding: 1rem 2rem 1.5rem;
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        @media (max-width: 768px) {
+            .sdk-redeem-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .sdk-redeem-section {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                margin: 20% auto;
+                width: 95%;
+            }
+            
+            .modal-body {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

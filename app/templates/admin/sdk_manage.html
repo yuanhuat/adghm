@@ -1,0 +1,393 @@
+{% extends "admin/base.html" %}
+
+{% block page_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">SDK管理</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" onclick="refreshData()">刷新</button>
+                        <button type="button" class="btn btn-success" onclick="exportSdks()">导出SDK</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 筛选器 -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="">所有状态</option>
+                                <option value="unused">未使用</option>
+                                <option value="used">已使用</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" id="daysFilter" class="form-control" placeholder="筛选天数">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="searchFilter" class="form-control" placeholder="搜索SDK码或使用者">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-primary w-100" onclick="applyFilters()">筛选</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info"><i class="fas fa-ticket-alt"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">总SDK数</span>
+                                    <span class="info-box-number" id="totalCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">已使用</span>
+                                    <span class="info-box-number" id="usedCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">未使用</span>
+                                    <span class="info-box-number" id="unusedCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-primary"><i class="fas fa-calendar"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">总VIP天数</span>
+                                    <span class="info-box-number" id="totalDays">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SDK列表 -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="sdkTable">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th>SDK码</th>
+                                    <th>VIP天数</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>使用时间</th>
+                                    <th>使用者</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sdkTableBody">
+                                <!-- 数据将通过AJAX加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <nav aria-label="SDK分页">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- 分页将通过JavaScript生成 -->
+                        </ul>
+                    </nav>
+                    
+                    <!-- 批量操作 -->
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-danger" onclick="batchDelete()" id="batchDeleteBtn" disabled>
+                            <i class="fas fa-trash"></i> 批量删除
+                        </button>
+                        <span class="ms-2 text-muted" id="selectedCount">已选择 0 项</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">确定要删除这个SDK吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+let pageSize = 20;
+let totalPages = 1;
+let selectedSdks = new Set();
+
+$(document).ready(function() {
+    loadSdkData();
+    
+    // 全选/取消全选
+    $('#selectAll').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.sdk-checkbox').prop('checked', isChecked);
+        
+        if (isChecked) {
+            $('.sdk-checkbox').each(function() {
+                selectedSdks.add($(this).val());
+            });
+        } else {
+            selectedSdks.clear();
+        }
+        
+        updateBatchButtons();
+    });
+    
+    // 单个选择
+    $(document).on('change', '.sdk-checkbox', function() {
+        const sdkId = $(this).val();
+        
+        if ($(this).is(':checked')) {
+            selectedSdks.add(sdkId);
+        } else {
+            selectedSdks.delete(sdkId);
+            $('#selectAll').prop('checked', false);
+        }
+        
+        updateBatchButtons();
+    });
+});
+
+// 加载SDK数据
+function loadSdkData(page = 1) {
+    currentPage = page;
+    
+    const params = new URLSearchParams({
+        page: page,
+        page_size: pageSize,
+        status: $('#statusFilter').val(),
+        days: $('#daysFilter').val(),
+        search: $('#searchFilter').val(),
+        format: 'json'  // 添加format参数告诉后端返回JSON
+    });
+    
+    $.ajax({
+        url: `/admin/sdk-manage?${params.toString()}`,
+        method: 'GET',
+        dataType: 'json',  // 明确指定期望JSON响应
+        success: function(response) {
+            if (response.success) {
+                renderSdkTable(response.data.sdks);
+                renderPagination(response.data.pagination);
+                updateStatistics(response.data.stats);  // 修正为stats
+            } else {
+                showAlert('danger', response.message || '加载数据失败');
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            showAlert('danger', response?.message || '加载数据失败，请稍后重试');
+        }
+    });
+}
+
+// 渲染SDK表格
+function renderSdkTable(sdks) {
+    let html = '';
+    
+    sdks.forEach(function(sdk) {
+        const statusBadge = sdk.status === 'used' ? 
+            '<span class="badge bg-success">已使用</span>' : 
+            '<span class="badge bg-warning">未使用</span>';
+        
+        const usedTime = sdk.used_at ? new Date(sdk.used_at).toLocaleString() : '-';
+        const username = sdk.used_by || '-';
+        
+        html += `
+            <tr>
+                <td><input type="checkbox" class="sdk-checkbox" value="${sdk.id}"></td>
+                <td><code>${sdk.sdk_code}</code></td>
+                <td>${sdk.vip_days}天</td>
+                <td>${statusBadge}</td>
+                <td>${new Date(sdk.created_at).toLocaleString()}</td>
+                <td>${usedTime}</td>
+                <td>${username}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteSdk('${sdk.id}', '${sdk.sdk_code}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#sdkTableBody').html(html);
+    selectedSdks.clear();
+    $('#selectAll').prop('checked', false);
+    updateBatchButtons();
+}
+
+// 渲染分页
+function renderPagination(pagination) {
+    totalPages = pagination.pages;
+    let html = '';
+    
+    // 上一页
+    if (pagination.has_prev) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadSdkData(${pagination.prev_num})">上一页</a></li>`;
+    } else {
+        html += '<li class="page-item disabled"><span class="page-link">上一页</span></li>';
+    }
+    
+    // 页码
+    for (let i = 1; i <= pagination.pages; i++) {
+        if (i === pagination.page) {
+            html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+        } else {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="loadSdkData(${i})">${i}</a></li>`;
+        }
+    }
+    
+    // 下一页
+    if (pagination.has_next) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadSdkData(${pagination.next_num})">下一页</a></li>`;
+    } else {
+        html += '<li class="page-item disabled"><span class="page-link">下一页</span></li>';
+    }
+    
+    $('#pagination').html(html);
+}
+
+// 更新统计信息
+function updateStatistics(stats) {
+    $('#totalCount').text(stats.total);
+    $('#usedCount').text(stats.used);
+    $('#unusedCount').text(stats.unused);
+    $('#totalDays').text(stats.total_days);
+}
+
+// 更新批量操作按钮
+function updateBatchButtons() {
+    const count = selectedSdks.size;
+    $('#selectedCount').text(`已选择 ${count} 项`);
+    $('#batchDeleteBtn').prop('disabled', count === 0);
+}
+
+// 应用筛选
+function applyFilters() {
+    loadSdkData(1);
+}
+
+// 刷新数据
+function refreshData() {
+    loadSdkData(currentPage);
+}
+
+// 删除单个SDK
+function deleteSdk(sdkId, sdkCode) {
+    $('#deleteMessage').text(`确定要删除SDK "${sdkCode}" 吗？`);
+    
+    $('#confirmDeleteBtn').off('click').on('click', function() {
+        $.ajax({
+            url: '/admin/sdk-delete',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ sdk_ids: [sdkId] }),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', '删除成功');
+                    loadSdkData(currentPage);
+                    $('#deleteModal').modal('hide');
+                } else {
+                    showAlert('danger', response.message || '删除失败');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showAlert('danger', response?.message || '删除失败，请稍后重试');
+            }
+        });
+    });
+    
+    $('#deleteModal').modal('show');
+}
+
+// 批量删除
+function batchDelete() {
+    if (selectedSdks.size === 0) return;
+    
+    $('#deleteMessage').text(`确定要删除选中的 ${selectedSdks.size} 个SDK吗？`);
+    
+    $('#confirmDeleteBtn').off('click').on('click', function() {
+        $.ajax({
+            url: '/admin/sdk-delete',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ sdk_ids: Array.from(selectedSdks) }),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', `成功删除 ${response.data.deleted_count} 个SDK`);
+                    loadSdkData(currentPage);
+                    $('#deleteModal').modal('hide');
+                } else {
+                    showAlert('danger', response.message || '删除失败');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showAlert('danger', response?.message || '删除失败，请稍后重试');
+            }
+        });
+    });
+    
+    $('#deleteModal').modal('show');
+}
+
+// 导出SDK
+function exportSdks() {
+    const params = new URLSearchParams({
+        status: $('#statusFilter').val(),
+        days: $('#daysFilter').val(),
+        search: $('#searchFilter').val()
+    });
+    
+    window.open(`/admin/sdk-export?${params.toString()}`, '_blank');
+}
+
+// 显示提示信息
+function showAlert(type, message) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // 移除现有的alert
+    $('.alert').remove();
+    
+    // 添加新的alert
+    $('.container-fluid').prepend(alertHtml);
+    
+    // 3秒后自动消失
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 3000);
+}
+</script>
+{% endblock %}

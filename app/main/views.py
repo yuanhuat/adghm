@@ -11,6 +11,7 @@ from app.models.dns_config import DnsConfig
 from app.models.donation_config import DonationConfig
 from app.models.donation_record import DonationRecord
 from app.models.vip_config import VipConfig
+from app.models.sdk import Sdk
 from app.services.adguard_service import AdGuardService
 from app.services.openlist_service import OpenListService
 from app.utils.seo_config import get_page_seo, get_structured_data
@@ -3053,4 +3054,130 @@ def api_openlist_register():
         return jsonify({
             'success': False,
             'message': '服务器内部错误，请稍后重试'
+        }), 500
+
+
+@main.route('/sdk-redeem')
+@login_required
+def sdk_redeem():
+    """SDK兑换页面
+    
+    显示SDK兑换表单，用户可以输入SDK码进行VIP充值
+    """
+    seo_config = get_page_seo('sdk-redeem')
+    structured_data = get_structured_data('sdk-redeem')
+    return render_template('main/sdk_redeem.html', 
+                         seo_config=seo_config, 
+                         structured_data=structured_data)
+
+
+@main.route('/api/sdk/redeem', methods=['POST'])
+@login_required
+def api_sdk_redeem():
+    """SDK兑换API接口
+    
+    处理用户提交的SDK兑换请求
+    
+    Returns:
+        JSON: 兑换结果信息
+    """
+    try:
+        # 获取请求数据
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': '请求数据格式错误'
+            }), 400
+        
+        sdk_code = data.get('sdk_code', '').strip()
+        if not sdk_code:
+            return jsonify({
+                'success': False,
+                'message': '请输入SDK码'
+            }), 400
+        
+        # 查找SDK
+        sdk = Sdk.query.filter_by(sdk_code=sdk_code).first()
+        if not sdk:
+            return jsonify({
+                'success': False,
+                'message': 'SDK码不存在'
+            }), 400
+        
+        # 验证SDK有效性
+        if not sdk.is_valid():
+            return jsonify({
+                'success': False,
+                'message': 'SDK码已失效或已被使用'
+            }), 400
+        
+        # 使用SDK
+        result = sdk.use_sdk(current_user.id)
+        if result['success']:
+            # 记录操作日志
+            operation_log = OperationLog(
+                user_id=current_user.id,
+                operation_type='SDK_REDEEM',
+                target_type='SDK',
+                target_id=sdk_code,
+                details=f'用户 {current_user.username} 成功兑换SDK: {sdk_code}，获得 {sdk.vip_days} 天VIP'
+            )
+            db.session.add(operation_log)
+            db.session.commit()
+            
+            logging.info(f"用户 {current_user.username} 成功兑换SDK: {sdk_code}，获得 {sdk.vip_days} 天VIP")
+            
+            return jsonify({
+                'success': True,
+                'message': result['message'],
+                'data': {
+                    'days': sdk.vip_days,
+                    'new_vip_end_time': current_user.vip_expire_time.strftime('%Y-%m-%d %H:%M:%S') if current_user.vip_expire_time else None
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': result['message']
+            }), 400
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"SDK兑换API错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误，请稍后重试'
+        }), 500
+
+
+@main.route('/api/sdk/history')
+@login_required
+def sdk_history():
+    """获取用户SDK兑换历史"""
+    try:
+        # 获取当前用户的SDK使用记录
+        sdks = Sdk.query.filter_by(
+            used_by=current_user.id,
+            status='used'
+        ).order_by(Sdk.used_time.desc()).limit(20).all()
+        
+        history = []
+        for sdk in sdks:
+            history.append({
+                'sdk_code': sdk.code,
+                'days': sdk.days,
+                'used_time': sdk.used_time.isoformat() if sdk.used_time else None
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': history
+        })
+        
+    except Exception as e:
+        logging.error(f"获取SDK历史记录错误: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'获取历史记录失败: {str(e)}'
         }), 500

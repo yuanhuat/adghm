@@ -46,6 +46,7 @@
                 {% if donation_config and donation_config.show_ranking %}
                 <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
                 {% endif %}
+                <a href="{{ url_for('main.sdk_redeem') }}" class="nav-link">SDK兑换</a>
                 <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
                 <div class="nav-dropdown">
                     <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
@@ -129,6 +130,25 @@
                     </div>
                     <div class="card-action">
                         <a href="{{ url_for('main.clients') }}" class="btn-modern">管理客户端</a>
+                    </div>
+                </div>
+
+                <!-- SDK兑换卡片 -->
+                <div class="feature-card">
+                    <div class="card-header">
+                        <svg class="card-icon" viewBox="0 0 24 24" width="32" height="32">
+                            <path fill="currentColor" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h3>SDK兑换</h3>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-description">使用SDK码兑换VIP会员服务</p>
+                        <div class="sdk-info">
+                            <p>输入有效的SDK码即可兑换相应天数的VIP服务</p>
+                        </div>
+                    </div>
+                    <div class="card-action">
+                        <a href="{{ url_for('main.sdk_redeem') }}" class="btn-modern">立即兑换</a>
                     </div>
                 </div>
 

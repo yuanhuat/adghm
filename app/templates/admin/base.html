@@ -91,6 +91,14 @@
                 </div>
                 
                 <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">SDK管理</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('admin.sdk_generate') }}">生成SDK</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.sdk_manage') }}">管理SDK</a>
+                    </div>
+                </div>
+                
+                <div class="nav-dropdown">
                     <a href="#" class="nav-link dropdown-toggle">日志监控</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{{ url_for('admin.query_log') }}">原版查询日志</a>

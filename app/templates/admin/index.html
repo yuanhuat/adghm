@@ -87,6 +87,32 @@
                 查看查询
             </a>
         </div>
+        
+        <!-- SDK管理 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <h5>SDK管理</h5>
+            <p>生成和管理VIP充值码，查看使用记录</p>
+            <a href="{{ url_for('admin.sdk_generate') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                管理SDK
+            </a>
+        </div>
+        
+        <!-- VIP配置 -->
+        <div class="admin-card">
+            <div class="admin-card-icon">
+                <i class="fas fa-crown"></i>
+            </div>
+            <h5>VIP配置</h5>
+            <p>配置VIP功能和权限设置</p>
+            <a href="{{ url_for('admin.vip_config') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-right"></i>
+                VIP设置
+            </a>
+        </div>
     </div>
 </div>
 {% endblock page_content %}

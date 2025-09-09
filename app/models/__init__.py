@@ -8,10 +8,11 @@ from .dns_import_source import DnsImportSource
 from .donation_config import DonationConfig
 from .donation_record import DonationRecord
 from .vip_config import VipConfig
+from .sdk import Sdk
 
 from .feedback import Feedback
 from .verification_code import VerificationCode
 from .email_config import EmailConfig
 from .system_config import SystemConfig
 
-__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'VipConfig', 'Feedback', 'VerificationCode', 'EmailConfig', 'SystemConfig']
+__all__ = ['User', 'ClientMapping', 'OperationLog', 'AdGuardConfig', 'DnsConfig', 'Announcement', 'DnsImportSource', 'DonationConfig', 'DonationRecord', 'VipConfig', 'Sdk', 'Feedback', 'VerificationCode', 'EmailConfig', 'SystemConfig']
