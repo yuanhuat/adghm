@@ -500,34 +500,8 @@
     </button>
 
     <script>
-        // 导航栏切换功能
+        // 导航栏功能已在base.html中定义，此处移除重复代码以避免事件绑定冲突
         document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navMenu = document.getElementById('navMenu');
-            
-            if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
-                    navMenu.classList.toggle('active');
-                    navToggle.classList.toggle('active');
-                });
-            }
-
-            // 下拉菜单功能
-            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
-            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
-            
-            if (dropdownToggle && dropdownMenu) {
-                dropdownToggle.addEventListener('click', function() {
-                    dropdownMenu.classList.toggle('active');
-                });
-
-                // 点击其他地方关闭下拉菜单
-                document.addEventListener('click', function(event) {
-                    if (!dropdownToggle.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                        dropdownMenu.classList.remove('active');
-                    }
-                });
-            }
 
             // 平滑滚动动画
             const observerOptions = {

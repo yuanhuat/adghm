@@ -17,89 +17,11 @@
             background: #fff;
         }
 
-        /* 导航栏 */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 17px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #0071e3;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 17px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #0071e3;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0077ed;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #0071e3;
-            border: 1px solid #0071e3;
-        }
-
-        .btn-secondary:hover {
-            background: #0071e3;
-            color: white;
-        }
+        /* 移除自定义导航栏样式，使用base.html的统一导航 */
 
         /* 主要内容区域 */
         .main-content {
-            margin-top: 60px;
+            margin-top: 0;
         }
 
         .container {
@@ -569,33 +491,8 @@
     </button>
 
     <script>
-        // 导航栏切换功能
+        // 导航栏功能已在base.html中定义，此处移除重复代码以避免事件绑定冲突
         document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navMenu = document.getElementById('navMenu');
-            
-            if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
-                    navMenu.classList.toggle('active');
-                    navToggle.classList.toggle('active');
-                });
-            }
-
-            // 下拉菜单功能
-            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
-            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
-            
-            if (dropdownToggle && dropdownMenu) {
-                dropdownToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    dropdownMenu.classList.toggle('active');
-                });
-
-                // 点击其他地方关闭下拉菜单
-                document.addEventListener('click', function() {
-                    dropdownMenu.classList.remove('active');
-                });
-            }
 
             // 返回顶部功能
             const backToTop = document.getElementById('backToTop');

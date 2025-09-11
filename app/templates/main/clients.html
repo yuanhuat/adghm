@@ -275,15 +275,6 @@
     <script>
     // 导航菜单控制
     document.addEventListener('DOMContentLoaded', function() {
-        const navToggle = document.getElementById('navToggle');
-        const navMenu = document.getElementById('navMenu');
-        
-        if (navToggle && navMenu) {
-            navToggle.addEventListener('click', function() {
-                navToggle.classList.toggle('active');
-                navMenu.classList.toggle('active');
-            });
-    
     // 显示客户端ID错误信息
     function showClientIdError(inputElement, message) {
         removeClientIdError(inputElement); // 先移除现有错误信息
