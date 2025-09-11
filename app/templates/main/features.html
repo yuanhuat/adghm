@@ -4,12 +4,7 @@
 
 {% block extra_css %}
 <style>
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        /* 使用base.html的统一容器设计 */
 
         /* 页面标题 */
         .page-header {
@@ -378,19 +373,18 @@
 {% endblock %}
 
 {% block page_content %}
-        <!-- 页面标题 -->
-        <section class="page-header">
-            <div class="container">
-                <h1 class="animate-fade-in">功能特性</h1>
-                <p class="animate-fade-in animate-delay-1">
-                    全面了解 {{ project_name }} 的强大功能和技术优势
-                </p>
-            </div>
-        </section>
+<div class="page-content">
+    <!-- 页面标题 -->
+    <div class="page-header">
+        <h1 class="animate-fade-in">功能特性</h1>
+        <p class="animate-fade-in animate-delay-1">
+            全面了解 {{ project_name }} 的强大功能和技术优势
+        </p>
+    </div>
 
-        <!-- 功能概览 -->
-        <section class="features-overview">
-            <div class="container">
+    <!-- 功能概览 -->
+    <section class="features-overview">
+        <div class="content-container">
                 <h2 class="section-title">核心功能</h2>
                 <p class="section-subtitle">
                     为您提供全方位的DNS管理和网络安全解决方案
@@ -466,9 +460,9 @@
             </div>
         </section>
 
-        <!-- 详细功能展示 -->
-        <section class="detailed-features">
-            <div class="container">
+    <!-- 详细功能展示 -->
+    <section class="detailed-features">
+        <div class="content-container">
                 <div class="feature-detail">
                     <div class="feature-content animate-fade-in">
                         <h3>智能过滤引擎</h3>
@@ -623,9 +617,9 @@
             </div>
         </section>
 
-        <!-- 技术规格 -->
-        <section class="tech-specs">
-            <div class="container">
+    <!-- 技术规格 -->
+    <section class="tech-specs">
+        <div class="content-container">
                 <h2 class="section-title" style="color: white;">技术规格</h2>
                 <p class="section-subtitle" style="color: #a1a1a6;">
                     强大的技术指标，确保卓越的性能和可靠性
@@ -664,12 +658,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- 功能比较 -->
-        <section class="comparison-section">
-            <div class="container">
+    <!-- 功能比较 -->
+    <section class="comparison-section">
+        <div class="content-container">
                 <h2 class="section-title">功能对比</h2>
                 <p class="section-subtitle">
                     了解我们相比其他解决方案的优势
@@ -725,8 +719,9 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </section>
+        </div>
+    </section>
+</div>
 {% endblock %}
 
 {% block page_scripts %}

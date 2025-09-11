@@ -207,12 +207,16 @@ def dashboard():
         total_dns_queries = 0
         total_blocked_queries = 0
     
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
+    
     seo_config = get_page_seo('dashboard')
     structured_data = get_structured_data('dashboard')
     return render_template('main/dashboard.html', 
                          user_request_count=user_request_count,
                          total_dns_queries=total_dns_queries,
                          total_blocked_queries=total_blocked_queries,
+                         donation_config=donation_config,
                          seo_config=seo_config,
                          structured_data=structured_data)
 
@@ -226,9 +230,12 @@ def index():
     """
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
     seo_config = get_page_seo('landing')
     structured_data = get_structured_data('landing')
     return render_template('main/landing.html', 
+                         donation_config=donation_config,
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
@@ -238,9 +245,12 @@ def landing():
     
     显示产品介绍和功能特性
     """
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
     seo_config = get_page_seo('landing')
     structured_data = get_structured_data('landing')
     return render_template('main/landing.html', 
+                         donation_config=donation_config,
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
@@ -250,9 +260,12 @@ def about():
     
     显示公司介绍、团队信息和联系方式
     """
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
     seo_config = get_page_seo('about')
     structured_data = get_structured_data('about')
     return render_template('main/about.html', 
+                         donation_config=donation_config,
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
@@ -262,9 +275,12 @@ def features():
     
     详细展示产品功能和技术优势
     """
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
     seo_config = get_page_seo('features')
     structured_data = get_structured_data('features')
     return render_template('main/features.html', 
+                         donation_config=donation_config,
                          seo_config=seo_config, 
                          structured_data=structured_data)
 
@@ -2124,7 +2140,9 @@ def donation_success():
     
     用户支付完成后的跳转页面
     """
-    return render_template('main/donation_success.html')
+    # 获取捐赠配置以显示排行榜入口
+    donation_config = DonationConfig.query.first()
+    return render_template('main/donation_success.html', donation_config=donation_config)
 
 
 @main.route('/donation/ranking')
