@@ -57,7 +57,7 @@ def create_app():
         from app.models import SystemConfig
         config = SystemConfig.get_config() if hasattr(SystemConfig, 'get_config') else None
         return {
-            'project_name': config.project_name if config and hasattr(config, 'project_name') else '{{ project_name }}'
+            'project_name': config.project_name if config and hasattr(config, 'project_name') else 'AdGuard Home Manager'
         }
     
     # 初始化调度器

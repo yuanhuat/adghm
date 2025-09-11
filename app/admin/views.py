@@ -1282,7 +1282,7 @@ def close_feedback(feedback_id):
 @login_required
 @admin_required
 def adguard_config():
-    """{{ project_name }}配置页面"""
+    """AdGuard Home配置页面"""
     config = AdGuardConfig.get_config()
     return render_template('admin/adguard_config.html', config=config)
 
@@ -1290,7 +1290,7 @@ def adguard_config():
 @login_required
 @admin_required
 def update_adguard_config():
-    """更新{{ project_name }}配置"""
+    """更新AdGuard Home配置"""
     from app.models.adguard_config import AdGuardConfig
     
     data = request.get_json()
@@ -1317,7 +1317,7 @@ def update_adguard_config():
         adguard = AdGuardService(config)
         status = adguard.get_status()
         if not status:
-            return jsonify({'error': '无法连接到{{ project_name }}服务器，请检查URL、端口和认证信息是否正确'}), 400
+            return jsonify({'error': '无法连接到AdGuard Home服务器，请检查URL、端口和认证信息是否正确'}), 400
             
         # 记录操作日志
         log = OperationLog(
@@ -1325,7 +1325,7 @@ def update_adguard_config():
             operation_type='update_config',
             target_type='adguard_config',
             target_id='1',
-            details=f'更新{{ project_name }}配置：{api_base_url}'
+            details=f'更新AdGuard Home配置：{api_base_url}'
         )
         db.session.add(log)
         
@@ -1345,7 +1345,7 @@ def update_adguard_config():
 @login_required
 @admin_required
 def query_log():
-    """查询 {{ project_name }} 的日志
+    """查询 AdGuard Home 的日志
     
     实现分页功能，每页显示50条记录
     """
@@ -1439,7 +1439,7 @@ def query_log_advanced_search():
 @login_required
 @admin_required
 def query_log_api():
-    """查询 {{ project_name }} 日志的 API 接口
+    """查询 AdGuard Home 日志的 API 接口
     
     返回 JSON 格式的日志数据，用于 AJAX 刷新
     """
@@ -1494,11 +1494,11 @@ def query_log_api():
 @login_required
 @admin_required
 def get_adguard_status():
-    """获取{{ project_name }}状态信息"""
+    """获取AdGuard Home状态信息"""
     try:
         adguard = AdGuardService()
         if not adguard.check_connection():
-            return jsonify({'error': '无法连接到{{ project_name }}服务器，请检查配置是否正确'}), 503
+            return jsonify({'error': '无法连接到AdGuard Home服务器，请检查配置是否正确'}), 503
             
         status = adguard.get_status()
         if not status:

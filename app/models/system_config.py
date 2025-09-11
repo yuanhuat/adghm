@@ -10,10 +10,10 @@ class SystemConfig(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     allow_registration = db.Column(db.Boolean, default=True, nullable=False, comment='是否允许新用户注册')
-    project_name = db.Column(db.String(100), default='{{ project_name }}', nullable=False, comment='系统名称')
+    project_name = db.Column(db.String(100), default='AdGuard Home Manager', nullable=False, comment='系统名称')
     updated_at = db.Column(db.DateTime, default=beijing_time, onupdate=beijing_time)
     
-    def __init__(self, allow_registration=True, project_name='{{ project_name }}'):
+    def __init__(self, allow_registration=True, project_name='AdGuard Home Manager'):
         """初始化系统配置对象
         
         Args:
