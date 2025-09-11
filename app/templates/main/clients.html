@@ -3,8 +3,7 @@
 {% block title %}{{ seo_config.title if seo_config else '客户端管理 - ' + project_name + '用户管理系统' }}{% endblock %}
 
 {% block page_styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/clients.css') }}">
-    
+<!-- 移除不存在的clients.css文件引用，避免404错误 -->
 <style>
     /* 优化规则类型选择器样式 */
     #ruleType {
