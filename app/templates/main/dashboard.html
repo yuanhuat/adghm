@@ -438,50 +438,7 @@
     margin-bottom: 20px;
 }
 
-/* 移动端下拉菜单样式 */
-@media (max-width: 768px) {
-    .nav-dropdown-menu {
-        position: static;
-        opacity: 0;
-        visibility: hidden;
-        transform: none;
-        background: rgba(240, 240, 240, 0.95);
-        box-shadow: none;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        margin: 0;
-        min-width: auto;
-        width: 100%;
-        display: none;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-    }
-    
-    .nav-dropdown-menu.active {
-        display: block;
-        opacity: 1;
-        visibility: visible;
-        max-height: 300px;
-    }
-    
-    .nav-dropdown-menu a {
-        color: #1d1d1f;
-        padding: 12px 40px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        background: rgba(240, 240, 240, 0.95);
-        text-shadow: none;
-        font-size: 14px;
-        margin-left: 0;
-    }
-    
-    .nav-dropdown-menu a:hover {
-        background: rgba(0, 122, 255, 0.1);
-        color: #007AFF;
-        transform: none;
-    }
-}
+/* 导航栏下拉菜单样式已在base.html中定义，移除重复样式以避免冲突 */
 
 .apple-config-item {
     display: flex;
