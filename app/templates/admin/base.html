@@ -107,8 +107,13 @@
                     </div>
                 </div>
                 
-                <a href="{{ url_for('main.dashboard') }}" class="nav-link">返回前台</a>
-                <a href="{{ url_for('auth.logout') }}" class="nav-link">退出</a>
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">用户操作</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.dashboard') }}">返回前台</a>
+                        <a class="dropdown-item" href="{{ url_for('auth.logout') }}">退出</a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
