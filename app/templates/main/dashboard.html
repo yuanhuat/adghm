@@ -1603,70 +1603,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 每2分钟更新一次公告
     setInterval(loadAnnouncements, 120000);
     
-    // 导航菜单控制
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.getElementById('navMenu');
-    
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
-            navToggle.classList.toggle('active');
-            navMenu.classList.toggle('active');
-        });
-        
-        // 点击菜单项后关闭菜单
-        const navLinks = navMenu.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                navToggle.classList.remove('active');
-                navMenu.classList.remove('active');
-            });
-        });
-        
-        // 点击页面其他地方关闭菜单
-        document.addEventListener('click', function(e) {
-            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navToggle.classList.remove('active');
-                navMenu.classList.remove('active');
-            }
-        });
-    }
-    
-    // 下拉菜单功能
-    const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
-    
-    dropdownToggles.forEach(function(toggle) {
-        const dropdown = toggle.parentElement;
-        const menu = dropdown.querySelector('.nav-dropdown-menu');
-        
-        if (menu) {
-            toggle.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // 关闭其他下拉菜单
-                dropdownToggles.forEach(function(otherToggle) {
-                    if (otherToggle !== toggle) {
-                        const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
-                        if (otherMenu) {
-                            otherMenu.classList.remove('active');
-                        }
-                    }
-                });
-                
-                // 切换当前下拉菜单
-                menu.classList.toggle('active');
-            });
-        }
-    });
-
-    // 点击其他地方关闭下拉菜单
-     document.addEventListener('click', function() {
-         dropdownToggles.forEach(function(toggle) {
-             const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
-             if (menu) {
-                 menu.classList.remove('active');
-             }
-         });
-     });
+    // 导航栏功能已在base.html中实现，此处不需要重复定义
 });
 </script>
 {% endblock %}
