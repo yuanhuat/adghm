@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>修改邮箱 - {{ project_name }} 管理系统</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
+{% extends "main/base.html" %}
+
+{% block title %}修改邮箱 - {{ project_name }} 管理系统{% endblock %}
+
+{% block page_styles %}
+<style>
         .container {
             max-width: 600px;
             margin: 50px auto;
@@ -163,9 +161,10 @@
             font-weight: 600;
             margin-bottom: 5px;
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block page_content %}
     <div class="container">
         <div class="page-header">
             <h1>修改邮箱</h1>
@@ -225,8 +224,10 @@
             返回首页
         </a>
     </div>
+{% endblock %}
 
-    <script>
+{% block page_scripts %}
+<script>
         let countdown = 0;
         
         /**
@@ -323,6 +324,5 @@
                 this.setCustomValidity('');
             }
         });
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

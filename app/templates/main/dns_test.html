@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNS检测 - 配置正确</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <style>
+{% extends "main/base.html" %}
+
+{% block title %}DNS检测 - 配置正确{% endblock %}
+
+{% block page_styles %}
+<style>
         :root {
             --success-color: #28a745;
             --success-bg: #d4edda;
@@ -17,10 +14,9 @@
             --primary-hover: #0056b3;
         }
         
-        body {
+        .page-wrapper {
             background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
             min-height: 100vh;
-            margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-display: swap;
         }
@@ -105,9 +101,11 @@
             background: var(--primary-hover);
             color: white;
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="page-wrapper">
     <main class="dns-test-container">
         <div class="status-icon" aria-label="成功图标">
             <i class="fas fa-check-circle" aria-hidden="true"></i>
@@ -138,10 +136,12 @@
             <i class="fas fa-times" aria-hidden="true"></i> 关闭页面
         </a>
     </main>
-    
-    <script>
-        // 显示当前时间
-        document.getElementById('current-time').textContent = new Date().toLocaleString('zh-CN');
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    // 显示当前时间
+    document.getElementById('current-time').textContent = new Date().toLocaleString('zh-CN');
+</script>
+{% endblock %}

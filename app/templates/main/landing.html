@@ -1,15 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else project_name + ' - 智能DNS管理平台' }}</title>
-    
-    <!-- SEO Meta Tags -->
-    {% include 'components/seo_meta.html' %}
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
+{% extends "main/base.html" %}
+
+{% block title %}{{ seo_config.title if seo_config else project_name + ' - 智能DNS管理平台' }}{% endblock %}
+
+{% block page_styles %}
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -565,9 +559,10 @@
             animation-delay: 0.6s;
             animation-fill-mode: both;
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block page_content %}
     <!-- 导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
@@ -874,5 +869,4 @@
             observer.observe(el);
         });
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,112 +1,51 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else '关于我们 - {{ project_name }}' }}</title>
-    
-    <!-- SEO Meta Tags -->
-    {% include 'components/seo_meta.html' %}
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "main/base.html" %}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #1d1d1f;
-            background: #fff;
-        }
+{% block title %}{{ seo_config.title if seo_config else '关于我们 - ' + project_name }}{% endblock %}
 
-        /* 导航栏 */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
+{% block page_styles %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: #1d1d1f;
+        background: #fff;
+    }
 
-        .logo {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-            text-decoration: none;
-        }
+    .btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 17px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
 
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
+    .btn-primary {
+        background: #0071e3;
+        color: white;
+    }
 
-        .nav-links a {
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 17px;
-            transition: color 0.3s ease;
-        }
+    .btn-primary:hover {
+        background: #0077ed;
+    }
 
-        .nav-links a:hover {
-            color: #0071e3;
-        }
+    .btn-secondary {
+        background: transparent;
+        color: #0071e3;
+        border: 1px solid #0071e3;
+    }
 
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 17px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #0071e3;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0077ed;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #0071e3;
-            border: 1px solid #0071e3;
-        }
-
-        .btn-secondary:hover {
-            background: #0071e3;
-            color: white;
-        }
-
-        /* 主要内容区域 */
-        .main-content {
-            margin-top: 60px;
-        }
+    .btn-secondary:hover {
+        background: #0071e3;
+        color: white;
+    }
 
         .container {
             max-width: 1200px;
@@ -419,31 +358,10 @@
             animation-delay: 0.6s;
             animation-fill-mode: both;
         }
-    </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> {{ project_name }}
-            </a>
-            <ul class="nav-links">
-                <li><a href="{{ url_for('main.landing') }}">首页</a></li>
-                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
-                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
-                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
-                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
-            </div>
-        </div>
-    </nav>
+</style>
+{% endblock %}
 
-    <!-- 主要内容 -->
-    <main class="main-content">
+{% block page_content %}
         <!-- 页面标题 -->
         <section class="page-header">
             <div class="container">
@@ -622,48 +540,31 @@
                 </div>
             </div>
         </section>
-    </main>
+{% endblock %}
 
-    <!-- 页脚 -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-links">
-                <a href="{{ url_for('main.landing') }}">首页</a>
-                <a href="{{ url_for('main.about') }}">关于我们</a>
-                <a href="{{ url_for('main.features') }}">功能特性</a>
-                <a href="{{ url_for('main.guide') }}">使用指南</a>
-                <a href="#">隐私政策</a>
-                <a href="#">服务条款</a>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 {{ project_name }}. 保留所有权利。</p>
-            </div>
-        </div>
-    </footer>
+{% block page_scripts %}
+<script>
+    // 滚动动画
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
 
-    <script>
-        // 滚动动画
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // 观察所有动画元素
-        document.querySelectorAll('.animate-fade-in').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-            observer.observe(el);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
         });
-    </script>
-</body>
-</html>
+    }, observerOptions);
+
+    // 观察所有动画元素
+    document.querySelectorAll('.animate-fade-in').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+        observer.observe(el);
+    });
+</script>
+{% endblock %}

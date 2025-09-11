@@ -1,18 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else 'Windows配置指南 - {{ project_name }}' }}</title>
-    
-    <!-- SEO Meta Tags -->
-    {% include 'components/seo_meta.html' %}
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
+{% extends "main/base.html" %}
+
+{% block title %}Windows使用指南 - {{ project_name }}用户管理系统{% endblock %}
+
+{% block page_styles %}
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -444,66 +435,10 @@
                 font-size: 18px;
             }
         }
-    </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    {% if current_user.is_authenticated %}
-    <!-- 已登录用户导航栏 -->
-    <nav class="apple-nav">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span>{{ project_name }}</span>
-            </div>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
-                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
-                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
-                {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
-                {% endif %}
-                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.clients') }}">客户端管理</a>
-                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
-                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-    {% else %}
-    <!-- 未登录用户导航栏 -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="{{ url_for('main.landing') }}" class="logo">
-                <i class="fas fa-shield-alt"></i> {{ project_name }}
-            </a>
-            <ul class="nav-links">
-                <li><a href="{{ url_for('main.landing') }}">首页</a></li>
-                <li><a href="{{ url_for('main.about') }}">关于我们</a></li>
-                <li><a href="{{ url_for('main.features') }}">详细功能</a></li>
-                <li><a href="{{ url_for('main.guide') }}">使用指南</a></li>
-                <li><a href="{{ url_for('main.pricing') }}">价格方案</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">登录</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">注册</a>
-            </div>
-        </div>
-    </nav>
-    {% endif %}
+</style>
+{% endblock %}
+
+{% block page_content %}
 
     <!-- 主要内容 -->
     <main class="main-content">
@@ -727,35 +662,6 @@
     </footer>
 
     <script>
-        // 导航栏切换功能
-        document.addEventListener('DOMContentLoaded', function() {
-            const navToggle = document.getElementById('navToggle');
-            const navMenu = document.getElementById('navMenu');
-            
-            if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
-                    navMenu.classList.toggle('active');
-                    navToggle.classList.toggle('active');
-                });
-            }
-
-            // 下拉菜单功能
-            const dropdownToggle = document.querySelector('.nav-dropdown-toggle');
-            const dropdownMenu = document.querySelector('.nav-dropdown-menu');
-            
-            if (dropdownToggle && dropdownMenu) {
-                dropdownToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    dropdownMenu.classList.toggle('active');
-                });
-
-                // 点击其他地方关闭下拉菜单
-                document.addEventListener('click', function() {
-                    dropdownMenu.classList.remove('active');
-                });
-            }
-        });
-
         // 方法切换功能
         function showMethod(method) {
             // 隐藏所有方法内容
@@ -777,5 +683,4 @@
             event.target.classList.add('active');
         }
     </script>
-</body>
-</html>
+{% endblock %}

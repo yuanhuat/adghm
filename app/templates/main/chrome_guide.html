@@ -1,18 +1,9 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ seo_config.title if seo_config else 'Chrome浏览器配置指南 - {{ project_name }}' }}</title>
-    
-    <!-- SEO Meta Tags -->
-    {% include 'components/seo_meta.html' %}
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
+{% extends "main/base.html" %}
+
+{% block title %}{{ seo_config.title if seo_config else 'Chrome浏览器配置指南 - ' + project_name }}{% endblock %}
+
+{% block page_styles %}
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -26,89 +17,9 @@
             background: #fff;
         }
 
-        /* 导航栏 */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: #1d1d1f;
-            text-decoration: none;
-            font-size: 17px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #0071e3;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 17px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #0071e3;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0077ed;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: #0071e3;
-            border: 1px solid #0071e3;
-        }
-
-        .btn-secondary:hover {
-            background: #0071e3;
-            color: white;
-        }
-
         /* 主要内容区域 */
         .main-content {
-            margin-top: 60px;
+            margin-top: 0;
         }
 
         .container {
@@ -464,9 +375,10 @@
                 display: none;
             }
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block page_content %}
     <!-- 导航栏 -->
     {% if current_user.is_authenticated %}
     <!-- 已登录用户导航栏 -->
@@ -798,5 +710,4 @@
             }
         });
     </script>
-</body>
-</html>
+{% endblock %}

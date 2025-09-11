@@ -1,76 +1,13 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SDK兑换 - {{ project_name }}用户管理系统</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="apple-nav">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span>{{ project_name }}</span>
-            </div>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
-                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
-                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
-                {% if current_user.is_vip() %}
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">影视</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.movies') }}">注册</a>
-                        <a href="{{ url_for('main.movies_guide') }}">使用方法</a>
-                    </div>
-                </div>
-                {% else %}
-                <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
-                {% endif %}
-                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
-                {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
-                {% endif %}
-                <a href="{{ url_for('main.sdk_redeem') }}" class="nav-link active">SDK兑换</a>
-                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
-                        {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
-                        {% endif %}
-                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
-                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+{% extends "main/base.html" %}
 
-    <div class="main-container">
-        <main class="main-content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
+{% block title %}SDK兑换 - {{ project_name }}用户管理系统{% endblock %}
+
+{% block page_styles %}
+<style>
+</style>
+{% endblock %}
+
+{% block page_content %}
             <!-- SDK兑换页面内容 -->
             <section class="sdk-redeem-section">
                 <div class="page-header">
@@ -143,8 +80,6 @@
                     </div>
                 </div>
             </section>
-        </main>
-    </div>
 
     <!-- 多模态弹窗 -->
     <div id="sdkModal" class="modal" style="display: none;">
@@ -162,9 +97,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+{% block page_scripts %}
     <script>
         $(document).ready(function() {
             $('#sdk-redeem-form').on('submit', function(e) {
@@ -248,8 +183,7 @@
             }
         });
     </script>
-
-    <style>
+{% endblock %}
         .sdk-redeem-section {
             max-width: 1200px;
             margin: 0 auto;
@@ -464,6 +398,3 @@
                 padding: 1.5rem;
             }
         }
-    </style>
-</body>
-</html>
