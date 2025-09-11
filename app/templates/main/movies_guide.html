@@ -727,39 +727,7 @@
             const navToggle = document.getElementById('navToggle');
             const navMenu = document.getElementById('navMenu');
             
-            if (navToggle && navMenu) {
-                navToggle.addEventListener('click', function() {
-                    navMenu.classList.toggle('active');
-                    navToggle.classList.toggle('active');
-                });
-            }
-            
-            // 下拉菜单功能
-            const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
-            
-            dropdownToggles.forEach(function(toggle) {
-                const dropdown = toggle.parentElement;
-                const menu = dropdown.querySelector('.nav-dropdown-menu');
-                
-                if (menu) {
-                    toggle.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        
-                        // 关闭其他下拉菜单
-                        dropdownToggles.forEach(function(otherToggle) {
-                            if (otherToggle !== toggle) {
-                                const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
-                                if (otherMenu) {
-                                    otherMenu.classList.remove('active');
-                                }
-                            }
-                        });
-                        
-                        // 切换当前下拉菜单
-                        menu.classList.toggle('active');
-                    });
-                }
-            });
+            // 导航栏功能已在base.html中实现，此处不需要重复定义
 
             // 点击其他地方关闭下拉菜单
             document.addEventListener('click', function() {
