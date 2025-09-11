@@ -285,6 +285,7 @@
                 {% endif %}
                 <a href="{{ url_for('main.sdk_redeem') }}" class="nav-link">SDK兑换</a>
                 <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                {% if current_user.is_authenticated %}
                 <div class="nav-dropdown">
                     <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
                     <div class="nav-dropdown-menu">
@@ -297,6 +298,10 @@
                         <a href="{{ url_for('auth.logout') }}">退出登录</a>
                     </div>
                 </div>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="nav-link">登录</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link">注册</a>
+                {% endif %}
             </div>
         </div>
     </nav>

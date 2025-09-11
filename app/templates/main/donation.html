@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>捐赠支持 - {{ project_name }}用户管理系统</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+{% extends "main/base.html" %}
+
+{% block title %}捐赠支持 - {{ project_name }}用户管理系统{% endblock %}
+
+{% block extra_css %}
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -645,39 +641,9 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="apple-nav">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span>{{ project_name }}</span>
-            </div>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
-                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
-                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
-                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
-                {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
-                {% endif %}
-                {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.index') }}" class="nav-link">管理后台</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}" class="nav-link">退出</a>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="main-container">
+{% endblock %}
+
+{% block page_content %}
         <div class="donation-container">
             <a href="{{ url_for('main.dashboard') }}" class="back-link">
                 <i class="fas fa-arrow-left"></i> 返回首页
@@ -800,8 +766,9 @@
             </form>
             {% endif %}
         </div>
-    </div>
+{% endblock %}
 
+{% block page_scripts %}
     <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
     <script>
         $(document).ready(function() {
@@ -913,36 +880,4 @@
             });
         });
     </script>
-    
-    <!-- 导航栏JavaScript -->
-    <script>
-        // 移动端导航栏切换
-        const navToggle = document.getElementById('navToggle');
-        const navMenu = document.getElementById('navMenu');
-        
-        if (navToggle && navMenu) {
-            navToggle.addEventListener('click', function() {
-                navToggle.classList.toggle('active');
-                navMenu.classList.toggle('active');
-            });
-            
-            // 点击导航链接时关闭菜单
-            const navLinks = navMenu.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                });
-            });
-            
-            // 点击外部区域关闭菜单
-            document.addEventListener('click', function(event) {
-                if (!navToggle.contains(event.target) && !navMenu.contains(event.target)) {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+{% endblock %}

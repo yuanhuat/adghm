@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>捐赠排行榜 - {{ project_name }}用户管理系统</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+{% extends "main/base.html" %}
+
+{% block title %}捐赠排行榜 - {{ project_name }}用户管理系统{% endblock %}
+
+{% block extra_css %}
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -741,59 +737,9 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="apple-nav">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <svg class="brand-icon" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                <span>{{ project_name }}</span>
-            </div>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
-                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
-                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
-                {% if current_user.is_vip() %}
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">影视</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.movies') }}">注册</a>
-                        <a href="{{ url_for('main.movies_guide') }}">使用方法</a>
-                    </div>
-                </div>
-                {% else %}
-                <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
-                {% endif %}
-                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
-                {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
-                {% endif %}
-                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
-                <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
-                        {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
-                        {% endif %}
-                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
-                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="main-container">
+{% endblock %}
+
+{% block page_content %}
         <div class="ranking-container">
             
             <div class="ranking-header">
@@ -943,77 +889,4 @@
                 </div>
             </div>
         </div>
-    </div>
-    
-    <script>
-    // 导航菜单控制
-    document.addEventListener('DOMContentLoaded', function() {
-        const navToggle = document.getElementById('navToggle');
-        const navMenu = document.getElementById('navMenu');
-        
-        if (navToggle && navMenu) {
-            navToggle.addEventListener('click', function() {
-                navToggle.classList.toggle('active');
-                navMenu.classList.toggle('active');
-            });
-            
-            // 点击菜单项后关闭菜单
-            const navLinks = navMenu.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                });
-            });
-            
-            // 点击页面其他地方关闭菜单
-            document.addEventListener('click', function(e) {
-                if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                }
-            });
-        }
-        
-        // 移动端下拉菜单切换
-        const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
-        
-        dropdownToggles.forEach(toggle => {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // 在移动端才处理点击事件
-                if (window.innerWidth <= 768) {
-                    const dropdown = this.parentElement;
-                    const menu = dropdown.querySelector('.nav-dropdown-menu');
-                    
-                    // 切换当前下拉菜单
-                    this.classList.toggle('active');
-                    menu.classList.toggle('active');
-                    
-                    // 关闭其他下拉菜单
-                    dropdownToggles.forEach(otherToggle => {
-                        if (otherToggle !== this) {
-                            otherToggle.classList.remove('active');
-                            const otherMenu = otherToggle.parentElement.querySelector('.nav-dropdown-menu');
-                            otherMenu.classList.remove('active');
-                        }
-                    });
-                }
-            });
-        });
-        
-        // 窗口大小改变时重置下拉菜单状态
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                dropdownToggles.forEach(toggle => {
-                    toggle.classList.remove('active');
-                    const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
-                    menu.classList.remove('active');
-                });
-            }
-        });
-    });
-    </script>
-</body>
-</html>
+{% endblock %}
