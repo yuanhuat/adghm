@@ -728,16 +728,7 @@
             const navMenu = document.getElementById('navMenu');
             
             // 导航栏功能已在base.html中实现，此处不需要重复定义
-
-            // 点击其他地方关闭下拉菜单
-            document.addEventListener('click', function() {
-                dropdownToggles.forEach(function(toggle) {
-                    const menu = toggle.parentElement.querySelector('.nav-dropdown-menu');
-                    if (menu) {
-                        menu.classList.remove('active');
-                    }
-                });
-            });
+            // 已移除重复的全局点击事件监听器以避免与base.html冲突
         });
         
         // 图片模态框功能

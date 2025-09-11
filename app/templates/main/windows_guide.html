@@ -4,19 +4,7 @@
 
 {% block page_styles %}
 <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #1d1d1f;
-            background: #fff;
-        }
-
+        /* 移除重复的全局样式定义，使用base.html中的统一样式 */
         /* 移除自定义导航栏样式，使用base.html的统一导航 */
 
         /* 页面标题 */
@@ -171,21 +159,10 @@
             border-radius: 8px;
         }
 
+        /* 下载链接样式 - 继承base.html的btn样式 */
         .download-link {
             display: inline-block;
-            background: #0078d4;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 500;
             margin: 10px 0;
-            transition: background 0.3s ease;
-        }
-
-        .download-link:hover {
-            background: #106ebe;
-            color: white;
         }
 
         /* 验证部分 */
@@ -217,24 +194,9 @@
             font-size: 36px;
         }
 
+        /* 测试按钮样式 - 继承base.html的btn样式 */
         .test-button {
-            background: #34c759;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 17px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
             margin-top: 20px;
-            transition: background 0.3s ease;
-        }
-
-        .test-button:hover {
-            background: #30d158;
-            color: white;
         }
 
         /* 返回按钮 */
@@ -458,7 +420,7 @@
                                     <a href="https://yogadns.com/" target="_blank" class="download-link">https://yogadns.com/</a></p>
                                 </div>
                                 <p><strong>官方下载地址：</strong><br>
-                                <a href="https://yogadns.com/download/YogaDNSSetup.exe" target="_blank" class="download-link">
+                                <a href="https://yogadns.com/download/YogaDNSSetup.exe" target="_blank" class="btn btn-primary download-link">
                                     <i class="fas fa-download"></i> 下载 YogaDNS
                                 </a></p>
                                 <p>下载完成后，运行安装程序，一直"下一步"即可完成安装。</p>
@@ -542,7 +504,7 @@
                     </div>
                     <h3>验证去广告功能生效</h3>
                     <p>在软件中启动DNS服务后，可访问验证测试页来验证DNS广告屏蔽功能是否生效，当看到3条"红杠"时就大功告成了！</p>
-                    <a href="http://test.dns.con/dns-test" target="_blank" class="test-button">
+                    <a href="http://test.dns.con/dns-test" target="_blank" class="btn btn-primary test-button">
                         <i class="fas fa-external-link-alt"></i> 验证测试页
                     </a>
                 </div>
