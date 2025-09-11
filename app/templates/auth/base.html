@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ project_name }}用户管理系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    {% block page_styles %}{% endblock %}
+    {% block page_scripts_head %}{% endblock %}
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .auth-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite linear;
+        }
+        
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+             0%, 100% { transform: translateY(0px) rotate(0deg); }
+             33% { transform: translateY(-30px) rotate(120deg); }
+             66% { transform: translateY(30px) rotate(240deg); }
+         }
+         
+         .auth-container {
+             position: relative;
+             z-index: 2;
+             width: 100%;
+             max-width: 480px;
+             margin: 0 auto;
+         }
+         
+         .auth-card {
+             background: rgba(255, 255, 255, 0.1);
+             backdrop-filter: blur(20px);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: var(--border-radius);
+             padding: 40px;
+             box-shadow: var(--shadow-soft);
+             transition: var(--transition);
+             position: relative;
+             overflow: hidden;
+         }
+         
+         .auth-card::before {
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 0;
+             right: 0;
+             height: 1px;
+             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+         }
+         
+         .auth-card:hover {
+             transform: translateY(-5px);
+             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+         }
+         
+         .auth-header {
+             text-align: center;
+             margin-bottom: 32px;
+         }
+         
+         .logo {
+             margin-bottom: 24px;
+         }
+         
+         .logo-icon {
+             width: 80px;
+             height: 80px;
+             margin: 0 auto;
+             background: var(--primary-gradient);
+             border-radius: 20px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             box-shadow: var(--shadow-medium);
+             transition: var(--transition);
+         }
+         
+         .logo-icon:hover {
+             transform: scale(1.05) rotate(5deg);
+         }
+         
+         .logo-icon i {
+             font-size: 36px;
+             color: white;
+         }
+         
+         .auth-header h1 {
+             font-size: 28px;
+             font-weight: 700;
+             color: white;
+             margin-bottom: 8px;
+             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+         }
+         
+         .auth-header .subtitle {
+             font-size: 16px;
+             color: rgba(255, 255, 255, 0.8);
+             font-weight: 400;
+             line-height: 1.5;
+         }
+         
+         .messages-container {
+             margin-bottom: 24px;
+         }
+         
+         .message {
+             padding: 16px 20px;
+             border-radius: 12px;
+             margin-bottom: 12px;
+             display: flex;
+             align-items: center;
+             gap: 12px;
+             font-weight: 500;
+             backdrop-filter: blur(10px);
+             border: 1px solid;
+             transition: var(--transition);
+         }
+         
+         .message:last-child {
+             margin-bottom: 0;
+         }
+         
+         .message i {
+             font-size: 18px;
+             flex-shrink: 0;
+         }
+         
+         .message-success {
+             background: rgba(72, 187, 120, 0.1);
+             border-color: rgba(72, 187, 120, 0.3);
+             color: #38a169;
+         }
+         
+         .message-error {
+             background: rgba(245, 101, 101, 0.1);
+             border-color: rgba(245, 101, 101, 0.3);
+             color: #e53e3e;
+         }
+         
+         .message-warning {
+             background: rgba(237, 137, 54, 0.1);
+             border-color: rgba(237, 137, 54, 0.3);
+             color: #dd6b20;
+         }
+         
+         .message-info {
+             background: rgba(66, 153, 225, 0.1);
+             border-color: rgba(66, 153, 225, 0.3);
+             color: #3182ce;
+         }
+         
+         /* 页面内容样式 */
+         .page-content {
+             margin-top: 24px;
+         }
+         
+         .form-group {
+             margin-bottom: 24px;
+         }
+         
+         .form-group label {
+             display: block;
+             margin-bottom: 8px;
+             font-weight: 600;
+             color: white;
+             font-size: 14px;
+         }
+         
+         .form-group input {
+             width: 100%;
+             padding: 16px 20px;
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: 12px;
+             background: rgba(255, 255, 255, 0.1);
+             backdrop-filter: blur(10px);
+             color: white;
+             font-size: 16px;
+             transition: var(--transition);
+             box-sizing: border-box;
+         }
+         
+         .form-group input::placeholder {
+             color: rgba(255, 255, 255, 0.6);
+         }
+         
+         .form-group input:focus {
+             outline: none;
+             border-color: var(--primary-color);
+             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+             background: rgba(255, 255, 255, 0.15);
+         }
+         
+         .form-text {
+             margin-top: 6px;
+             font-size: 13px;
+             color: rgba(255, 255, 255, 0.7);
+             line-height: 1.4;
+         }
+         
+         .submit-btn {
+             width: 100%;
+             padding: 16px;
+             background: var(--primary-gradient);
+             border: none;
+             border-radius: 12px;
+             color: white;
+             font-size: 16px;
+             font-weight: 600;
+             cursor: pointer;
+             transition: var(--transition);
+             box-shadow: var(--shadow-medium);
+             margin-top: 8px;
+         }
+         
+         .submit-btn:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
+         }
+         
+         .submit-btn:active {
+             transform: translateY(0);
+         }
+         
+         .back-link {
+             display: inline-flex;
+             align-items: center;
+             gap: 8px;
+             margin-top: 24px;
+             color: rgba(255, 255, 255, 0.8);
+             text-decoration: none;
+             font-size: 14px;
+             transition: var(--transition);
+         }
+         
+         .back-link:hover {
+             color: white;
+             transform: translateX(-4px);
+         }
+         
+         .back-link svg {
+             transition: var(--transition);
+         }
+         
+         .current-email {
+             background: rgba(99, 102, 241, 0.1);
+             border: 1px solid rgba(99, 102, 241, 0.3);
+             border-radius: 12px;
+             padding: 16px 20px;
+             margin-bottom: 24px;
+             color: white;
+             font-size: 14px;
+         }
+         
+         .warning-box {
+             background: rgba(245, 101, 101, 0.1);
+             border: 1px solid rgba(245, 101, 101, 0.3);
+             border-radius: 12px;
+             padding: 20px;
+             margin-bottom: 24px;
+         }
+         
+         .warning-title {
+             font-weight: 600;
+             color: #f56565;
+             margin-bottom: 8px;
+             font-size: 14px;
+         }
+         
+         .warning-box div:last-child {
+             color: rgba(255, 255, 255, 0.9);
+             font-size: 13px;
+             line-height: 1.5;
+         }
+         
+         .verification-group .verification-input {
+             display: flex;
+             gap: 12px;
+             align-items: stretch;
+         }
+         
+         .verification-input input {
+             flex: 1;
+         }
+         
+         .send-code-btn {
+             padding: 16px 24px;
+             background: rgba(255, 255, 255, 0.1);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: 12px;
+             color: white;
+             font-size: 14px;
+             font-weight: 500;
+             cursor: pointer;
+             transition: var(--transition);
+             white-space: nowrap;
+             backdrop-filter: blur(10px);
+         }
+         
+         .send-code-btn:hover {
+             background: rgba(255, 255, 255, 0.15);
+             border-color: rgba(255, 255, 255, 0.3);
+         }
+         
+         .send-code-btn:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+         }
+         
+         /* 响应式设计 */
+         @media (max-width: 640px) {
+             body {
+                 padding: 16px;
+             }
+             
+             .auth-card {
+                 padding: 32px 24px;
+             }
+             
+             .auth-header h1 {
+                 font-size: 24px;
+             }
+             
+             .logo-icon {
+                 width: 64px;
+                 height: 64px;
+             }
+             
+             .logo-icon i {
+                 font-size: 28px;
+             }
+             
+             .verification-input {
+                 flex-direction: column;
+             }
+             
+             .send-code-btn {
+                 padding: 14px 20px;
+             }
+         }
+         
+         @media (max-width: 480px) {
+             .auth-card {
+                 padding: 24px 20px;
+             }
+             
+             .auth-header h1 {
+                 font-size: 22px;
+             }
+             
+             .form-group input {
+                 padding: 14px 16px;
+                 font-size: 15px;
+             }
+             
+             .submit-btn {
+                 padding: 14px;
+                 font-size: 15px;
+             }
+         }
+     </style>
+<body>
+    <!-- 现代化背景 -->
+    <div class="auth-background">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <!-- 现代化玻璃态容器 -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                </div>
+                <h1>{{ project_name }}</h1>
+                <p class="subtitle">{% block subtitle %}{% endblock %}</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="messages-container">
+                        {% for category, message in messages %}
+                            <div class="message message-{{ category }}">
+                                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'times-circle' if category == 'error' else 'info-circle' }}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block page_content %}{% endblock %}
+        </div>
+    </div>
+    
+    {% block page_scripts %}{% endblock %}
+</body>
+</html>

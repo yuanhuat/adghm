@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>注册 - {{ project_name }}用户管理系统</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% extends "auth/base.html" %}
+
+{% block title %}注册 - {{ project_name }}用户管理系统{% endblock %}
+
+{% block subtitle %}创建您的账户{% endblock %}
+
+{% block page_scripts_head %}
     <script>
         // 检查是否为第一个用户
         let isFirstUser = false;
@@ -145,34 +141,9 @@
             }, 1000);
         }
     </script>
-</head>
-<body>
-    <!-- Apple风格背景 -->
-    <div class="auth-background">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-        <div class="mesh-gradient"></div>
-    </div>
+{% endblock %}
 
-    <!-- Apple风格注册容器 -->
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <div class="logo">
-                    <img src="{{ url_for('static', filename='images/logo-icon.svg') }}" alt="Logo" width="64" height="64">
-                </div>
-                <h1>{{ project_name }}</h1>
-                <p class="subtitle">创建您的账户</p>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="message message-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+{% block page_content %}
         
             <form class="auth-form" method="POST" action="{{ url_for('auth.register') }}" onsubmit="getDeviceInfo(); return validateClientName();">
                 
@@ -265,6 +236,4 @@
                     <p>已有账号？ <a href="{{ url_for('auth.login') }}" class="register-link">立即登录</a></p>
                 </div>
             </form>
-    </div>
-</body>
-</html>
+{% endblock %}

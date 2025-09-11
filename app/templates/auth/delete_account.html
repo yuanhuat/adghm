@@ -1,198 +1,74 @@
-{% extends "main/base.html" %}
+{% extends "auth/base.html" %}
 
-{% block title %}注销账户 - {{ project_name }}用户管理系统{% endblock %}
+{% block title %}注销账户{% endblock %}
+
+{% block subtitle %}请谨慎操作，注销后数据将无法恢复{% endblock %}
 
 {% block page_styles %}
 <style>
-        :root {
-            --danger-color: #dc3545;
-            --danger-hover: #c82333;
-            --warning-color: #ffc107;
-            --warning-bg: #fff3cd;
-            --success-color: #28a745;
-            --success-bg: #d4edda;
-            --primary-color: #007bff;
-            --primary-hover: #0056b3;
-            --secondary-color: #6c757d;
-            --secondary-hover: #545b62;
-            --border-radius: 12px;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
+        .delete-warning {
+            background: rgba(245, 101, 101, 0.1);
+            border: 1px solid rgba(245, 101, 101, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
         }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        .page-wrapper {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
-        }
-
-        .header-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .header h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .header p {
-            margin: 0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px 30px;
-        }
-
-        .current-user {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 2px solid #dee2e6;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .current-user::before {
-            content: '\f007';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #fff;
-            color: var(--primary-color);
-            padding: 8px 12px;
-            border-radius: 50%;
-            border: 2px solid #dee2e6;
-            font-size: 1.2rem;
-        }
-
-        .current-user h3 {
-            margin: 0 0 10px 0;
-            color: #495057;
-            font-size: 1.1rem;
-        }
-
-        .user-info {
-            font-size: 1.2rem;
+        
+        .delete-warning-title {
             font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .warning-section {
-            background: linear-gradient(135deg, var(--warning-bg) 0%, #ffeaa7 100%);
-            border: 2px solid var(--warning-color);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .warning-section::before {
-            content: '\f071';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            top: -15px;
-            left: 30px;
-            background: var(--warning-color);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-        }
-
-        .warning-title {
-            color: #856404;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin: 0 0 15px 0;
+            color: #f56565;
+            margin-bottom: 16px;
+            font-size: 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-
-        .warning-list {
+        
+        .delete-warning-list {
             list-style: none;
             padding: 0;
-            margin: 15px 0;
+            margin: 0;
         }
-
-        .warning-list li {
+        
+        .delete-warning-list li {
             padding: 8px 0;
-            color: #856404;
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
             position: relative;
-            padding-left: 25px;
+            padding-left: 24px;
         }
-
-        .warning-list li::before {
+        
+        .delete-warning-list li::before {
             content: '\f00d';
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
             position: absolute;
             left: 0;
-            color: var(--danger-color);
+            color: #f56565;
         }
-
-        .form-section {
-            background: #f8f9fa;
-            border-radius: var(--border-radius);
-            padding: 30px;
-            margin-bottom: 30px;
+        
+        .danger-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+            margin-top: 8px;
+        }
+        
+        .danger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(220, 53, 69, 0.4);
+        }
+        
+        .danger-btn:active {
+            transform: translateY(0);
         }
 
         .form-group {
@@ -420,116 +296,102 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="page-wrapper">
-    <div class="container">
-        <div class="header">
-            <div class="header-content">
-                <h1>
-                    <i class="fas fa-user-times"></i>
-                    注销账户
-                </h1>
-                <p>此操作将永久删除您的账户和所有相关数据</p>
+    <div class="page-content">
+        <div class="current-email">
+            <strong>当前账户：</strong>{{ current_user.email }}
+        </div>
+        
+        <!-- 消息提示 -->
+        <div id="message-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <div class="delete-warning">
+            <div class="delete-warning-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                重要警告
             </div>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 16px;"><strong>注销账户是不可逆的操作！</strong>一旦确认注销，以下数据将被永久删除：</p>
+            <ul class="delete-warning-list">
+                <li>您的个人资料和账户信息</li>
+                <li>所有DNS配置和自定义规则</li>
+                <li>查询日志和统计数据</li>
+                <li>客户端映射关系</li>
+                <li>所有相关的系统设置</li>
+            </ul>
+            <p style="color: rgba(255, 255, 255, 0.9); margin-top: 16px; margin-bottom: 0;"><strong>请确保您已经备份了所有重要数据！</strong></p>
         </div>
 
-        <div class="content">
-            <div class="current-user">
-                <h3>当前登录账户</h3>
-                <div class="user-info">
-                    {{ current_user.username }} ({{ current_user.email }})
-                </div>
-            </div>
-
-            <!-- 消息提示 -->
-            <div id="message-container">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">
-                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-            </div>
-
-            <div class="warning-section">
-                <h3 class="warning-title">
-                    重要警告
-                </h3>
-                <p><strong>注销账户是不可逆的操作，将会：</strong></p>
-                <ul class="warning-list">
-                    <li>永久删除您的用户账户</li>
-                    <li>删除所有客户端配置信息</li>
-                    <li>清除所有相关的操作记录</li>
-                    <li>无法恢复任何已删除的数据</li>
-                    <li>同步删除{{ project_name }}中的客户端配置</li>
-                </ul>
-                <p><strong>请确保您已经备份了重要的配置信息！</strong></p>
-            </div>
-
-            <form method="POST" id="deleteAccountForm">
-                <div class="form-section">
-                    <div class="form-group">
-                        <label for="confirm_text">
-                            <i class="fas fa-keyboard"></i>
-                            确认操作
-                        </label>
-                        <input type="text" 
-                               id="confirm_text" 
-                               name="confirm_text" 
-                               placeholder="请输入：确认注销" 
-                               autocomplete="off"
-                               required>
-                        <div class="form-help">
-                            <i class="fas fa-info-circle"></i>
-                            请准确输入"确认注销"四个字
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="verification-group">
-                            <div>
-                                <label for="verification_code">
-                                    <i class="fas fa-shield-alt"></i>
-                                    邮箱验证码
-                                </label>
-                                <input type="text" 
-                                       id="verification_code" 
-                                       name="verification_code" 
-                                       placeholder="请输入6位验证码" 
-                                       maxlength="6" 
-                                       pattern="\d{6}" 
-                                       autocomplete="off"
-                                       required>
-                                <div class="form-help">
-                                    <i class="fas fa-envelope"></i>
-                                    验证码将发送到您的注册邮箱
-                                </div>
-                            </div>
-                            <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">
-                                <i class="fas fa-paper-plane"></i>
-                                发送验证码
-                            </button>
-                        </div>
+        <form method="POST" id="deleteAccountForm">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="confirm_text">
+                        <i class="fas fa-keyboard"></i>
+                        确认操作
+                    </label>
+                    <input type="text" 
+                           id="confirm_text" 
+                           name="confirm_text" 
+                           placeholder="请输入：确认注销" 
+                           autocomplete="off"
+                           required>
+                    <div class="form-help">
+                        <i class="fas fa-info-circle"></i>
+                        请准确输入"确认注销"四个字
                     </div>
                 </div>
                 
-                <div class="btn-group">
-                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i>
-                        取消
-                    </a>
-                    <button type="submit" class="btn btn-danger" id="deleteBtn">
-                        <i class="fas fa-trash-alt"></i>
-                        确认注销账户
-                    </button>
+                <div class="form-group">
+                    <div class="verification-group">
+                        <div>
+                            <label for="verification_code">
+                                <i class="fas fa-shield-alt"></i>
+                                邮箱验证码
+                            </label>
+                            <input type="text" 
+                                   id="verification_code" 
+                                   name="verification_code" 
+                                   placeholder="请输入6位验证码" 
+                                   maxlength="6" 
+                                   pattern="\d{6}" 
+                                   autocomplete="off"
+                                   required>
+                            <div class="form-help">
+                                <i class="fas fa-envelope"></i>
+                                验证码将发送到您的注册邮箱
+                            </div>
+                        </div>
+                        <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">
+                            <i class="fas fa-paper-plane"></i>
+                            发送验证码
+                        </button>
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
+            </div>
+            
+            <button type="submit" class="danger-btn" id="deleteBtn">
+                 <i class="fas fa-trash-alt"></i>
+                 确认注销账户
+             </button>
+         </form>
+         
+         <a href="/dashboard" class="back-link">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                 <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>
+             返回首页
+         </a>
+     </div>
 {% endblock %}
 
 {% block page_scripts %}
