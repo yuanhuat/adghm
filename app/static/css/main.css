@@ -75,6 +75,90 @@ body::before {
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* 汉堡菜单按钮样式 */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.nav-toggle span {
+    width: 25px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.8);
+    margin: 3px 0;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* 移动端导航菜单 */
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: flex;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: 70px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 70px);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px) saturate(180%);
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        transition: left 0.3s ease;
+        padding-top: 50px;
+        z-index: 1000;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    .nav-menu .nav-item {
+        margin: 10px 0;
+        width: 90%;
+        text-align: center;
+    }
+    
+    .nav-dropdown {
+        width: 100%;
+    }
+    
+    .dropdown-menu {
+        position: static;
+        display: none;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: none;
+        box-shadow: none;
+        margin-top: 10px;
+    }
+    
+    .nav-dropdown.active .dropdown-menu {
+        display: block;
+    }
+}
+
 /* 品牌图标动画 */
 .brand-icon {
     transition: all 0.3s ease;

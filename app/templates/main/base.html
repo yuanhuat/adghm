@@ -22,89 +22,7 @@
     <!-- 页面特定样式 -->
     {% block page_styles %}{% endblock %}
     
-    <!-- 导航栏交互脚本 -->
-    <script>
-    // 导航菜单控制
-    document.addEventListener('DOMContentLoaded', function() {
-        const navToggle = document.getElementById('navToggle');
-        const navMenu = document.getElementById('navMenu');
-        
-        if (navToggle && navMenu) {
-            navToggle.addEventListener('click', function() {
-                navToggle.classList.toggle('active');
-                navMenu.classList.toggle('active');
-            });
-            
-            // 处理下拉菜单点击事件
-            const dropdownToggles = navMenu.querySelectorAll('.dropdown-toggle');
-            dropdownToggles.forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const dropdown = this.parentElement;
-                    const isActive = dropdown.classList.contains('active');
-                    
-                    // 关闭所有其他下拉菜单
-                    document.querySelectorAll('.nav-dropdown').forEach(item => {
-                        item.classList.remove('active');
-                        const toggleBtn = item.querySelector('.dropdown-toggle');
-                        if (toggleBtn) {
-                            toggleBtn.classList.remove('active');
-                        }
-                    });
-                    
-                    // 切换当前下拉菜单
-                    if (!isActive) {
-                        dropdown.classList.add('active');
-                        this.classList.add('active');
-                    }
-                });
-            });
-            
-            // 点击菜单项后关闭菜单
-            const navLinks = navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle), .dropdown-item');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                    // 关闭所有下拉菜单
-                    document.querySelectorAll('.nav-dropdown').forEach(item => {
-                        item.classList.remove('active');
-                        const toggleBtn = item.querySelector('.dropdown-toggle');
-                        if (toggleBtn) {
-                            toggleBtn.classList.remove('active');
-                        }
-                    });
-                });
-            });
-            
-            // 点击页面其他地方关闭菜单
-            document.addEventListener('click', function(e) {
-                if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                    navToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
-                    // 关闭所有下拉菜单
-                    document.querySelectorAll('.nav-dropdown').forEach(item => {
-                        item.classList.remove('active');
-                        const toggleBtn = item.querySelector('.dropdown-toggle');
-                        if (toggleBtn) {
-                            toggleBtn.classList.remove('active');
-                        }
-                    });
-                }
-            });
-            
-            // 窗口大小改变时重置下拉菜单状态
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                        menu.style.display = '';
-                    });
-                }
-            });
-        }
-    });
-    </script>
+
 </head>
 <body>
     <!-- 导航栏 -->
@@ -227,7 +145,7 @@
             });
             
             // 处理下拉菜单点击事件
-            const dropdownToggles = navMenu.querySelectorAll('.nav-dropdown-toggle');
+            const dropdownToggles = navMenu.querySelectorAll('.dropdown-toggle');
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -238,17 +156,22 @@
                     // 关闭所有其他下拉菜单
                     document.querySelectorAll('.nav-dropdown').forEach(item => {
                         item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
                     });
                     
                     // 切换当前下拉菜单
                     if (!isActive) {
                         dropdown.classList.add('active');
+                        this.classList.add('active');
                     }
                 });
             });
             
             // 点击菜单项后关闭菜单
-            const navLinks = navMenu.querySelectorAll('.nav-link:not(.nav-dropdown-toggle), .nav-dropdown-menu a');
+            const navLinks = navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle), .dropdown-item');
             navLinks.forEach(link => {
                 link.addEventListener('click', function() {
                     navToggle.classList.remove('active');
@@ -256,6 +179,10 @@
                     // 关闭所有下拉菜单
                     document.querySelectorAll('.nav-dropdown').forEach(item => {
                         item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
                     });
                 });
             });
@@ -268,6 +195,19 @@
                     // 关闭所有下拉菜单
                     document.querySelectorAll('.nav-dropdown').forEach(item => {
                         item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
+                    });
+                }
+            });
+            
+            // 窗口大小改变时重置下拉菜单状态
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = '';
                     });
                 }
             });
