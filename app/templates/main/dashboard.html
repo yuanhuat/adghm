@@ -2,9 +2,18 @@
 
 {% block title %}{{ seo_config.title if seo_config else '主页 - ' + project_name + '用户管理系统' }}{% endblock %}
 
+{% block page_styles %}
+<style>
+    .main-content {
+        margin-top: 80px; /* 避免被固定导航栏遮挡 */
+    }
+</style>
+{% endblock %}
+
 {% block page_content %}
-<!-- 系统公告横幅 -->
-<div class="announcement-banner" id="announcement-banner" style="display: block;" data-announcement-id="1">
+<div class="main-content">
+    <!-- 系统公告横幅 -->
+    <div class="announcement-banner" id="announcement-banner" style="display: block;" data-announcement-id="1">
     <div class="announcement-banner-content">
         <svg class="announcement-icon" viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -39,7 +48,7 @@
 
         </section>
         
-        <main class="main-content">
+        <main class="dashboard-content">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -1563,4 +1572,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // 导航栏功能已在base.html中实现，此处不需要重复定义
 });
 </script>
+</div>
 {% endblock %}

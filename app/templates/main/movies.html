@@ -4,9 +4,13 @@
 
 {% block page_styles %}
 <style>
+        .main-content {
+            margin-top: 80px; /* 避免被固定导航栏遮挡 */
+        }
+        
         .movies-container {
             max-width: 800px;
-            margin: 2rem auto;
+            margin: 0 auto;
             padding: 0 1rem;
         }
         
@@ -249,7 +253,7 @@
 {% endblock %}
 
 {% block page_content %}
-
+<div class="main-content">
     <div class="movies-container">
         <div class="movies-header">
             <h1>影视服务</h1>
@@ -419,4 +423,5 @@
             }
         });
     </script>
+</div>
 {% endblock %}

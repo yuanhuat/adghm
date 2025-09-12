@@ -5,6 +5,16 @@
 {% block page_styles %}
 <!-- 移除不存在的clients.css文件引用，避免404错误 -->
 <style>
+    /* 主要内容容器样式 */
+    .main-content {
+        margin-top: 80px; /* 避免被固定导航栏遮挡 */
+    }
+    
+    /* 客户端列表容器样式 */
+    .client-list {
+        padding: 20px;
+    }
+    
     /* 优化规则类型选择器样式 */
     #ruleType {
         background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
@@ -98,7 +108,8 @@
                 {% endif %}
             {% endwith %}
             
-            <div class="client-list">
+            <div class="main-content">
+                <div class="client-list">
                 <div class="client-header">
                     <h2>我的客户端列表</h2>
                     {% if current_user.is_vip() %}
@@ -156,6 +167,7 @@
                 {% else %}
                 <p class="no-data">您还没有客户端。</p>
                 {% endif %}
+                </div>
             </div>
         </main>
 {% endblock %}

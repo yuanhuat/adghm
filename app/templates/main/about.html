@@ -5,11 +5,16 @@
 {% block extra_css %}
 <style>
         /* 移除自定义container样式，使用base.html统一设计 */
+        
+        /* 主要内容容器样式 */
+        .main-content {
+            margin-top: 80px !important; /* 使用!important确保样式生效，避免被固定导航栏遮挡 */
+        }
 
         /* 页面标题 */
         .page-header {
             text-align: center;
-            padding: 100px 20px 60px;
+            padding: 20px 20px 60px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
@@ -221,7 +226,7 @@
         }
 
         .footer-content {
-            max-width: 1200px;
+            max-width: 120px;
             margin: 0 auto;
         }
 
@@ -315,6 +320,7 @@
 {% endblock %}
 
 {% block page_content %}
+<div class="main-content" style="margin-top: 120px !important;">
         <!-- 页面标题 -->
         <section class="page-header">
             <div class="container">
@@ -493,6 +499,7 @@
                 </div>
             </div>
         </section>
+</div>
 {% endblock %}
 
 {% block page_scripts %}

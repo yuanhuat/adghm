@@ -1,8 +1,17 @@
 {% extends "main/base.html" %}
 
+{% block page_styles %}
+<style>
+    .main-content {
+        margin-top: 80px; /* 避免被固定导航栏遮挡 */
+    }
+</style>
+{% endblock %}
+
 {% block page_content %}
-<div class="page-content">
-    <div class="page-header">
+<div class="main-content">
+    <div class="page-content">
+        <div class="page-header">
         <h1>全局阻止服务管理</h1>
         <p>在这里，您可以管理全局阻止的服务列表。</p>
     </div>
