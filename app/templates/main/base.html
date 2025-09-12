@@ -9,419 +9,102 @@
     {% include 'components/seo_meta.html' %}
     
     <!-- 基础样式 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}">
+    <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/fontawesome/brands.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
     
-    <!-- 额外样式 -->
-    {% block extra_css %}{% endblock %}
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
     
     <!-- 页面特定样式 -->
     {% block page_styles %}{% endblock %}
     
-    <!-- 增强的CSS美化样式 -->
-    <style>
-        /* 全局美化样式 */
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-            --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.5);
-        }
+    <!-- 导航栏交互脚本 -->
+    <script>
+    // 导航菜单控制
+    document.addEventListener('DOMContentLoaded', function() {
+        const navToggle = document.getElementById('navToggle');
+        const navMenu = document.getElementById('navMenu');
         
-        /* 动态背景 */
-        body {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        /* 玻璃态效果增强 */
-        .apple-nav {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
-        }
-        
-        /* 主容器美化 */
-        .main-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(180%);
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-light);
-            margin: 80px auto 40px;
-            transition: all 0.3s ease;
-        }
-        
-        .main-container:hover {
-            box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
-        }
-        
-        /* 导航链接增强动画 */
-        .nav-link {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .nav-link:hover::before {
-            left: 100%;
-        }
-        
-        /* 品牌图标动画 */
-        .brand-icon {
-            transition: all 0.3s ease;
-        }
-        
-        .nav-brand:hover .brand-icon {
-            transform: rotate(360deg) scale(1.1);
-            filter: drop-shadow(0 0 10px rgba(0, 122, 255, 0.5));
-        }
-        
-        /* 下拉菜单美化 */
-        .nav-dropdown-menu {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        
-        /* 页脚美化 */
-        .footer {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(180%);
-            border-top: 1px solid var(--glass-border);
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -8px 32px 0 rgba(31, 38, 135, 0.2);
-            margin-top: auto;
-        }
-        
-        .footer-content {
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .footer-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary-gradient);
-            transition: width 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .footer-links a:hover::after {
-            width: 100%;
-        }
-        
-        .footer-bottom p {
-            color: rgba(255, 255, 255, 0.6);
-            margin: 0;
-            font-size: 14px;
-        }
-        
-        /* 提示消息美化 */
-        .alert {
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            box-shadow: var(--shadow-light);
-            animation: slideInDown 0.5s ease;
-        }
-        
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* 响应式优化 */
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 70px 10px 20px;
-                border-radius: 15px;
-                padding: 60px 15px 30px;
-            }
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', function() {
+                navToggle.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
             
-            .footer-links {
-                flex-direction: column;
-                gap: 15px;
-            }
+            // 处理下拉菜单点击事件
+            const dropdownToggles = navMenu.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const dropdown = this.parentElement;
+                    const isActive = dropdown.classList.contains('active');
+                    
+                    // 关闭所有其他下拉菜单
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
+                    });
+                    
+                    // 切换当前下拉菜单
+                    if (!isActive) {
+                        dropdown.classList.add('active');
+                        this.classList.add('active');
+                    }
+                });
+            });
+            
+            // 点击菜单项后关闭菜单
+            const navLinks = navMenu.querySelectorAll('.nav-link:not(.dropdown-toggle), .dropdown-item');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    // 关闭所有下拉菜单
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // 点击页面其他地方关闭菜单
+            document.addEventListener('click', function(e) {
+                if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                    navToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    // 关闭所有下拉菜单
+                    document.querySelectorAll('.nav-dropdown').forEach(item => {
+                        item.classList.remove('active');
+                        const toggleBtn = item.querySelector('.dropdown-toggle');
+                        if (toggleBtn) {
+                            toggleBtn.classList.remove('active');
+                        }
+                    });
+                }
+            });
+            
+            // 窗口大小改变时重置下拉菜单状态
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        menu.style.display = '';
+                    });
+                }
+            });
         }
-        
-        /* 滚动条美化 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-gradient);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-gradient);
-        }
-        
-        /* 表格样式 */
-        table {
-            width: 100%;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px) saturate(180%);
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-light);
-            overflow: hidden;
-            margin: 20px 0;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        
-        table thead {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-        }
-        
-        table th {
-            padding: 15px 20px;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 600;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-        
-        table td {
-            padding: 15px 20px;
-            color: rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        table tbody tr {
-            transition: all 0.3s ease;
-        }
-        
-        table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        /* 按钮样式 */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .btn-primary {
-            background: var(--primary-gradient);
-            color: white;
-        }
-        
-        .btn-info {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-            color: #212529;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        
-        /* 客户端ID列表样式 */
-        .client-ids {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .client-ids li {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 8px;
-            border-radius: 6px;
-            margin: 2px 0;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        /* 无数据提示样式 */
-        .no-data {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-style: italic;
-            padding: 40px 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-        }
-        
-        /* 文本样式 */
-        .text-muted {
-            color: rgba(255, 255, 255, 0.5) !important;
-            font-style: italic;
-        }
-        
-        /* 客户端列表容器样式 */
-        .client-list {
-            padding: 20px;
-        }
-        
-        .client-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .client-header h2 {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 600;
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        /* 加载动画 */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    });
+    </script>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -440,36 +123,50 @@
             </button>
             <div class="nav-menu" id="navMenu">
                 <a href="{{ url_for('main.dashboard') }}" class="nav-link">主页</a>
-                <a href="{{ url_for('main.clients') }}" class="nav-link">客户端</a>
-                <a href="{{ url_for('main.guide') }}" class="nav-link">指南</a>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">服务</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.clients') }}">客户端</a>
+                        <a class="dropdown-item" href="{{ url_for('main.guide') }}">指南</a>
+                        <a class="dropdown-item" href="http://test.dns.con/dns-test" target="_blank">DNS检测</a>
+                        <a class="dropdown-item" href="{{ url_for('main.sdk_redeem') }}">SDK兑换</a>
+                    </div>
+                </div>
+                
                 {% if current_user.is_authenticated and current_user.is_vip() %}
                 <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">影视</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.movies') }}">注册</a>
-                        <a href="{{ url_for('main.movies_guide') }}">使用方法</a>
+                    <a href="#" class="nav-link dropdown-toggle">影视</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.movies') }}">注册</a>
+                        <a class="dropdown-item" href="{{ url_for('main.movies_guide') }}">使用方法</a>
                     </div>
                 </div>
                 {% else %}
                 <a href="#" class="nav-link" onclick="showVipRequiredAlert(event)">影视</a>
                 {% endif %}
-                <a href="{{ url_for('main.donation') }}" class="nav-link">支持</a>
-                {% if donation_config and donation_config.show_ranking %}
-                <a href="{{ url_for('main.donation_ranking') }}" class="nav-link">排行榜</a>
-                {% endif %}
-                <a href="{{ url_for('main.sdk_redeem') }}" class="nav-link">SDK兑换</a>
-                <a href="http://test.dns.con/dns-test" target="_blank" class="nav-link">DNS检测</a>
+                
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">社区</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.donation') }}">支持</a>
+                        {% if donation_config and donation_config.show_ranking %}
+                        <a class="dropdown-item" href="{{ url_for('main.donation_ranking') }}">排行榜</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
                 {% if current_user.is_authenticated %}
                 <div class="nav-dropdown">
-                    <button class="nav-dropdown-toggle">{{ current_user.username }}</button>
-                    <div class="nav-dropdown-menu">
-                        <a href="{{ url_for('main.change_password_page') }}">修改密码</a>
-                        <a href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
+                    <a href="#" class="nav-link dropdown-toggle">{{ current_user.username }}</a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ url_for('main.change_password_page') }}">修改密码</a>
+                        <a class="dropdown-item" href="{{ url_for('main.change_email_page') }}">修改邮箱</a>
                         {% if current_user.is_admin %}
-                        <a href="{{ url_for('admin.index') }}">管理员后台</a>
+                        <a class="dropdown-item" href="{{ url_for('admin.index') }}">管理员后台</a>
                         {% endif %}
-                        <a href="{{ url_for('auth.delete_account') }}" class="danger">注销账户</a>
-                        <a href="{{ url_for('auth.logout') }}">退出登录</a>
+                        <a class="dropdown-item danger" href="{{ url_for('auth.delete_account') }}">注销账户</a>
+                        <a class="dropdown-item" href="{{ url_for('auth.logout') }}">退出登录</a>
                     </div>
                 </div>
                 {% else %}
@@ -481,7 +178,7 @@
     </nav>
 
     <!-- 主要内容区域 -->
-    <div class="main-container">
+    <div class="container mt-4">
         <!-- Flash消息显示 -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -516,10 +213,6 @@
     </footer>
     {% endblock %}
 
-    <!-- 基础JavaScript -->
-    <script src="{{ url_for('static', filename='vendor/jquery/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
-    
     <!-- 导航栏交互脚本 -->
     <script>
     // 导航菜单控制
