@@ -1,115 +1,97 @@
-{% extends "main/base.html" %}
+{% extends 'main/base.html' %}
 
 {% block title %}{{ seo_config.title if seo_config else '客户端管理 - ' + project_name + '用户管理系统' }}{% endblock %}
 
 {% block page_styles %}
-<!-- 移除不存在的clients.css文件引用，避免404错误 -->
-<style>
-    /* 主要内容容器样式 */
-    .main-content {
-        margin-top: 80px; /* 避免被固定导航栏遮挡 */
-    }
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/clients.css') }}">
     
-    /* 客户端列表容器样式 */
-    .client-list {
-        padding: 20px;
-    }
-    
-    /* 优化规则类型选择器样式 */
-    #ruleType {
-        background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
-        color: #ffffff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        cursor: pointer;
-    }
-    
-    #ruleType:hover {
-        border-color: #007bff;
-        background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
-        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
-        transform: translateY(-1px);
-    }
-    
-    #ruleType:focus {
-        border-color: #007bff;
-        background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
-        box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-        outline: none;
-    }
-    
-    #ruleType option {
-        padding: 8px 12px;
-        font-size: 14px;
-        background-color: #2c2c2e;
-        color: #ffffff;
-    }
-    
-    #ruleType option[value="block"] {
-        background-color: #3d1a1a;
-        color: #ff6b6b;
-    }
-    
-    #ruleType option[value="allow"] {
-        background-color: #1a3d1a;
-        color: #4caf50;
-    }
-    
-    /* 优化上游DNS配置文本框样式 */
-    #upstreamsConfig {
-        background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
-        color: #ffffff;
-        border: 2px solid #444;
-        border-radius: 8px;
-        padding: 12px;
-        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        resize: vertical;
-        min-height: 120px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-    }
-    
-    #upstreamsConfig:hover {
-        border-color: #007bff;
-        background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
-        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
-        transform: translateY(-1px);
-    }
-    
-    #upstreamsConfig:focus {
-        border-color: #007bff;
-        background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
-        box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-        outline: none;
-    }
-    
-    #upstreamsConfig::placeholder {
-        color: #888;
-        font-style: italic;
-    }
-    
-    /* 优化表单文本样式 */
-    .form-text {
-        color: #aaa;
-        font-size: 12px;
-        margin-top: 5px;
-        font-style: italic;
-    }
-</style>
+    <style>
+        /* 优化规则类型选择器样式 */
+        #ruleType {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        
+        #ruleType:hover {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        #ruleType:focus {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        #ruleType option {
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: #2c2c2e;
+            color: #ffffff;
+        }
+        
+        #ruleType option[value="block"] {
+            background-color: #3d1a1a;
+            color: #ff6b6b;
+        }
+        
+        #ruleType option[value="allow"] {
+            background-color: #1a3d1a;
+            color: #4caf50;
+        }
+        
+        /* 优化上游DNS配置文本框样式 */
+        #upstreamsConfig {
+            background: linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 100%);
+            color: #ffffff;
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        #upstreamsConfig:hover {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        #upstreamsConfig:focus {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+            outline: none;
+        }
+        
+        #upstreamsConfig::placeholder {
+            color: #888;
+            font-style: italic;
+        }
+        
+        /* 优化表单文本样式 */
+        .form-text {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
 {% endblock %}
 
 {% block page_content %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <div class="main-content">
-                <div class="client-list">
+<div class="client-list">
                 <div class="client-header">
                     <h2>我的客户端列表</h2>
                     {% if current_user.is_vip() %}
@@ -167,13 +149,10 @@
                 {% else %}
                 <p class="no-data">您还没有客户端。</p>
                 {% endif %}
-                </div>
             </div>
-        </main>
 {% endblock %}
 
 {% block page_scripts %}
-    
     <!-- 创建客户端模态框 -->
     {% if current_user.is_vip() %}
     <div id="createClientModal" class="modal" style="display: none;">
@@ -287,6 +266,15 @@
     <script>
     // 导航菜单控制
     document.addEventListener('DOMContentLoaded', function() {
+        const navToggle = document.getElementById('navToggle');
+        const navMenu = document.getElementById('navMenu');
+        
+        if (navToggle && navMenu) {
+            navToggle.addEventListener('click', function() {
+                navToggle.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+    
     // 显示客户端ID错误信息
     function showClientIdError(inputElement, message) {
         removeClientIdError(inputElement); // 先移除现有错误信息
