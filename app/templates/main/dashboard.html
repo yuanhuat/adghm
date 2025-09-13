@@ -1544,10 +1544,12 @@ window.onclick = function(event) {
 let lazyLoadConfig = {
     intervals: {},
     isInitialized: false,
+    loadingQueue: [], // 加载队列
+    isProcessingQueue: false, // 是否正在处理队列
     containers: [
         {
             selector: '.announcement-banner',
-            triggerOffset: 0,
+            triggerOffset: 50,
             isVisible: false,
             callbacks: []
         },
@@ -1604,14 +1606,17 @@ function initLazyLoad() {
         if (element) {
             element.style.opacity = '0';
             element.style.transform = 'translateY(50px)';
-            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            element.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            element.style.willChange = 'opacity, transform';
+            element.style.backfaceVisibility = 'hidden';
             element.style.position = 'relative';
             element.style.left = '50%';
             element.style.transform = 'translateX(-50%) translateY(50px)';
         }
     });
     
-    // 添加滚动监听器
+    // 添加滚动监听器（使用节流）
+    const handleScroll = throttle(handleScrollOriginal, 16); // 约60fps
     window.addEventListener('scroll', handleScroll);
     
     // 初始检查一次
@@ -1620,8 +1625,22 @@ function initLazyLoad() {
     lazyLoadConfig.isInitialized = true;
 }
 
-// 处理滚动事件
-function handleScroll() {
+// 节流函数
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
+// 处理滚动事件（原始函数）
+function handleScrollOriginal() {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const windowHeight = window.innerHeight;
     const screenCenter = scrollTop + windowHeight / 2;
@@ -1736,14 +1755,16 @@ function groupContainersByRow() {
 function showContainer(container) {
     const element = document.querySelector(container.selector);
     if (element) {
-        // 显示容器
-        element.style.opacity = '1';
-        element.style.transform = 'translateX(-50%) translateY(0)';
+        // 使用requestAnimationFrame优化动画性能
+        requestAnimationFrame(() => {
+            element.style.opacity = '1';
+            element.style.transform = 'translateX(-50%) translateY(0)';
+        });
         container.isVisible = true;
         
-        // 启动相关的JS调用
+        // 将回调添加到队列中，而不是立即执行
         container.callbacks.forEach(callbackName => {
-            startCallback(callbackName);
+            addToLoadingQueue(callbackName);
         });
     }
 }
@@ -1752,9 +1773,11 @@ function showContainer(container) {
 function hideContainer(container) {
     const element = document.querySelector(container.selector);
     if (element) {
-        // 隐藏容器
-        element.style.opacity = '0';
-        element.style.transform = 'translateX(-50%) translateY(50px)';
+        // 使用requestAnimationFrame优化动画性能
+        requestAnimationFrame(() => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateX(-50%) translateY(50px)';
+        });
         container.isVisible = false;
         
         // 停止相关的JS调用
@@ -1762,6 +1785,37 @@ function hideContainer(container) {
             stopCallback(callbackName);
         });
     }
+}
+
+// 添加到加载队列
+function addToLoadingQueue(callbackName) {
+    // 避免重复添加
+    if (!lazyLoadConfig.loadingQueue.includes(callbackName) && !lazyLoadConfig.intervals[callbackName]) {
+        lazyLoadConfig.loadingQueue.push(callbackName);
+        processLoadingQueue();
+    }
+}
+
+// 处理加载队列
+function processLoadingQueue() {
+    if (lazyLoadConfig.isProcessingQueue || lazyLoadConfig.loadingQueue.length === 0) {
+        return;
+    }
+    
+    lazyLoadConfig.isProcessingQueue = true;
+    
+    const callbackName = lazyLoadConfig.loadingQueue.shift();
+    
+    // 延迟执行，避免并发加载
+    setTimeout(() => {
+        startCallback(callbackName);
+        lazyLoadConfig.isProcessingQueue = false;
+        
+        // 继续处理队列中的下一个
+        if (lazyLoadConfig.loadingQueue.length > 0) {
+            setTimeout(() => processLoadingQueue(), 200); // 200ms间隔
+        }
+    }, 100); // 100ms延迟
 }
 
 // 启动特定的JS调用
@@ -1799,6 +1853,12 @@ function stopCallback(callbackName) {
         clearInterval(lazyLoadConfig.intervals[callbackName]);
         delete lazyLoadConfig.intervals[callbackName];
     }
+    
+    // 从加载队列中移除待处理的回调
+    const queueIndex = lazyLoadConfig.loadingQueue.indexOf(callbackName);
+    if (queueIndex > -1) {
+        lazyLoadConfig.loadingQueue.splice(queueIndex, 1);
+    }
 }
 
 // 停止所有定时器
@@ -1815,6 +1875,10 @@ function stopAllIntervals() {
 function resetLazyLoad() {
     // 停止所有定时器
     stopAllIntervals();
+    
+    // 清空加载队列
+    lazyLoadConfig.loadingQueue = [];
+    lazyLoadConfig.isProcessingQueue = false;
     
     // 重置所有容器状态
     lazyLoadConfig.containers.forEach(container => {
