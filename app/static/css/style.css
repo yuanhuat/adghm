@@ -490,20 +490,7 @@ tr:hover {
     -webkit-transform: translate3d(0, 0, 0);
 }
 
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url('/static/images/hero-graphic.svg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.6;
-    z-index: 1;
-}
+
 
 .hero-content {
     flex: 1;
@@ -2136,18 +2123,6 @@ tr:hover {
     transform: scale(0.95);
 }
 
-/* 装饰性背景效果 */
-.announcement-banner::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
-    animation: shimmer 3s ease-in-out infinite;
-    z-index: 1;
-}
 
 @keyframes shimmer {
     0%, 100% {
