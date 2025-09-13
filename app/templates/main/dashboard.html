@@ -5,7 +5,7 @@
 {% block page_styles %}
 <style>
     .main-content {
-        margin-top: 80px; /* 避免被固定导航栏遮挡 */
+        margin-top: 0; /* 系统公告横幅显示位置设置为0 */
     }
 </style>
 {% endblock %}
@@ -1619,8 +1619,16 @@ function initLazyLoad() {
     const handleScroll = throttle(handleScrollOriginal, 16); // 约60fps
     window.addEventListener('scroll', handleScroll);
     
-    // 初始检查一次
-    handleScroll();
+    // 立即检查一次，确保初始状态正确
+    handleScrollOriginal();
+    
+    // 如果初始检查后没有容器显示，延迟再检查一次
+    setTimeout(() => {
+        const hasVisibleContainer = lazyLoadConfig.containers.some(container => container.isVisible);
+        if (!hasVisibleContainer) {
+            handleScrollOriginal();
+        }
+    }, 100);
     
     lazyLoadConfig.isInitialized = true;
 }
@@ -1643,10 +1651,15 @@ function throttle(func, limit) {
 function handleScrollOriginal() {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
     const screenCenter = scrollTop + windowHeight / 2;
     
     // 获取当前屏幕宽度，判断是否为电脑端
     const isDesktop = window.innerWidth > 768;
+    
+    // 检查是否在页面顶部或底部
+    const isAtTop = scrollTop <= 100; // 顶部100px范围内
+    const isAtBottom = scrollTop + windowHeight >= documentHeight - 100; // 底部100px范围内
     
     if (isDesktop) {
         // 电脑端：按行处理容器
@@ -1654,21 +1667,32 @@ function handleScrollOriginal() {
         let targetRow = null;
         let minDistance = Infinity;
         
-        rows.forEach(row => {
-            // 计算行的中心位置（使用第一个容器的位置）
-            const firstContainer = row[0];
-            const firstElement = document.querySelector(firstContainer.selector);
-            if (!firstElement) return;
-            
-            const rect = firstElement.getBoundingClientRect();
-            const rowCenter = rect.top + scrollTop + rect.height / 2;
-            const distance = Math.abs(rowCenter - screenCenter);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                targetRow = row;
-            }
-        });
+        // 如果在顶部，优先显示第一行
+        if (isAtTop && rows.length > 0) {
+            targetRow = rows[0];
+        }
+        // 如果在底部，优先显示最后一行
+        else if (isAtBottom && rows.length > 0) {
+            targetRow = rows[rows.length - 1];
+        }
+        // 否则按距离计算最近的行
+        else {
+            rows.forEach(row => {
+                // 计算行的中心位置（使用第一个容器的位置）
+                const firstContainer = row[0];
+                const firstElement = document.querySelector(firstContainer.selector);
+                if (!firstElement) return;
+                
+                const rect = firstElement.getBoundingClientRect();
+                const rowCenter = rect.top + scrollTop + rect.height / 2;
+                const distance = Math.abs(rowCenter - screenCenter);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    targetRow = row;
+                }
+            });
+        }
         
         // 显示目标行的所有容器，隐藏其他容器
         lazyLoadConfig.containers.forEach(container => {
@@ -1687,19 +1711,30 @@ function handleScrollOriginal() {
         let targetContainer = null;
         let minDistance = Infinity;
         
-        lazyLoadConfig.containers.forEach(container => {
-            const element = document.querySelector(container.selector);
-            if (!element) return;
-            
-            const rect = element.getBoundingClientRect();
-            const elementCenter = rect.top + scrollTop + rect.height / 2;
-            const distance = Math.abs(elementCenter - screenCenter);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                targetContainer = container;
-            }
-        });
+        // 如果在顶部，优先显示第一个容器
+        if (isAtTop && lazyLoadConfig.containers.length > 0) {
+            targetContainer = lazyLoadConfig.containers[0];
+        }
+        // 如果在底部，优先显示最后一个容器
+        else if (isAtBottom && lazyLoadConfig.containers.length > 0) {
+            targetContainer = lazyLoadConfig.containers[lazyLoadConfig.containers.length - 1];
+        }
+        // 否则按距离计算最近的容器
+        else {
+            lazyLoadConfig.containers.forEach(container => {
+                const element = document.querySelector(container.selector);
+                if (!element) return;
+                
+                const rect = element.getBoundingClientRect();
+                const elementCenter = rect.top + scrollTop + rect.height / 2;
+                const distance = Math.abs(elementCenter - screenCenter);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    targetContainer = container;
+                }
+            });
+        }
         
         // 隐藏所有容器，然后只显示目标容器
         lazyLoadConfig.containers.forEach(container => {
@@ -1886,14 +1921,20 @@ function resetLazyLoad() {
         const element = document.querySelector(container.selector);
         if (element) {
             element.style.opacity = '0';
-            element.style.transform = 'translateY(50px)';
+            element.style.transform = 'translateX(-50%) translateY(50px)';
         }
     });
     
-    // 重新检查滚动位置
+    // 立即检查滚动位置，不延迟
+    handleScrollOriginal();
+    
+    // 如果仍然没有容器显示，再次尝试
     setTimeout(() => {
-        handleScroll();
-    }, 100);
+        const hasVisibleContainer = lazyLoadConfig.containers.some(container => container.isVisible);
+        if (!hasVisibleContainer) {
+            handleScrollOriginal();
+        }
+    }, 50);
 }
 
 // 页面加载完成后初始化懒加载
