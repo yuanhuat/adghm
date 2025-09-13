@@ -1540,16 +1540,303 @@ window.onclick = function(event) {
     }
 }
 
-// 页面加载完成后开始定期更新
-document.addEventListener('DOMContentLoaded', function() {
-    // 立即更新一次
-    updateStats();
-    updateClientRanking();
-    updateFeedbackList();
-    updateDnsConfig();
+// 滚动懒加载控制变量
+let lazyLoadConfig = {
+    intervals: {},
+    isInitialized: false,
+    containers: [
+        {
+            selector: '.announcement-banner',
+            triggerOffset: 0,
+            isVisible: false,
+            callbacks: []
+        },
+        {
+            selector: '.hero-section',
+            triggerOffset: 100,
+            isVisible: false,
+            callbacks: ['updateStats']
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(1)',
+            triggerOffset: 300,
+            isVisible: false,
+            callbacks: ['updateClientRanking']
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(2)',
+            triggerOffset: 500,
+            isVisible: false,
+            callbacks: []
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(3)',
+            triggerOffset: 700,
+            isVisible: false,
+            callbacks: ['updateDnsConfig']
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(4)',
+            triggerOffset: 900,
+            isVisible: false,
+            callbacks: []
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(5)',
+            triggerOffset: 1100,
+            isVisible: false,
+            callbacks: []
+        },
+        {
+            selector: '.features-grid .feature-card:nth-child(6)',
+            triggerOffset: 1300,
+            isVisible: false,
+            callbacks: ['updateFeedbackList']
+        }
+    ]
+};
+
+// 初始化懒加载
+function initLazyLoad() {
+    // 隐藏所有容器
+    lazyLoadConfig.containers.forEach(container => {
+        const element = document.querySelector(container.selector);
+        if (element) {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(50px)';
+            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            element.style.position = 'relative';
+            element.style.left = '50%';
+            element.style.transform = 'translateX(-50%) translateY(50px)';
+        }
+    });
     
-    // 加载公告
+    // 添加滚动监听器
+    window.addEventListener('scroll', handleScroll);
+    
+    // 初始检查一次
+    handleScroll();
+    
+    lazyLoadConfig.isInitialized = true;
+}
+
+// 处理滚动事件
+function handleScroll() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const screenCenter = scrollTop + windowHeight / 2;
+    
+    // 获取当前屏幕宽度，判断是否为电脑端
+    const isDesktop = window.innerWidth > 768;
+    
+    if (isDesktop) {
+        // 电脑端：按行处理容器
+        const rows = groupContainersByRow();
+        let targetRow = null;
+        let minDistance = Infinity;
+        
+        rows.forEach(row => {
+            // 计算行的中心位置（使用第一个容器的位置）
+            const firstContainer = row[0];
+            const firstElement = document.querySelector(firstContainer.selector);
+            if (!firstElement) return;
+            
+            const rect = firstElement.getBoundingClientRect();
+            const rowCenter = rect.top + scrollTop + rect.height / 2;
+            const distance = Math.abs(rowCenter - screenCenter);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                targetRow = row;
+            }
+        });
+        
+        // 显示目标行的所有容器，隐藏其他容器
+        lazyLoadConfig.containers.forEach(container => {
+            const isInTargetRow = targetRow && targetRow.includes(container);
+            
+            if (isInTargetRow && !container.isVisible) {
+                // 显示目标行的容器
+                showContainer(container);
+            } else if (!isInTargetRow && container.isVisible) {
+                // 隐藏其他行的容器
+                hideContainer(container);
+            }
+        });
+    } else {
+        // 移动端：单个容器处理（原有逻辑）
+        let targetContainer = null;
+        let minDistance = Infinity;
+        
+        lazyLoadConfig.containers.forEach(container => {
+            const element = document.querySelector(container.selector);
+            if (!element) return;
+            
+            const rect = element.getBoundingClientRect();
+            const elementCenter = rect.top + scrollTop + rect.height / 2;
+            const distance = Math.abs(elementCenter - screenCenter);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                targetContainer = container;
+            }
+        });
+        
+        // 隐藏所有容器，然后只显示目标容器
+        lazyLoadConfig.containers.forEach(container => {
+            if (container === targetContainer && !container.isVisible) {
+                // 显示目标容器
+                showContainer(container);
+            } else if (container !== targetContainer && container.isVisible) {
+                // 隐藏其他容器
+                hideContainer(container);
+            }
+        });
+    }
+}
+
+// 按行分组容器的函数
+function groupContainersByRow() {
+    const rows = [];
+    let currentRow = [];
+    let currentRowTop = null;
+    
+    lazyLoadConfig.containers.forEach(container => {
+        const element = document.querySelector(container.selector);
+        if (!element) return;
+        
+        const rect = element.getBoundingClientRect();
+        const containerTop = Math.round(rect.top);
+        
+        // 如果是第一个容器或者与当前行的top位置相近（容差15px），则属于同一行
+        if (currentRowTop === null || Math.abs(containerTop - currentRowTop) <= 15) {
+            if (currentRowTop === null) {
+                currentRowTop = containerTop;
+            }
+            currentRow.push(container);
+        } else {
+            // 开始新的一行
+            if (currentRow.length > 0) {
+                rows.push(currentRow);
+            }
+            currentRow = [container];
+            currentRowTop = containerTop;
+        }
+    });
+    
+    // 添加最后一行
+    if (currentRow.length > 0) {
+        rows.push(currentRow);
+    }
+    
+    return rows;
+}
+
+// 显示容器并启动相关JS调用
+function showContainer(container) {
+    const element = document.querySelector(container.selector);
+    if (element) {
+        // 显示容器
+        element.style.opacity = '1';
+        element.style.transform = 'translateX(-50%) translateY(0)';
+        container.isVisible = true;
+        
+        // 启动相关的JS调用
+        container.callbacks.forEach(callbackName => {
+            startCallback(callbackName);
+        });
+    }
+}
+
+// 隐藏容器并停止相关JS调用
+function hideContainer(container) {
+    const element = document.querySelector(container.selector);
+    if (element) {
+        // 隐藏容器
+        element.style.opacity = '0';
+        element.style.transform = 'translateX(-50%) translateY(50px)';
+        container.isVisible = false;
+        
+        // 停止相关的JS调用
+        container.callbacks.forEach(callbackName => {
+            stopCallback(callbackName);
+        });
+    }
+}
+
+// 启动特定的JS调用
+function startCallback(callbackName) {
+    if (lazyLoadConfig.intervals[callbackName]) {
+        return; // 已经启动，避免重复
+    }
+    
+    switch(callbackName) {
+        case 'updateStats':
+            updateStats(); // 立即执行一次
+            lazyLoadConfig.intervals.updateStats = setInterval(updateStats, 1000);
+            break;
+        case 'updateClientRanking':
+            updateClientRanking(); // 立即执行一次
+            lazyLoadConfig.intervals.updateClientRanking = setInterval(updateClientRanking, 5000);
+            break;
+        case 'updateDnsConfig':
+            updateDnsConfig(); // 立即执行一次
+            break;
+        case 'updateFeedbackList':
+            updateFeedbackList(); // 立即执行一次
+            lazyLoadConfig.intervals.updateFeedbackList = setInterval(updateFeedbackList, 30000);
+            break;
+        case 'loadAnnouncements':
+            loadAnnouncements(); // 立即执行一次
+            lazyLoadConfig.intervals.loadAnnouncements = setInterval(loadAnnouncements, 120000);
+            break;
+    }
+}
+
+// 停止特定的JS调用
+function stopCallback(callbackName) {
+    if (lazyLoadConfig.intervals[callbackName]) {
+        clearInterval(lazyLoadConfig.intervals[callbackName]);
+        delete lazyLoadConfig.intervals[callbackName];
+    }
+}
+
+// 停止所有定时器
+function stopAllIntervals() {
+    Object.keys(lazyLoadConfig.intervals).forEach(key => {
+        if (lazyLoadConfig.intervals[key]) {
+            clearInterval(lazyLoadConfig.intervals[key]);
+            delete lazyLoadConfig.intervals[key];
+        }
+    });
+}
+
+// 重置懒加载状态
+function resetLazyLoad() {
+    // 停止所有定时器
+    stopAllIntervals();
+    
+    // 重置所有容器状态
+    lazyLoadConfig.containers.forEach(container => {
+        container.isVisible = false;
+        const element = document.querySelector(container.selector);
+        if (element) {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(50px)';
+        }
+    });
+    
+    // 重新检查滚动位置
+    setTimeout(() => {
+        handleScroll();
+    }, 100);
+}
+
+// 页面加载完成后初始化懒加载
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载公告（始终显示）
     loadAnnouncements();
+    lazyLoadConfig.intervals.loadAnnouncements = setInterval(loadAnnouncements, 120000);
     
     // 绑定留言表单提交事件
     const feedbackForm = document.getElementById('feedback-form');
@@ -1557,19 +1844,37 @@ document.addEventListener('DOMContentLoaded', function() {
         feedbackForm.addEventListener('submit', submitFeedback);
     }
     
-    // 每1秒更新一次统计数据
-    setInterval(updateStats, 1000);
-    
-    // 每5秒更新一次客户端排行
-    setInterval(updateClientRanking, 5000);
-    
-    // 每30秒更新一次留言列表
-    setInterval(updateFeedbackList, 30000);
-    
-    // 每2分钟更新一次公告
-    setInterval(loadAnnouncements, 120000);
-    
-    // 导航栏功能已在base.html中实现，此处不需要重复定义
+    // 初始化懒加载
+    initLazyLoad();
+});
+
+// 监听页面导航变化（用于处理页面切换）
+window.addEventListener('hashchange', function() {
+    if (lazyLoadConfig.isInitialized) {
+        // 页面导航变化时重置懒加载状态
+        resetLazyLoad();
+    }
+});
+
+// 监听浏览器前进后退（用于处理页面历史变化）
+window.addEventListener('popstate', function() {
+    if (lazyLoadConfig.isInitialized) {
+        // 浏览器前进后退时重置懒加载状态
+        resetLazyLoad();
+    }
+});
+
+// 监听页面重新加载（用于处理刷新）
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted && lazyLoadConfig.isInitialized) {
+        // 从缓存恢复页面时重置懒加载状态
+        resetLazyLoad();
+    }
+});
+
+// 页面卸载时清理定时器
+window.addEventListener('beforeunload', function() {
+    stopAllIntervals();
 });
 </script>
 </div>
